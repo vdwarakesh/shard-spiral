@@ -121,6 +121,68 @@ def _base_visual_dict(**overrides):
     return base
 
 
+def _finalize_node_steps(trace_steps, is_paused_for_choice=False):
+    """Computes visitedNodes for node-based structures (Graphs, Trees, Linked Lists, Hash).
+    A node is only marked as 'visited' (completely finished) at step_idx if:
+      1. It was first directly accessed before step_idx (first_access_step[k] < step_idx)
+      2. It will NEVER be accessed or held in an active call-stack frame at or after step_idx
+         (last_active_or_access_step[k] < step_idx)
+      3. When paused for a manual user choice, any node currently held in the call stack
+         or frontier (`_in_flight`) is still pending future work and is NOT marked visited.
+    """
+    last_access_step = {}
+    first_access_step = {}
+
+    for step_idx, step in enumerate(trace_steps):
+        vis = step['visual']
+        accessed = vis.pop('_accessed', [])
+        in_flight = vis.pop('_in_flight', [])
+
+        if vis.get('activeNodeId') is not None and str(vis['activeNodeId']) not in accessed:
+            accessed.append(str(vis['activeNodeId']))
+
+        for node_id in accessed:
+            s_id = str(node_id)
+            if s_id not in first_access_step:
+                first_access_step[s_id] = step_idx
+            last_access_step[s_id] = step_idx
+
+        # Any node still held in a caller's frame (e.g. parent during DFS recursion)
+        # will be returned to later, so extend its last_access_step at least to step_idx.
+        for node_id in in_flight:
+            s_id = str(node_id)
+            if s_id in first_access_step:
+                last_access_step[s_id] = max(last_access_step.get(s_id, step_idx), step_idx)
+
+    # If paused for user choice on the last step, any node still in_flight at the final step
+    # has not finished execution yet.
+    final_in_flight = set()
+    if is_paused_for_choice and trace_steps:
+        last_vis = trace_steps[-1]['visual']
+        final_in_flight.update(str(x) for x in (last_vis.get('activeNodeIds') or []))
+        if last_vis.get('activeNodeId') is not None:
+            final_in_flight.add(str(last_vis['activeNodeId']))
+
+    ever_accessed_in_order = sorted(first_access_step.keys(), key=lambda k: first_access_step[k])
+    for step_idx, step in enumerate(trace_steps):
+        vis = step['visual']
+        active = vis.get('activeNodeId')
+        active_set = set(str(x) for x in (vis.get('activeNodeIds') or []))
+        if active is not None:
+            active_set.add(str(active))
+        found = str(vis['foundNodeId']) if vis.get('foundNodeId') is not None else None
+
+        visited = [
+            k for k in ever_accessed_in_order
+            if first_access_step[k] < step_idx
+            and last_access_step[k] < step_idx
+            and (not is_paused_for_choice or k not in final_in_flight)
+            and k not in active_set
+            and k != found
+        ]
+        vis['visitedNodes'] = visited
+
+
 # ----------------------------------------------------------------------------
 # 1A. LINEAR SEQUENCES, QUEUES, STACKS, STRINGS, HEAPS
 # ----------------------------------------------------------------------------
@@ -145,11 +207,14 @@ class VisualSequence(list):
         self.active_index = -1
         self.recent_accesses = {}
         self.step_accessed_indices = set()
+        self.in_flight_indices = set()
         self.last_op = None
 
     def on_step_start(self):
+        self.active_index = -1
         self.recent_accesses.clear()
         self.step_accessed_indices.clear()
+        self.in_flight_indices.clear()
         self.last_op = None
 
     def _record_access(self, idx):
@@ -178,6 +243,12 @@ class VisualSequence(list):
             self.last_op = 'set'
             return
         super().__setitem__(idx, val)
+
+    def insert(self, idx, val):
+        super().insert(idx, val)
+        self.last_op = 'insert'
+        norm_idx = max(0, min(idx if idx >= 0 else len(self) + idx, len(self) - 1))
+        self._record_access(norm_idx)
 
     def append(self, val):
         if self.capacity and len(self) >= self.capacity and self.subtype == 'circular_queue':
@@ -271,7 +342,7 @@ class VisualSequence(list):
             return ''.join(str(x) for x in self) == other
         return super().__eq__(other)
 
-    def on_line_fallback(self, loop_target_vars, frame_locals):
+    def on_line_fallback(self, loop_target_vars, frame_locals, all_frames_locals=None):
         if not self.recent_accesses:
             for var_val in loop_target_vars:
                 if isinstance(var_val, int) and not isinstance(var_val, bool) and 0 <= var_val < len(self):
@@ -288,6 +359,7 @@ class VisualSequence(list):
             found_idx = ret_val
         self.active_index = -1
         self.step_accessed_indices.clear()
+        self.in_flight_indices.clear()
         return self.snapshot(found_idx)
 
     def snapshot(self, found_index=-1):
@@ -300,6 +372,7 @@ class VisualSequence(list):
             elements=[_serialize(x) for x in self],
             lastOp=self.last_op,
             _accessed=list(self.step_accessed_indices),
+            _in_flight=list(self.in_flight_indices),
         )
         if self.subtype in ('heap', 'binary_heap', 'min_heap', 'max_heap', 'priority_queue'):
             heap_nodes = [{'id': str(i), 'label': str(_serialize(v)), 'index': i} for i, v in enumerate(self)]
@@ -323,12 +396,16 @@ class VisualSequence(list):
         for step_idx, step in enumerate(trace_steps):
             vis = step['visual']
             accessed = vis.pop('_accessed', [])
+            in_flight = vis.pop('_in_flight', [])
             if vis['activeIndex'] >= 0 and vis['activeIndex'] not in accessed:
                 accessed.append(vis['activeIndex'])
             for arr_idx in accessed:
                 if arr_idx not in first_access_step:
                     first_access_step[arr_idx] = step_idx
                 last_access_step[arr_idx] = step_idx
+            for arr_idx in in_flight:
+                if arr_idx in first_access_step:
+                    last_access_step[arr_idx] = max(last_access_step.get(arr_idx, step_idx), step_idx)
 
         ever_accessed_in_order = sorted(first_access_step.keys(), key=lambda k: first_access_step[k])
 
@@ -339,7 +416,7 @@ class VisualSequence(list):
             checked = [
                 k for k in ever_accessed_in_order
                 if first_access_step[k] < step_idx
-                and (not is_paused_for_choice and last_access_step[k] < step_idx or is_paused_for_choice and k != active)
+                and last_access_step[k] < step_idx
                 and k != active
                 and k != found
             ]
@@ -457,6 +534,7 @@ class VisualLinkedList:
         self.active_edge = None
         self.visited_edges = []
         self.step_accessed_nodes = set()
+        self.in_flight_nodes = set()
         self.pointer_vars = {}
         self._build_from_payload(payload)
 
@@ -514,21 +592,34 @@ class VisualLinkedList:
         u_s, v_s = str(u_id), str(v_id)
         self.active_edge = [u_s, v_s]
         self.step_accessed_nodes.add(u_s)
-        self.step_accessed_nodes.add(v_s)
         if [u_s, v_s] not in self.visited_edges:
             self.visited_edges.append([u_s, v_s])
 
     def on_step_start(self):
+        self.active_node = None
         self.step_accessed_nodes.clear()
+        self.in_flight_nodes.clear()
         self.active_edge = None
 
-    def on_line_fallback(self, loop_target_vars, frame_locals):
+    def on_line_fallback(self, loop_target_vars, frame_locals, all_frames_locals=None):
         self.pointer_vars.clear()
         for k, v in frame_locals.items():
             if isinstance(v, ListNode) and not k.startswith('_'):
-                self.pointer_vars[k] = str(v._id)
-                if self.active_node is None:
+                nid = str(v._id)
+                self.pointer_vars[k] = nid
+                if k != self.param_name:
+                    self.in_flight_nodes.add(nid)
+                if self.active_node is None and k != self.param_name:
                     self._record_node_access(v)
+        if self.active_node is None and self.pointer_vars:
+            first_nid = next(iter(self.pointer_vars.values()))
+            if first_nid in self.all_nodes:
+                self._record_node_access(self.all_nodes[first_nid])
+
+        for f_loc in (all_frames_locals or []):
+            for k, v in f_loc.items():
+                if isinstance(v, ListNode) and not k.startswith('_') and k != self.param_name:
+                    self.in_flight_nodes.add(str(v._id))
 
     def enhance_state_vars(self, state_vars):
         pass
@@ -539,6 +630,7 @@ class VisualLinkedList:
         self.active_node = None
         self.active_edge = None
         self.step_accessed_nodes.clear()
+        self.in_flight_nodes.clear()
         return self.snapshot(found_node=str(ret_val._id) if isinstance(ret_val, ListNode) else None)
 
     def snapshot(self, found_node=None):
@@ -582,6 +674,7 @@ class VisualLinkedList:
             edges=edges_out,
             pointers=dict(self.pointer_vars),
             _accessed=list(self.step_accessed_nodes),
+            _in_flight=list(self.in_flight_nodes),
         )
 
     def finalize_steps(self, trace_steps, is_paused_for_choice=False):
@@ -714,6 +807,7 @@ class VisualTree:
         self.active_edge = None
         self.visited_edges = []
         self.step_accessed_nodes = set()
+        self.in_flight_nodes = set()
         self.pointer_vars = {}
         self._adj_fallback = {}
         self._build_from_payload(payload)
@@ -818,7 +912,6 @@ class VisualTree:
         u_s, v_s = str(u_id), str(v_id)
         self.active_edge = [u_s, v_s]
         self.step_accessed_nodes.add(u_s)
-        self.step_accessed_nodes.add(v_s)
         if [u_s, v_s] not in self.visited_edges:
             self.visited_edges.append([u_s, v_s])
 
@@ -833,6 +926,7 @@ class VisualTree:
 
     def _on_edge_inspect(self, u_key, v_entry):
         v_str = str(v_entry[0]) if isinstance(v_entry, tuple) else str(v_entry)
+        self._record_node_access(u_key)
         self._record_edge_access(u_key, v_str)
 
     def get(self, key, default=None):
@@ -851,19 +945,33 @@ class VisualTree:
         return [_NodeId(nid) for nid in self.all_nodes.keys()]
 
     def on_step_start(self):
+        self.active_node = None
         self.step_accessed_nodes.clear()
+        self.in_flight_nodes.clear()
         self.active_edge = None
 
-    def on_line_fallback(self, loop_target_vars, frame_locals):
+    def on_line_fallback(self, loop_target_vars, frame_locals, all_frames_locals=None):
         self.pointer_vars.clear()
         for k, v in frame_locals.items():
             if isinstance(v, TreeNode) and not k.startswith('_'):
-                self.pointer_vars[k] = str(v._id)
+                nid = str(v._id)
+                self.pointer_vars[k] = nid
+                self.in_flight_nodes.add(nid)
                 if self.active_node is None:
                     self._record_node_access(v)
             elif isinstance(v, _NodeId) and str(v) in self.all_nodes:
+                nid = str(v)
+                self.in_flight_nodes.add(nid)
                 if self.active_node is None:
-                    self._record_node_access(str(v))
+                    self._record_node_access(nid)
+
+        for f_loc in (all_frames_locals or []):
+            for k, v in f_loc.items():
+                if k.startswith('_'): continue
+                if isinstance(v, TreeNode):
+                    self.in_flight_nodes.add(str(v._id))
+                elif isinstance(v, _NodeId) and str(v) in self.all_nodes:
+                    self.in_flight_nodes.add(str(v))
 
     def enhance_state_vars(self, state_vars):
         pass
@@ -874,6 +982,7 @@ class VisualTree:
         self.active_node = None
         self.active_edge = None
         self.step_accessed_nodes.clear()
+        self.in_flight_nodes.clear()
         found_id = str(ret_val._id) if isinstance(ret_val, TreeNode) else None
         return self.snapshot(found_node=found_id)
 
@@ -908,6 +1017,7 @@ class VisualTree:
             rootId=str(self.root._id) if self.root else None,
             nodes=nodes_out, edges=edges_out, pointers=dict(self.pointer_vars),
             _accessed=list(self.step_accessed_nodes),
+            _in_flight=list(self.in_flight_nodes),
         )
 
     def finalize_steps(self, trace_steps, is_paused_for_choice=False):
@@ -1045,9 +1155,12 @@ class VisualGraph(dict):
         self.active_edge_weight = None
         self.visited_edges = []
         self.step_accessed_nodes = set()
+        self.in_flight_nodes = set()
 
     def on_step_start(self):
+        self.active_node = None
         self.step_accessed_nodes.clear()
+        self.in_flight_nodes.clear()
 
     def record_visit(self, node_key):
         s_key = str(node_key)
@@ -1064,21 +1177,22 @@ class VisualGraph(dict):
         else:
             v_str = str(v_entry)
             self.active_edge_weight = self.edge_weights.get(f"{u_str}->{v_str}")
+        # Record u_str as actively expanded, and highlight edge (u_str, v_str),
+        # without falsely marking v_str as expanded yet.
         self.record_visit(u_str)
         self.active_edge = [u_str, v_str]
-        self.step_accessed_nodes.add(v_str)
 
     def _promote_discovered_edges(self, frame_locals):
         if not self.active_edge: return
         u_str, v_str = self.active_edge
-        
-        # Check only user queues/collections to see if node has been marked visited or enqueued
+
         for var_name, val in frame_locals.items():
             if var_name.startswith('_') or val is self:
                 continue
             if isinstance(val, (list, tuple, set, deque)):
                 for item in val:
-                    if str(item) == v_str:
+                    item_id = str(item[-1]) if isinstance(item, (list, tuple)) and item else str(item)
+                    if item_id == v_str or str(item) == v_str:
                         self._discovered_nodes.add(v_str)
                         break
             elif isinstance(val, dict):
@@ -1119,16 +1233,49 @@ class VisualGraph(dict):
     def items(self):
         return [(_NodeId(k), super().__getitem__(k)) for k in super().keys()]
 
-    def on_line_fallback(self, loop_target_vars, frame_locals):
-        for val in loop_target_vars:
-            if isinstance(val, _NodeId) and str(val) in self:
-                self.record_visit(str(val))
-                break
-            elif isinstance(val, tuple):
-                for sub in val:
-                    if isinstance(sub, _NodeId) and str(sub) in self:
-                        self.record_visit(str(sub))
-                        break
+    def on_line_fallback(self, loop_target_vars, frame_locals, all_frames_locals=None):
+        # 1. If a loop variable is a node (e.g., `for neighbor in graph[u]:`),
+        # keep the source node `u` active if we are inspecting its edge, otherwise record loop target
+        if self.active_edge and self.active_node is None:
+            self.record_visit(self.active_edge[0])
+
+        if self.active_node is None:
+            for val in loop_target_vars:
+                if isinstance(val, _NodeId) and str(val) in self:
+                    self.record_visit(str(val))
+                    break
+                elif isinstance(val, tuple):
+                    for sub in val:
+                        if isinstance(sub, _NodeId) and str(sub) in self:
+                            self.record_visit(str(sub))
+                            break
+
+        # 2. Check current frame scalar variables (e.g. `node`, `curr`, `u`) when backtracking
+        if self.active_node is None:
+            for k, val in frame_locals.items():
+                if k.startswith('_') or val is self:
+                    continue
+                if isinstance(val, _NodeId) and str(val) in self:
+                    self.record_visit(str(val))
+                    break
+
+        # 3. Track all nodes currently held in any call-stack frame (e.g. parent recursive calls)
+        # or active frontier queues/stacks so they are never marked completely visited prematurely.
+        for f_loc in (all_frames_locals or [frame_locals]):
+            for k, val in f_loc.items():
+                if k.startswith('_') or val is self:
+                    continue
+                if isinstance(val, _NodeId) and str(val) in self:
+                    self.in_flight_nodes.add(str(val))
+                elif isinstance(val, (list, deque)):
+                    for item in val:
+                        if isinstance(item, _NodeId) and str(item) in self:
+                            self.in_flight_nodes.add(str(item))
+                        elif isinstance(item, tuple):
+                            for sub in item:
+                                if isinstance(sub, _NodeId) and str(sub) in self:
+                                    self.in_flight_nodes.add(str(sub))
+
         self._promote_discovered_edges(frame_locals)
 
     def enhance_state_vars(self, state_vars): pass
@@ -1137,6 +1284,7 @@ class VisualGraph(dict):
         self.active_node = None
         self.active_edge = None
         self.step_accessed_nodes.clear()
+        self.in_flight_nodes.clear()
         return self.snapshot()
 
     def snapshot(self):
@@ -1152,39 +1300,11 @@ class VisualGraph(dict):
             visitedEdges=list(self.visited_edges),
             edgeWeights={k: _serialize(v) for k, v in self.edge_weights.items()},
             _accessed=list(self.step_accessed_nodes),
+            _in_flight=list(self.in_flight_nodes),
         )
 
     def finalize_steps(self, trace_steps, is_paused_for_choice=False):
         _finalize_node_steps(trace_steps, is_paused_for_choice)
-
-
-def _finalize_node_steps(trace_steps, is_paused_for_choice=False):
-    last_access_step = {}
-    first_access_step = {}
-    for step_idx, step in enumerate(trace_steps):
-        vis = step['visual']
-        accessed = vis.pop('_accessed', [])
-        if vis['activeNodeId'] is not None and vis['activeNodeId'] not in accessed:
-            accessed.append(vis['activeNodeId'])
-        for node_id in accessed:
-            if node_id not in first_access_step: first_access_step[node_id] = step_idx
-            last_access_step[node_id] = step_idx
-
-    ever_accessed_in_order = sorted(first_access_step.keys(), key=lambda k: first_access_step[k])
-    for step_idx, step in enumerate(trace_steps):
-        vis = step['visual']
-        active = vis['activeNodeId']
-        active_set = set(str(x) for x in (vis.get('activeNodeIds') or []))
-        if active is not None: active_set.add(str(active))
-        found = vis['foundNodeId']
-        visited = [
-            k for k in ever_accessed_in_order
-            if first_access_step[k] < step_idx
-            and (not is_paused_for_choice and last_access_step[k] < step_idx or is_paused_for_choice and k not in active_set)
-            and k not in active_set
-            and k != found
-        ]
-        vis['visitedNodes'] = visited
 
 
 # ----------------------------------------------------------------------------
@@ -1220,6 +1340,7 @@ class VisualMatrix(list):
         self.active_cell = None
         self.recent_accesses = {}
         self.step_accessed_cells = set()
+        self.in_flight_cells = set()
 
     def _record_cell(self, r, c):
         self.active_cell = [r, c]
@@ -1228,14 +1349,27 @@ class VisualMatrix(list):
         self.recent_accesses[f"{self.param_name}[{r}][{c}]"] = val
 
     def on_step_start(self):
+        self.active_cell = None
         self.recent_accesses.clear()
         self.step_accessed_cells.clear()
+        self.in_flight_cells.clear()
 
-    def on_line_fallback(self, loop_target_vars, frame_locals):
+    def on_line_fallback(self, loop_target_vars, frame_locals, all_frames_locals=None):
         if not self.recent_accesses and len(loop_target_vars) >= 2:
             r, c = loop_target_vars[0], loop_target_vars[1]
-            if isinstance(r, int) and isinstance(c, int) and 0 <= r < len(self) and 0 <= c < len(self[r]):
-                self._record_cell(r, c)
+            if isinstance(r, int) and not isinstance(r, bool) and isinstance(c, int) and not isinstance(c, bool):
+                if 0 <= r < len(self) and 0 <= c < len(self[r]):
+                    self._record_cell(r, c)
+
+        for f_loc in (all_frames_locals or [frame_locals]):
+            for r_key, c_key in (('r', 'c'), ('row', 'col'), ('i', 'j'), ('x', 'y')):
+                if r_key in f_loc and c_key in f_loc:
+                    r, c = f_loc[r_key], f_loc[c_key]
+                    if isinstance(r, int) and not isinstance(r, bool) and isinstance(c, int) and not isinstance(c, bool):
+                        if 0 <= r < len(self) and 0 <= c < len(self[r]):
+                            self.in_flight_cells.add((r, c))
+                            if self.active_cell is None and f_loc is frame_locals:
+                                self._record_cell(r, c)
 
     def enhance_state_vars(self, state_vars):
         for expr_str, val in self.recent_accesses.items():
@@ -1247,6 +1381,7 @@ class VisualMatrix(list):
             found_cell = [ret_val[0], ret_val[1]]
         self.active_cell = None
         self.step_accessed_cells.clear()
+        self.in_flight_cells.clear()
         return self.snapshot(found_cell)
 
     def snapshot(self, found_cell=None):
@@ -1259,6 +1394,7 @@ class VisualMatrix(list):
             foundCell=found_cell, checkedCells=[],
             grid=[[_serialize(cell) for cell in row] for row in self],
             _accessed=[list(c) for c in self.step_accessed_cells],
+            _in_flight=[list(c) for c in self.in_flight_cells],
         )
 
     def finalize_steps(self, trace_steps, is_paused_for_choice=False):
@@ -1267,12 +1403,16 @@ class VisualMatrix(list):
         for idx, step in enumerate(trace_steps):
             vis = step['visual']
             accessed = [tuple(x) for x in vis.pop('_accessed', [])]
+            in_flight = [tuple(x) for x in vis.pop('_in_flight', [])]
             if vis.get('activeCell'):
                 ac = tuple(vis['activeCell'])
                 if ac not in accessed: accessed.append(ac)
             for cell in accessed:
                 if cell not in first_step: first_step[cell] = idx
                 last_step[cell] = idx
+            for cell in in_flight:
+                if cell in first_step:
+                    last_step[cell] = max(last_step.get(cell, idx), idx)
 
         ordered = sorted(first_step.keys(), key=lambda c: first_step[c])
         for idx, step in enumerate(trace_steps):
@@ -1327,6 +1467,7 @@ class VisualHash:
         self.cache_status = None
         self.recent_accesses = {}
         self.step_accessed_keys = set()
+        self.in_flight_keys = set()
 
     def _record_key(self, key, val=None, status=None):
         s_key = str(_serialize(key))
@@ -1399,18 +1540,28 @@ class VisualHash:
     def __len__(self): return len(self._store)
 
     def on_step_start(self):
+        self.active_key = None
         self.recent_accesses.clear()
         self.step_accessed_keys.clear()
+        self.in_flight_keys.clear()
         self.evicted_key = None
         self.cache_status = None
 
-    def on_line_fallback(self, loop_target_vars, frame_locals): pass
+    def on_line_fallback(self, loop_target_vars, frame_locals, all_frames_locals=None):
+        if self.active_key is None:
+            for val in loop_target_vars:
+                if isinstance(val, (int, str, float, tuple)) and val in self._store:
+                    self._record_key(val, self._store.get(val))
+                    break
+
     def enhance_state_vars(self, state_vars):
         for expr_str, val in self.recent_accesses.items():
             state_vars[expr_str] = _serialize(val)
+
     def on_return(self, ret_val):
         self.active_key = None
         self.step_accessed_keys.clear()
+        self.in_flight_keys.clear()
         return self.snapshot()
 
     def snapshot(self):
@@ -1423,6 +1574,7 @@ class VisualHash:
             cacheStatus=self.cache_status, capacity=self.capacity,
             entries=entries, elements=[e['key'] if self.is_set else f"{e['key']}: {e['value']}" for e in entries],
             _accessed=list(self.step_accessed_keys),
+            _in_flight=list(self.in_flight_keys),
         )
 
     def finalize_steps(self, trace_steps, is_paused_for_choice=False):
@@ -1535,7 +1687,6 @@ try:
         _eval_kwargs[_k] = _val
 
     def _build_state_vars_and_callstack(frame, executed_lineno):
-        loc = {}
         curr_f = frame
         frames_chain = []
         while curr_f is not None and curr_f.f_code.co_filename == '<algorithm>':
@@ -1543,17 +1694,21 @@ try:
             curr_f = curr_f.f_back
 
         call_stack = []
+        all_frames_locals = []
+        merged_loc = {}
         for f_item in reversed(frames_chain):
-            loc.update(f_item.f_locals)
+            merged_loc.update(f_item.f_locals)
+            all_frames_locals.append(f_item.f_locals)
             f_args = {k: _serialize(v) for k, v in f_item.f_locals.items() if not k.startswith('_') and k != _first_param and not inspect.isfunction(v) and not inspect.ismodule(v)}
             call_stack.append({'func': f_item.f_code.co_name, 'line': f_item.f_lineno, 'locals': f_args})
 
+        current_frame_locals = frame.f_locals
         loop_var_names = _loop_targets.get(executed_lineno, [])
-        loop_var_vals = [loc[name] for name in loop_var_names if name in loc and name not in _param_names]
-        _visual_ds.on_line_fallback(loop_var_vals, loc)
+        loop_var_vals = [current_frame_locals[name] for name in loop_var_names if name in current_frame_locals and name not in _param_names]
+        _visual_ds.on_line_fallback(loop_var_vals, current_frame_locals, all_frames_locals)
 
         state_vars = {}
-        for k, v in loc.items():
+        for k, v in merged_loc.items():
             if not k.startswith('_') and k != _first_param and not inspect.isfunction(v) and not inspect.ismodule(v):
                 state_vars[k] = _serialize(v)
 
@@ -1586,6 +1741,7 @@ try:
                         'event': 'line', 'line': caller_pending['line'],
                         'stateVars': caller_state, 'visual': _capture_snapshot_with_stack(caller_stack),
                     })
+                    _visual_ds.on_step_start()
             return _tracer
 
         fid = id(frame)
@@ -1613,6 +1769,8 @@ try:
                     'event': 'return', 'line': frame.f_lineno,
                     'stateVars': ret_state_vars, 'visual': _capture_snapshot_with_stack(call_stack, final_visual),
                 })
+            else:
+                _visual_ds.on_step_start()
 
         return _tracer
 
