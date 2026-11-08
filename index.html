@@ -15,6 +15,11 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
 
+  <!-- CodeMirror Indent Guide Addon -->
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/codemirror-addon-indent-guide@1.0.1/src/indent-guide.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/codemirror-addon-indent-guide@1.0.1/dist/indent-guide.min.js"></script>
+
   <style>
     /* Property ordering
       1. position
@@ -3037,27 +3042,13 @@
 
     .CodeMirror-linenumber {
       padding-left: 0.5rem !important;
-      padding-right: 0.85rem !important;
+      padding-right: 1.25rem !important;
+      /* Pushes the border away from the numbers */
       color: var(--text-muted) !important;
     }
 
     .CodeMirror-lines {
-      padding-left: 0.75rem !important; 
-    }
-
-    .CodeMirror-line {
-      /* Uses the 'ch' unit (width of 1 character in monospace) to perfectly align with 4-space indents */
-      background: repeating-linear-gradient(
-        to right,
-        transparent,
-        transparent calc(4ch - 1px),
-        var(--border-subtle) calc(4ch - 1px),
-        var(--border-subtle) 4ch
-      );
-      /* Offset by 4px to match CodeMirror's default internal line padding */
-      background-position: 4px 0; 
-      /* Ensure it doesn't repeat vertically in weird ways if lines are tall */
-      background-size: 100% 100%;
+      padding-left: 0.5rem !important;
     }
 
     .CodeMirror-cursor {
@@ -3069,25 +3060,63 @@
     }
 
     /* Map CodeMirror tokens to your existing Dark/Light variables */
-    .cm-s-default .cm-keyword { color: var(--prism-keyword) !important; }
+    .cm-s-default .cm-keyword {
+      color: var(--prism-keyword) !important;
+    }
+
     .cm-s-default .cm-def,
-    .cm-s-default .cm-variable-2 { color: var(--prism-function) !important; }
+    .cm-s-default .cm-variable-2 {
+      color: var(--prism-function) !important;
+    }
+
     .cm-s-default .cm-variable,
-    .cm-s-default .cm-punctuation { color: var(--prism-color) !important; }
-    .cm-s-default .cm-operator { color: var(--prism-operator) !important; }
-    .cm-s-default .cm-number { color: var(--prism-number) !important; }
+    .cm-s-default .cm-punctuation {
+      color: var(--prism-color) !important;
+    }
+
+    .cm-s-default .cm-operator {
+      color: var(--prism-operator) !important;
+    }
+
+    .cm-s-default .cm-number {
+      color: var(--prism-number) !important;
+    }
+
     .cm-s-default .cm-string,
-    .cm-s-default .cm-string-2 { color: var(--prism-string) !important; }
-    .cm-s-default .cm-comment { color: var(--prism-comment) !important; }
+    .cm-s-default .cm-string-2 {
+      color: var(--prism-string) !important;
+    }
+
+    .cm-s-default .cm-comment {
+      color: var(--prism-comment) !important;
+    }
+
     .cm-s-default .cm-builtin,
     .cm-s-default .cm-atom,
-    .cm-s-default .cm-type { color: var(--prism-boolean) !important; }
-    .cm-s-default .cm-property { color: var(--prism-property) !important; }
+    .cm-s-default .cm-type {
+      color: var(--prism-boolean) !important;
+    }
+
+    .cm-s-default .cm-property {
+      color: var(--prism-property) !important;
+    }
 
     /* Active execution line highlight */
     .cm-active-sim-line {
       background: var(--code-line-highlight) !important;
     }
+
+    .cm-indent-guide {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      border-left: 1.25px solid rgba(128, 128, 128, 0.4) !important;
+
+      /* Reset the default addon styling that creates gaps */
+      height: auto !important;
+      background: none !important;
+    }
+
     /* ========== End of CodeMirror Syntax Highlighter Overrides ========== */
 
 
@@ -6760,6 +6789,7 @@
             lineWrapping: true,
             indentUnit: 4,
             tabSize: 4,
+            indentGuide: true
           });
 
           codeEditorInstance.on('change', () => {
