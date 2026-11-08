@@ -25,13 +25,20 @@ export async function breadth_first_search_bfs(containerEl, rawKwargs = {}, simO
     }
   });
 
-  const res = await fetch('algorithms/breadth_first_search_bfs.py');
-  const pythonCode = await res.text();
+  let pythonCode = simOptions.pythonCode;
+  if (!pythonCode) {
+    const res = await fetch('algorithms/breadth_first_search_bfs.py');
+    pythonCode = await res.text();
+  }
+
+  // Detect the entry-point function name from the user's code (fallback to 'breadth_first_search')
+  const fnMatch = pythonCode.match(/^\s*def\s+([a-zA-Z_]\w*)\s*\(/m);
+  const funcName = fnMatch ? fnMatch[1] : 'breadth_first_search';
 
   const { steps: pyFrames, error } = await tracePythonAlgorithm({
     dsCategory: 'graph',
     pythonCode,
-    funcName: 'breadth_first_search',
+    funcName,
     dsData: adjList,
     nodeLabels,
     rawKwargs,

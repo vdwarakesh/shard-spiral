@@ -5,10 +5,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Shard Spiral</title>
-  <link rel="stylesheet" href="css/prism.css" />
+
   <link rel="stylesheet" href="js/quickdraw/quickdraw.css" />
+
   <script src="js/tailwind.js"></script>
-  <script src="js/prism.js"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+
   <style>
     /* Property ordering
       1. position
@@ -3013,50 +3019,76 @@
 
     /* ========== End of interactive Code Signature Editor (Settings Card) ========== */
 
-    /* ========== Prism Syntax Highlighter Overrides ========== */
-    pre[class*=language-] {
-      /* pre[class*=language-] overrides default Prism.js pre margins and enables line wrapping inside #codeViewPane */
-      flex: 1 0 auto;
-      width: 100% !important;
-      min-width: 0 !important;
-      max-width: 100% !important;
-      margin: 0 !important;
-      padding-top: 1em !important;
-      padding-bottom: 1em !important;
-      border-radius: 0;
-      font-variant-ligatures: none !important;
-      white-space: pre-wrap !important;
-      word-break: normal !important;
-      word-wrap: break-word !important;
-      overflow-wrap: break-word !important;
-      overflow: visible !important;
-      box-sizing: border-box !important;
+    /* ========== CodeMirror Syntax Highlighter Overrides ========== */
+    .CodeMirror {
+      flex: 1 1 auto;
+      width: 100%;
+      height: 100% !important;
+      background-color: var(--prism-bg) !important;
+      color: var(--prism-color) !important;
+      font-family: 'Noto Sans Mono', monospace;
+      line-height: 1.65;
     }
 
-    code[class*=language-],
-    .line-numbers-sizer,
-    .line-numbers-sizer>span {
-      /* code[class*=language-] and .line-numbers-sizer override default Prism.js inline/nowrap styles so wrapped lines stay aligned with line numbers */
-      display: block !important;
-      width: 100% !important;
-      min-width: 0 !important;
-      font-variant-ligatures: none !important;
-      letter-spacing: normal !important;
-      word-spacing: normal !important;
-      white-space: pre-wrap !important;
-      word-break: normal !important;
-      word-wrap: break-word !important;
-      overflow-wrap: break-word !important;
-      box-sizing: border-box !important;
+    .CodeMirror-gutters {
+      background-color: var(--bg-card) !important;
+      border-right: 0.0625rem solid var(--prism-line-numbers-border) !important;
     }
 
-    .line-highlight {
-      /* .line-highlight overrides Prism's line-highlight plugin background to use the theme-aware gradient */
+    .CodeMirror-linenumber {
+      padding-left: 0.5rem !important;
+      padding-right: 0.85rem !important;
+      color: var(--text-muted) !important;
+    }
+
+    .CodeMirror-lines {
+      padding-left: 0.75rem !important; 
+    }
+
+    .CodeMirror-line {
+      /* Uses the 'ch' unit (width of 1 character in monospace) to perfectly align with 4-space indents */
+      background: repeating-linear-gradient(
+        to right,
+        transparent,
+        transparent calc(4ch - 1px),
+        var(--border-subtle) calc(4ch - 1px),
+        var(--border-subtle) 4ch
+      );
+      /* Offset by 4px to match CodeMirror's default internal line padding */
+      background-position: 4px 0; 
+      /* Ensure it doesn't repeat vertically in weird ways if lines are tall */
+      background-size: 100% 100%;
+    }
+
+    .CodeMirror-cursor {
+      border-left: 0.1rem solid var(--text-bright) !important;
+    }
+
+    .CodeMirror-selected {
+      background: var(--prism-selection-bg) !important;
+    }
+
+    /* Map CodeMirror tokens to your existing Dark/Light variables */
+    .cm-s-default .cm-keyword { color: var(--prism-keyword) !important; }
+    .cm-s-default .cm-def,
+    .cm-s-default .cm-variable-2 { color: var(--prism-function) !important; }
+    .cm-s-default .cm-variable,
+    .cm-s-default .cm-punctuation { color: var(--prism-color) !important; }
+    .cm-s-default .cm-operator { color: var(--prism-operator) !important; }
+    .cm-s-default .cm-number { color: var(--prism-number) !important; }
+    .cm-s-default .cm-string,
+    .cm-s-default .cm-string-2 { color: var(--prism-string) !important; }
+    .cm-s-default .cm-comment { color: var(--prism-comment) !important; }
+    .cm-s-default .cm-builtin,
+    .cm-s-default .cm-atom,
+    .cm-s-default .cm-type { color: var(--prism-boolean) !important; }
+    .cm-s-default .cm-property { color: var(--prism-property) !important; }
+
+    /* Active execution line highlight */
+    .cm-active-sim-line {
       background: var(--code-line-highlight) !important;
-      pointer-events: none;
     }
-
-    /* ========== End of Prism Syntax Highlighter Overrides ========== */
+    /* ========== End of CodeMirror Syntax Highlighter Overrides ========== */
 
 
     /* ========== Panel Collapse State Overrides ========== */
@@ -4944,6 +4976,9 @@
     let activeStateBottomTab = 'state';
     let currentLangExt = '.py';
     let currentPrismLang = 'python';
+    let codeEditorInstance = null;
+    let activeSimLineHandle = null;
+    const editedCodeCache = {};
     let resizeRafId = null;
 
     // Simulation & Playback State
@@ -6631,44 +6666,47 @@
       return step.lines?.[langName] ? step.lines[langName][step.activeLineKey] : '';
     }
 
-    function syncPrismLayout(pre) {
-      /* syncPrismLayout recalculates Prism.js line numbers and line-highlight overlays when #codeViewPane resizes or wraps lines */
-      if (!pre || !window.Prism) return;
+    function getCodeMirrorMode(lang) {
+      if (lang === 'cpp') return 'text/x-c++src';
+      if (lang === 'java') return 'text/x-java';
+      return 'python';
+    }
 
-      if (window.Prism.plugins?.lineNumbers?.resize) {
-        window.Prism.plugins.lineNumbers.resize(pre);
+    function getCurrentRunnablePythonCode() {
+      const formattedTarget = toSnakeCase(selectedDsaName || '');
+      const cacheKey = `${formattedTarget}.py`;
+      if (codeEditorInstance && activeRightTopTab === 'code' && currentLangExt === '.py') {
+        const liveCode = codeEditorInstance.getValue();
+        editedCodeCache[cacheKey] = liveCode;
+        return liveCode;
       }
-
-      if (window.Prism.plugins?.lineHighlight) {
-        const code = pre.querySelector('code');
-        pre.querySelectorAll('.line-highlight').forEach(el => el.remove());
-
-        const highlightLines = pre.getAttribute('data-line');
-        if (highlightLines) {
-          const reposition = window.Prism.plugins.lineHighlight.highlightLines(pre, highlightLines);
-          if (typeof reposition === 'function') reposition();
-        } else if (code) {
-          window.Prism.hooks.run('complete', { element: code });
-        }
-      }
+      return editedCodeCache[cacheKey] || null;
     }
 
     function highlightActiveCodeLine() {
-      /* Updates the data-line attribute on the Prism <pre> element and refreshes line highlight positioning */
-      const pre = codeViewPane.querySelector('pre.line-numbers');
-      if (!pre) return;
-      const lineStr = getActiveSimulationLine();
-      if (lineStr) {
-        pre.setAttribute('data-line', String(lineStr));
-      } else {
-        pre.removeAttribute('data-line');
+      if (!codeEditorInstance) return;
+
+      if (activeSimLineHandle !== null) {
+        codeEditorInstance.removeLineClass(activeSimLineHandle, 'background', 'cm-active-sim-line');
+        activeSimLineHandle = null;
       }
-      syncPrismLayout(pre);
+
+      const lineStr = getActiveSimulationLine();
+      const lineNum = parseInt(lineStr, 10);
+      if (!Number.isNaN(lineNum) && lineNum >= 1 && lineNum <= codeEditorInstance.lineCount()) {
+        activeSimLineHandle = codeEditorInstance.addLineClass(
+          lineNum - 1,
+          'background',
+          'cm-active-sim-line'
+        );
+        codeEditorInstance.scrollIntoView({ line: lineNum - 1, ch: 0 }, 60);
+      }
     }
 
     async function updateCodeViewPane() {
-      /* updateCodeViewPane loads and renders either the syntax-highlighted code file (.py, .cpp, .java) or the conceptual HTML notes (.html) into #codeViewPane */
       if (!selectedDsaName) {
+        codeEditorInstance = null;
+        activeSimLineHandle = null;
         codeViewPane.innerHTML = `
         <div class="card-inner-pad">
           <span class="card-body-text" style="color: var(--text-muted); text-align: center; display: block; margin-top: 1rem;">
@@ -6685,48 +6723,71 @@
       const formattedTarget = toSnakeCase(currentTarget);
       const folder = selectedDsaType === 'ds' ? 'data-structures' : 'algorithms';
       const filePath = `${folder}/${formattedTarget}${ext}`;
+      const cacheKey = `${formattedTarget}${ext}`;
 
       try {
-        const response = await fetch(filePath);
-        if (!response.ok) {
-          throw new Error('File not found');
+        let text;
+        if (currentTab === 'code' && editedCodeCache[cacheKey] !== undefined) {
+          text = editedCodeCache[cacheKey];
+        } else {
+          const response = await fetch(filePath);
+          if (!response.ok) throw new Error('File not found');
+          text = await response.text();
+          if (text.includes('<title>Shard Spiral</title>')) {
+            throw new Error('Fallback HTML returned');
+          }
+          if (currentTab === 'code') {
+            if (/^\s*<!doctype html/i.test(text) || /^\s*<html/i.test(text)) {
+              throw new Error('Unexpected HTML for code file');
+            }
+            text = text.replace(/\r\n?/g, '\n');
+            editedCodeCache[cacheKey] = text;
+          }
         }
-        const text = await response.text();
 
         if (selectedDsaName !== currentTarget || activeRightTopTab !== currentTab) return;
 
-        if (text.includes('<title>Shard Spiral</title>')) {
-          throw new Error('Fallback HTML returned');
-        }
-
         if (currentTab === 'notes') {
+          codeEditorInstance = null;
+          activeSimLineHandle = null;
           codeViewPane.innerHTML = `<div class="card-inner-pad notes-content">${text}</div>`;
         } else {
-          if (/^\s*<!doctype html/i.test(text) || /^\s*<html/i.test(text)) {
-            throw new Error('Unexpected HTML for code file');
-          }
-          const pre = document.createElement('pre');
-          pre.className = 'line-numbers';
-          const activeLine = getActiveSimulationLine();
-          if (activeLine) {
-            pre.setAttribute('data-line', activeLine);
-          }
-
-          const code = document.createElement('code');
-          code.className = `language-${currentPrismLang}`;
-          code.textContent = text.replace(/\r\n?/g, '\n');
-
-          pre.appendChild(code);
           codeViewPane.innerHTML = '';
-          codeViewPane.appendChild(pre);
+          codeEditorInstance = window.CodeMirror(codeViewPane, {
+            value: text,
+            mode: getCodeMirrorMode(currentPrismLang),
+            lineNumbers: true,
+            lineWrapping: true,
+            indentUnit: 4,
+            tabSize: 4,
+          });
 
-          if (window.Prism) {
-            window.Prism.highlightElement(code);
-            requestAnimationFrame(() => syncPrismLayout(pre));
-          }
+          codeEditorInstance.on('change', () => {
+            const updatedCode = codeEditorInstance.getValue();
+            editedCodeCache[cacheKey] = updatedCode;
+
+            // Reset active simulation if the user edits the code
+            if (window.isSimulating && typeof resetSimulation === 'function') {
+              resetSimulation();
+            }
+
+            // Re-sync Settings signature inputs if the user changes the Python def(...) line
+            if (selectedDsaType === 'algo' && currentLangExt === '.py') {
+              renderSignatureEditorFromCode(updatedCode);
+            }
+          });
+
+          requestAnimationFrame(() => {
+            if (codeEditorInstance) {
+              codeEditorInstance.refresh();
+              highlightActiveCodeLine();
+            }
+          });
         }
       } catch (err) {
         if (selectedDsaName !== currentTarget || activeRightTopTab !== currentTab) return;
+        codeEditorInstance = null;
+        activeSimLineHandle = null;
         codeViewPane.innerHTML = `
         <div class="card-inner-pad">
           <span class="card-body-text">Algorithm/Data structure not implemented yet</span>
@@ -6863,11 +6924,10 @@
 
     /* ResizeObserver for Prism Code Layout & Event Listeners for Code/Notes Tabs, Language Selector, Copy/Download Buttons, and State/Explanation Tabs */
     const codePaneResizeObserver = new ResizeObserver(() => {
-      if (activeRightTopTab !== 'code' || !window.Prism) return;
+      if (activeRightTopTab !== 'code' || !codeEditorInstance) return;
       if (resizeRafId) cancelAnimationFrame(resizeRafId);
       resizeRafId = requestAnimationFrame(() => {
-        const pre = codeViewPane.querySelector('pre.line-numbers');
-        syncPrismLayout(pre);
+        codeEditorInstance.refresh();
       });
     });
     codePaneResizeObserver.observe(codeViewPane);
@@ -6943,10 +7003,8 @@
     } catch (e) { }
 
     btnCopyCode.addEventListener('click', () => {
-      const codeElement = document.querySelector('#codeViewPane code');
-      if (!codeElement) return;
-
-      navigator.clipboard.writeText(codeElement.textContent).then(() => {
+      if (!codeEditorInstance) return;
+      navigator.clipboard.writeText(codeEditorInstance.getValue()).then(() => {
         imgCopyCode.src = 'images/success.png';
         setTimeout(() => {
           imgCopyCode.src = 'images/copy.png';
@@ -6955,12 +7013,10 @@
     });
 
     btnDownloadCode.addEventListener('click', () => {
-      const codeElement = document.querySelector('#codeViewPane code');
-      if (!codeElement) return;
-
+      if (!codeEditorInstance) return;
       const activeOption = document.querySelector('#lang-dropdown-menu .lang-option-item.active');
       const ext = activeOption ? activeOption.getAttribute('data-ext') : '.txt';
-      const codeText = codeElement.textContent;
+      const codeText = codeEditorInstance.getValue();
       const baseName = toSnakeCase(selectedDsaName || 'algorithm');
 
       const blob = new Blob([codeText], { type: 'text/plain' });
@@ -7780,6 +7836,58 @@
       return { funcName, params };
     }
 
+    function renderSignatureEditorFromCode(pyCode) {
+      const configContainer = document.getElementById('algo-config-container');
+      if (!configContainer) return;
+
+      // Preserve any parameter values the user already typed
+      const existingValues = {};
+      configContainer.querySelectorAll('.sig-inline-input').forEach(inp => {
+        existingValues[inp.getAttribute('data-param-name')] = inp.value;
+      });
+
+      const sig = parsePythonSignature(pyCode);
+      if (!sig) {
+        if (algoSettingsSubmitBtn) algoSettingsSubmitBtn.style.display = 'none';
+        configContainer.style.color = 'var(--text-muted)';
+        configContainer.textContent = 'No top-level Python def found in editor.';
+        return;
+      }
+
+      const activeObj = dsContainers.find(c => c.name === activeContainerName);
+      const dsLabel = activeObj ? `${activeObj.name} (${activeObj.dsType})` : 'No active DS';
+
+      const linesHtml = sig.params.map((p, idx) => {
+        const comma = idx < sig.params.length - 1 ? '<span class="token punctuation">,</span>' : '';
+        if (p.isDataStructure) {
+          return `  <span class="token property">${p.name}</span> <span class="token operator">=</span> <span id="sig-active-ds-badge" class="sig-ds-linked-badge">${dsLabel}</span>${comma}`;
+        }
+        const placeholder = p.hasDefault ? p.defaultVal : 'required';
+        const valAttr = existingValues[p.name] !== undefined
+          ? `value="${existingValues[p.name].replace(/"/g, '&quot;')}"`
+          : '';
+        return `  <span class="token property">${p.name}</span> <span class="token operator">=</span> <input type="text" class="sig-inline-input" data-param-name="${p.name}" data-has-default="${p.hasDefault}" placeholder="${placeholder}" ${valAttr} />${comma}`;
+      }).join('\n');
+
+      configContainer.style.color = 'inherit';
+      configContainer.innerHTML = `<pre class="signature-editor-pre language-python"><code class="language-python"><span class="token function">${sig.funcName}</span><span class="token punctuation">(</span>\n${linesHtml}\n<span class="token punctuation">)</span></code></pre>`;
+
+      if (algoSettingsSubmitBtn) {
+        algoSettingsSubmitBtn.textContent = 'Run';
+      }
+      if (typeof updatePlaybackCompatibilityUI === 'function') {
+        updatePlaybackCompatibilityUI();
+      }
+
+      configContainer.querySelectorAll('.sig-inline-input').forEach(inp => {
+        inp.addEventListener('input', () => {
+          if (window.isSimulating && typeof resetSimulation === 'function') {
+            resetSimulation();
+          }
+        });
+      });
+    }
+
     async function updateAlgorithmSettings(name, parentDsName = null, itemType = 'algo') {
       /* Populates #algo-settings-card with either Attributes + "Creation Settings" (for DS) or Constraints & Tags + interactive <pre><code> signature (for Algorithms) */
       const configHeading = document.getElementById('algo-config-heading');
@@ -7980,45 +8088,16 @@
       const formattedTarget = toSnakeCase(name);
 
       try {
-        const res = await fetch(`algorithms/${formattedTarget}.py`);
-        if (!res.ok) throw new Error('Python file not found');
-        const pyCode = await res.text();
+        const cacheKey = `${formattedTarget}.py`;
+        let pyCode = getCurrentRunnablePythonCode();
+        if (!pyCode) {
+          const res = await fetch(`algorithms/${formattedTarget}.py`);
+          if (!res.ok) throw new Error('Python file not found');
+          pyCode = (await res.text()).replace(/\r\n?/g, '\n');
+          editedCodeCache[cacheKey] = pyCode;
+        }
         if (selectedDsaName !== name) return;
-
-        const sig = parsePythonSignature(pyCode);
-        if (!sig) throw new Error('No function signature found');
-
-        const activeObj = dsContainers.find(c => c.name === activeContainerName);
-        const dsLabel = activeObj ? `${activeObj.name} (${activeObj.dsType})` : 'No active DS';
-
-        const linesHtml = sig.params.map((p, idx) => {
-          const comma = idx < sig.params.length - 1 ? '<span class="token punctuation">,</span>' : '';
-          if (p.isDataStructure) {
-            return `  <span class="token property">${p.name}</span> <span class="token operator">=</span> <span id="sig-active-ds-badge" class="sig-ds-linked-badge">${dsLabel}</span>${comma}`;
-          }
-          const placeholder = p.hasDefault ? p.defaultVal : 'required';
-          return `  <span class="token property">${p.name}</span> <span class="token operator">=</span> <input type="text" class="sig-inline-input" data-param-name="${p.name}" data-has-default="${p.hasDefault}" placeholder="${placeholder}" />${comma}`;
-        }).join('\n');
-
-        configContainer.style.color = 'inherit';
-        configContainer.innerHTML = `<pre class="signature-editor-pre language-python"><code class="language-python"><span class="token function">${sig.funcName}</span><span class="token punctuation">(</span>\n${linesHtml}\n<span class="token punctuation">)</span></code></pre>`;
-
-        // Set the text to "Run", but let the compatibility checker decide if it should be visible
-        if (algoSettingsSubmitBtn) {
-          algoSettingsSubmitBtn.textContent = 'Run';
-        }
-        if (typeof updatePlaybackCompatibilityUI === 'function') {
-          updatePlaybackCompatibilityUI();
-        }
-
-        // Reset any running simulation if the user edits a parameter in the signature
-        configContainer.querySelectorAll('.sig-inline-input').forEach(inp => {
-          inp.addEventListener('input', () => {
-            if (window.isSimulating && typeof resetSimulation === 'function') {
-              resetSimulation();
-            }
-          });
-        });
+        renderSignatureEditorFromCode(pyCode);
       } catch (err) {
         if (algoSettingsSubmitBtn) algoSettingsSubmitBtn.style.display = 'none';
         const algoIncompatibleMsg = document.getElementById('algo-settings-incompatible-msg');
@@ -8401,10 +8480,20 @@
           return false;
         }
 
-        // 4. Pass the container element, rawKwargs, and manual interaction options
+        // 4. Pass the container element, rawKwargs, manual interaction options, AND live CodeMirror code
+        let pythonCodeToRun = getCurrentRunnablePythonCode();
+        if (!pythonCodeToRun) {
+          const pyRes = await fetch(`algorithms/${fileBase}.py`);
+          if (pyRes.ok) {
+            pythonCodeToRun = (await pyRes.text()).replace(/\r\n?/g, '\n');
+            editedCodeCache[`${fileBase}.py`] = pythonCodeToRun;
+          }
+        }
+
         const result = await algoFn(activeObj.element, rawKwargs, {
           mode: simMode,
           userChoices: simUserChoices.map(c => c.chosenId),
+          pythonCode: pythonCodeToRun,
         });
 
         if (result.error && (!result.steps || result.steps.length === 0)) {
