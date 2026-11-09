@@ -5,15 +5,16 @@ def depth_first_search(graph, start_node=None):
         start_node = next(iter(graph))
     if start_node not in graph:
         return []
+        
     visited = []
     order = []
-
-    def dfs(node):
+    
+    def _dfs(node):
         visited.append(node)
         order.append(node)
         for neighbor in graph[node]:
             if neighbor not in visited:
-                dfs(neighbor)
-
-    dfs(start_node)
+                _dfs(neighbor)
+                
+    _dfs(start_node)
     return order

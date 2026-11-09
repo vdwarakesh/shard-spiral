@@ -167,11 +167,24 @@ class VisualGraph(dict):
         self.record_visit(str(u_key))
 
     def _promote_discovered_edges(self, frame_locals):
-        for val in frame_locals.values():
+        for name, val in frame_locals.items():
             if isinstance(val, (list, tuple, set, deque)):
                 for item in val:
                     if isinstance(item, _NodeId) or str(item) in self:
                         self._discovered_nodes.add(str(item))
+                    elif isinstance(item, (list, tuple)) and len(item) >= 2:
+                        # Support priority queue tuples like (dist, node) or (weight, u, v)
+                        for sub in item:
+                            if isinstance(sub, _NodeId) or (isinstance(sub, str) and sub in self):
+                                self._discovered_nodes.add(str(sub))
+            elif isinstance(val, dict) and val is not self:
+                # Support dict trackers like parent = {v: u} or dist = {v: d}
+                for k, v in val.items():
+                    if (isinstance(k, _NodeId) or str(k) in self) and v is not None and v != float('inf'):
+                        self._discovered_nodes.add(str(k))
+                    if isinstance(v, _NodeId) and str(v) in self:
+                        self._discovered_nodes.add(str(v))
+
         if not self.active_edge:
             return
         u_str, v_str = self.active_edge
@@ -323,6 +336,7 @@ def _serialize(v):
 
 def _build_ast_line_info(code_str):
     loop_targets = {}
+    assign_targets = {}
     while_lines = set()
     top_level_funcs = []
     try:
@@ -338,11 +352,25 @@ def _build_ast_line_info(code_str):
                 ]
                 if names:
                     loop_targets.setdefault(node.lineno, []).extend(names)
+            elif isinstance(node, ast.Assign) and hasattr(node, 'lineno'):
+                names = [
+                    sub.id for t in node.targets for sub in ast.walk(t)
+                    if isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Store)
+                ]
+                if names:
+                    assign_targets.setdefault(node.lineno, []).extend(names)
+            elif isinstance(node, ast.AnnAssign) and hasattr(node, 'lineno') and node.target:
+                names = [
+                    sub.id for sub in ast.walk(node.target)
+                    if isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Store)
+                ]
+                if names:
+                    assign_targets.setdefault(node.lineno, []).extend(names)
             elif isinstance(node, ast.While) and hasattr(node, 'lineno'):
                 while_lines.add(node.lineno)
     except Exception:
         pass
-    return loop_targets, while_lines, top_level_funcs
+    return loop_targets, assign_targets, while_lines, top_level_funcs
 
 
 def _extract_algo_line(exc_tb):
@@ -357,7 +385,7 @@ try:
     _ns = {}
     exec(compile(_user_code, '<algorithm>', 'exec'), _ns)
 
-    _loop_targets, _while_lines, _top_level_funcs = _build_ast_line_info(_user_code)
+    _loop_targets, _assign_targets, _while_lines, _top_level_funcs = _build_ast_line_info(_user_code)
 
     # Guard against __init__ or missing function names by picking the first top-level function
     if (_func_name not in _ns or _func_name.startswith('__')) and _top_level_funcs:
@@ -416,11 +444,19 @@ try:
             is_while_line=(executed_lineno in _while_lines)
         )
 
-        # Also update active_node if `node` was just assigned (e.g. `node = queue.pop(0)`)
-        if not _visual_ds.active_edge and executed_lineno not in _while_lines and not _visual_ds._loop_exhausted_on_step:
-            for k, v in loc.items():
-                if k not in _param_names and k not in _exhausted_loop_vars and isinstance(v, _NodeId) and str(v) in _visual_ds:
-                    _visual_ds.record_visit(str(v))
+        # Only highlight newly assigned node variables on this specific line
+        # (e.g. `node = queue.pop(0)`, `_, u = heapq.heappop(pq)`, `v = parent[v]`)
+        assigned_names = _assign_targets.get(executed_lineno, [])
+        if assigned_names and not _visual_ds._loop_exhausted_on_step:
+            _visual_ds.active_edge = None
+            for name in assigned_names:
+                val = loc.get(name)
+                if isinstance(val, _NodeId) and str(val) in _visual_ds:
+                    _visual_ds.record_visit(str(val))
+                elif isinstance(val, (list, tuple)):
+                    for item in val:
+                        if isinstance(item, _NodeId) and str(item) in _visual_ds:
+                            _visual_ds.record_visit(str(item))
 
         state_vars = {}
         for k, v in loc.items():
@@ -527,8 +563,9 @@ except _WaitForUserChoice as pause_exc:
         for _lvar in _loop_targets.get(_pline, []):
             _pstate.pop(_lvar, None)
         _pvis = _visual_ds.snapshot()
-        _pvis['activeNodeId'] = None
-        _pvis['activeNodeIds'] = []
+        _src_id = pause_exc.interaction.get('sourceNodeId')
+        _pvis['activeNodeId'] = _src_id
+        _pvis['activeNodeIds'] = [_src_id] if _src_id is not None else []
         _pvis['activeEdge'] = None
         _trace_steps.append({
             'event': 'line',

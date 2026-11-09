@@ -69,6 +69,7 @@ export const GRAPH_HYPERPARAMETERS = {
   EDGE_VISITED_VAR: '--ds-checked-secondary',
 
   CANDIDATE_VAR: '--ds-current-fill',
+  SOURCE_NODE_VAR: '--ds-hover-secondary',
   DEFAULT_ALPHA: 1,
 };
 
@@ -99,6 +100,7 @@ function resolveStyleHyperparameters(hp) {
   resolved.EDGE_VISITED = readVar(hp.EDGE_VISITED_VAR);
   resolved.CURRENT_FILL = readVar(hp.CURRENT_FILL_VAR);
   resolved.CHECKED_COLOR = readVar(hp.CHECKED_COLOR_VAR);
+  resolved.SOURCE_NODE = rootStyle.getPropertyValue(hp.SOURCE_NODE_VAR).trim() || resolved.CHECKED_COLOR;
 
   return resolved;
 }
@@ -1108,13 +1110,18 @@ export function drawGraph(containerEl, camera = { x: 0, y: 0, z: 1 }, customHype
     const isCandidateNode =
       simStep?.interaction?.candidateNodeIds &&
       simStep.interaction.candidateNodeIds.map(String).includes(nodeIdStr);
+    const isSourceNode =
+      simStep?.interaction?.sourceNodeId !== undefined &&
+      String(simStep.interaction.sourceNodeId) === nodeIdStr;
 
     let fillColor = hp.NODE_FILL;
 
     if (draggedNode === node) {
       fillColor = hp.NODE_DRAG_FILL;
+    } else if (isSourceNode) {
+      fillColor = hp.SOURCE_NODE; // Highlights the "from" vertex during manual choice!
     } else if (isCandidateNode) {
-      fillColor = hp.CURRENT_FILL;
+      fillColor = hp.CANDIDATE;   // Highlights the selectable "to" vertices!
     } else if (simStep) {
       const isVisited = Array.isArray(simStep.visitedNodes) && simStep.visitedNodes.map(String).includes(nodeIdStr);
       const isEndpointOfActiveEdge =

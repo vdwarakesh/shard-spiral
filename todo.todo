@@ -7,8 +7,9 @@ constraints and attributes description might be incomplete - verify
 update syllabus
 add other graph algorithms
 
-Selection double tap on mobile - not working reliably.
-Double tap recenter - not correct - mobile
+dfs recursive unable to select, repeatedly asking for click
+dijkstras algorithm:
+Calculating candidate distance to '2': 0 + 3 = 3 this step is neither highlighting node 2 nor the edge from 1 to 2
 
 
 Update syllabus (Double check)
