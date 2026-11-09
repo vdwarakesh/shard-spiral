@@ -387,7 +387,6 @@ try:
 
     _loop_targets, _assign_targets, _while_lines, _top_level_funcs = _build_ast_line_info(_user_code)
 
-    # Guard against __init__ or missing function names by picking the first top-level function
     if (_func_name not in _ns or _func_name.startswith('__')) and _top_level_funcs:
         _func_name = _top_level_funcs[0]
 
@@ -399,6 +398,17 @@ try:
     _param_names = set(_sig_params)
     _first_param = _sig_params[0] if _sig_params else 'graph'
     _exhausted_loop_vars = set()
+
+    # Unique ID per live frame so recursive calls never collide via CPython id(frame) reuse
+    _frame_uid_map = {}
+    _next_frame_uid = 0
+
+    def _get_frame_uid(f):
+        global _next_frame_uid
+        if f not in _frame_uid_map:
+            _next_frame_uid += 1
+            _frame_uid_map[f] = _next_frame_uid
+        return _frame_uid_map[f]
 
     _visual_ds = VisualGraph(_payload)
 
@@ -428,10 +438,8 @@ try:
         loop_var_names = _loop_targets.get(executed_lineno, [])
         if loop_var_names:
             if _visual_ds._loop_exhausted_on_step:
-                # The `for` loop just terminated; mark its target variable(s) as exhausted
                 _exhausted_loop_vars.update(loop_var_names)
             else:
-                # The `for` loop is actively yielding a new item
                 _exhausted_loop_vars.difference_update(loop_var_names)
 
         loop_var_vals = [
@@ -444,19 +452,26 @@ try:
             is_while_line=(executed_lineno in _while_lines)
         )
 
-        # Only highlight newly assigned node variables on this specific line
-        # (e.g. `node = queue.pop(0)`, `_, u = heapq.heappop(pq)`, `v = parent[v]`)
+        # Only clear active_edge and switch active_node if a variable assigned on THIS line
+        # holds a _NodeId (e.g., `node = queue.pop(0)` or `curr_dist, node = heapq.heappop(pq)`).
+        # Numeric assignments like `new_dist = curr_dist + weight` keep active_edge intact!
         assigned_names = _assign_targets.get(executed_lineno, [])
         if assigned_names and not _visual_ds._loop_exhausted_on_step:
-            _visual_ds.active_edge = None
+            assigned_node_ids = []
             for name in assigned_names:
+                if name in _param_names:
+                    continue
                 val = loc.get(name)
                 if isinstance(val, _NodeId) and str(val) in _visual_ds:
-                    _visual_ds.record_visit(str(val))
+                    assigned_node_ids.append(str(val))
                 elif isinstance(val, (list, tuple)):
                     for item in val:
                         if isinstance(item, _NodeId) and str(item) in _visual_ds:
-                            _visual_ds.record_visit(str(item))
+                            assigned_node_ids.append(str(item))
+            if assigned_node_ids:
+                _visual_ds.active_edge = None
+                for nid in assigned_node_ids:
+                    _visual_ds.record_visit(nid)
 
         state_vars = {}
         for k, v in loc.items():
@@ -484,9 +499,10 @@ try:
             )
 
         if event == 'call':
+            _get_frame_uid(frame)
             caller = frame.f_back
             if caller is not None and caller.f_code.co_filename == '<algorithm>':
-                caller_fid = id(caller)
+                caller_fid = _get_frame_uid(caller)
                 caller_pending = _pending_steps.pop(caller_fid, None)
                 if caller_pending is not None:
                     caller_state = _build_state_vars(caller, caller_pending['line'])
@@ -496,9 +512,16 @@ try:
                         'stateVars': caller_state,
                         'visual': _visual_ds.snapshot(),
                     })
+                # Entering a recursive helper call (e.g. `_dfs(neighbor)`):
+                # clear the parent's active_edge and highlight the new frame's _NodeId argument
+                for k, v in frame.f_locals.items():
+                    if k != _first_param and isinstance(v, _NodeId) and str(v) in _visual_ds:
+                        _visual_ds.active_edge = None
+                        _visual_ds.record_visit(str(v))
+                _visual_ds.on_step_start()
             return _tracer
 
-        fid = id(frame)
+        fid = _get_frame_uid(frame)
         pending = _pending_steps.pop(fid, None)
         executed_line = pending['line'] if pending is not None else frame.f_lineno
 
@@ -516,6 +539,7 @@ try:
             _visual_ds.on_step_start()
             _pending_steps[fid] = {'line': frame.f_lineno}
         else:  # 'return'
+            _frame_uid_map.pop(frame, None)
             if frame.f_code.co_name == _func_name:
                 ret_val = _serialize(arg)
                 ret_state_vars = dict(state_vars)
@@ -528,6 +552,16 @@ try:
                     'stateVars': ret_state_vars,
                     'visual': final_visual,
                 })
+            else:
+                # Returning from recursive helper `_dfs` back to caller frame:
+                # restore caller's active node so backtracking highlights the parent node
+                caller = frame.f_back
+                if caller is not None and caller.f_code.co_filename == '<algorithm>':
+                    _visual_ds.active_edge = None
+                    for k, v in caller.f_locals.items():
+                        if k != _first_param and k not in _loop_targets.get(caller.f_lineno, []) and isinstance(v, _NodeId) and str(v) in _visual_ds:
+                            _visual_ds.record_visit(str(v))
+                            break
 
         return _tracer
 
@@ -544,9 +578,6 @@ try:
     _visual_ds.finalize_steps(_trace_steps)
 
 except _WaitForUserChoice as pause_exc:
-    # Flush the line where the choice was triggered (e.g. 'for neighbor in graph[node]:')
-    # and clear activeNodeId / activeNodeIds / activeEdge on this step so ONLY
-    # interaction.candidateNodeIds and interaction.candidateEdges are highlighted!
     _, _, _tb = sys.exc_info()
     _pause_frame = None
     _curr_tb = _tb
@@ -556,7 +587,7 @@ except _WaitForUserChoice as pause_exc:
         _curr_tb = _curr_tb.tb_next
 
     if _pause_frame is not None:
-        _pfid = id(_pause_frame)
+        _pfid = _get_frame_uid(_pause_frame)
         _pending = _pending_steps.pop(_pfid, None)
         _pline = _pending['line'] if _pending is not None else _pause_frame.f_lineno
         _pstate = _build_state_vars(_pause_frame, _pline)
