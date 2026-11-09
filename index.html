@@ -6704,12 +6704,17 @@
     function getCurrentRunnablePythonCode() {
       const formattedTarget = toSnakeCase(selectedDsaName || '');
       const cacheKey = `${formattedTarget}.py`;
-      if (codeEditorInstance && activeRightTopTab === 'code' && currentLangExt === '.py') {
+      if (
+        codeEditorInstance &&
+        codeEditorInstance._loadedCacheKey === cacheKey &&
+        activeRightTopTab === 'code' &&
+        currentLangExt === '.py'
+      ) {
         const liveCode = codeEditorInstance.getValue();
         editedCodeCache[cacheKey] = liveCode;
         return liveCode;
       }
-      return editedCodeCache[cacheKey] || null;
+      return editedCodeCache[cacheKey] !== undefined ? editedCodeCache[cacheKey] : null;
     }
 
     function highlightActiveCodeLine() {
@@ -6791,6 +6796,7 @@
             tabSize: 4,
             indentGuide: true
           });
+          codeEditorInstance._loadedCacheKey = cacheKey;
 
           codeEditorInstance.on('change', () => {
             const updatedCode = codeEditorInstance.getValue();
@@ -7813,8 +7819,8 @@
     }
 
     function parsePythonSignature(pyCode) {
-      /* Extracts function name and parameters (with optional defaults) from the first top-level def */
-      const match = pyCode.match(/^\s*def\s+([a-zA-Z_]\w*)\s*\(([^)]*)\)/m);
+      /* Extracts function name and parameters (with optional defaults) from the first top-level non-dunder def */
+      const match = pyCode.match(/^def\s+(?!__\w+__)([a-zA-Z_]\w*)\s*\(([^)]*)\)/m);
       if (!match) return null;
       const funcName = match[1];
       const rawParams = match[2].trim();

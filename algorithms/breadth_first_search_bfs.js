@@ -32,7 +32,7 @@ export async function breadth_first_search_bfs(containerEl, rawKwargs = {}, simO
   }
 
   // Detect the entry-point function name from the user's code (fallback to 'breadth_first_search')
-  const fnMatch = pythonCode.match(/^\s*def\s+([a-zA-Z_]\w*)\s*\(/m);
+  const fnMatch = pythonCode.match(/^def\s+(?!__\w+__)([a-zA-Z_]\w*)\s*\(/m);
   const funcName = fnMatch ? fnMatch[1] : 'breadth_first_search';
 
   const { steps: pyFrames, error } = await tracePythonAlgorithm({
@@ -77,7 +77,7 @@ export async function breadth_first_search_bfs(containerEl, rawKwargs = {}, simO
       stepDescription = `Visiting node '${sv.node}' - order is now [${(sv.order || []).join(', ')}]`;
     } else if (pyLine === 14) {
       stepDescription =
-        sv.neighbor !== undefined
+        vis.activeEdge && sv.neighbor !== undefined
           ? `Inspecting edge from '${sv.node}' to neighbor '${sv.neighbor}'`
           : `Finished checking all neighbors of '${sv.node}'`;
     } else if (pyLine === 15) {
@@ -105,6 +105,7 @@ export async function breadth_first_search_bfs(containerEl, rawKwargs = {}, simO
       foundIndex: -1,
       checkedIndices: [],
       activeNodeId: vis.activeNodeId,
+      activeNodeIds: vis.activeNodeIds || [],
       foundNodeId: null,
       visitedNodes: vis.visitedNodes,
       activeEdge: vis.activeEdge,

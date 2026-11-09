@@ -50,7 +50,7 @@ class _GraphNeighborList(list):
             for nb in items_list:
                 self._graph._on_edge_inspect(self._source, nb)
                 yield nb
-            self._graph.active_edge = None
+            self._graph._on_neighbor_loop_end(self._source)
             return
 
         remaining = list(items_list)
@@ -97,7 +97,7 @@ class _GraphNeighborList(list):
             self._graph._on_edge_inspect(self._source, nb)
             yield nb
 
-        self._graph.active_edge = None
+        self._graph._on_neighbor_loop_end(self._source)
 
     def __iter__(self):
         return self._iterate_items(super().__iter__())
@@ -138,9 +138,11 @@ class VisualGraph(dict):
         self.active_edge = None
         self.visited_edges = []
         self.step_accessed_nodes = set()
+        self._loop_exhausted_on_step = False
 
     def on_step_start(self):
         self.step_accessed_nodes.clear()
+        self._loop_exhausted_on_step = False
 
     def record_visit(self, node_key):
         s_key = str(node_key)
@@ -153,10 +155,16 @@ class VisualGraph(dict):
     def _on_edge_inspect(self, u_key, v_entry):
         u_str = str(u_key)
         v_str = str(v_entry[0]) if isinstance(v_entry, tuple) else str(v_entry)
+        self._loop_exhausted_on_step = False
         self.record_visit(u_str)
         self.active_edge = [u_str, v_str]
         if v_str in self:
             self.step_accessed_nodes.add(v_str)
+
+    def _on_neighbor_loop_end(self, u_key):
+        self.active_edge = None
+        self._loop_exhausted_on_step = True
+        self.record_visit(str(u_key))
 
     def _promote_discovered_edges(self, frame_locals):
         for val in frame_locals.values():
@@ -192,8 +200,14 @@ class VisualGraph(dict):
     def keys(self):
         return [_NodeId(k) for k in super().keys()]
 
-    def on_line_fallback(self, loop_target_vars, frame_locals):
-        if not self.active_edge:
+    def on_line_fallback(self, loop_target_vars, frame_locals, is_while_line=False):
+        if is_while_line:
+            # When evaluating a `while` loop header (e.g. `while queue:`),
+            # clear active_edge and active_node so the previously inspected
+            # neighbor/node doesn't stay highlighted during the queue check.
+            self.active_edge = None
+            self.active_node = None
+        elif not self.active_edge and not self._loop_exhausted_on_step:
             for val in loop_target_vars:
                 if isinstance(val, _NodeId) and str(val) in self:
                     self.record_visit(str(val))
@@ -307,10 +321,15 @@ def _serialize(v):
     return repr(v)
 
 
-def _build_loop_target_names(code_str):
-    line_map = {}
+def _build_ast_line_info(code_str):
+    loop_targets = {}
+    while_lines = set()
+    top_level_funcs = []
     try:
         tree = ast.parse(code_str)
+        for node in tree.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and not node.name.startswith('__'):
+                top_level_funcs.append(node.name)
         for node in ast.walk(tree):
             if isinstance(node, (ast.For, ast.AsyncFor)) and hasattr(node, 'lineno'):
                 names = [
@@ -318,10 +337,12 @@ def _build_loop_target_names(code_str):
                     if isinstance(sub, ast.Name) and isinstance(sub.ctx, ast.Store)
                 ]
                 if names:
-                    line_map.setdefault(node.lineno, []).extend(names)
+                    loop_targets.setdefault(node.lineno, []).extend(names)
+            elif isinstance(node, ast.While) and hasattr(node, 'lineno'):
+                while_lines.add(node.lineno)
     except Exception:
         pass
-    return line_map
+    return loop_targets, while_lines, top_level_funcs
 
 
 def _extract_algo_line(exc_tb):
@@ -336,6 +357,12 @@ try:
     _ns = {}
     exec(compile(_user_code, '<algorithm>', 'exec'), _ns)
 
+    _loop_targets, _while_lines, _top_level_funcs = _build_ast_line_info(_user_code)
+
+    # Guard against __init__ or missing function names by picking the first top-level function
+    if (_func_name not in _ns or _func_name.startswith('__')) and _top_level_funcs:
+        _func_name = _top_level_funcs[0]
+
     if _func_name not in _ns:
         raise NameError(f"Function '{_func_name}' was not found in the algorithm file.")
 
@@ -343,7 +370,7 @@ try:
     _sig_params = list(inspect.signature(_fn).parameters.keys())
     _param_names = set(_sig_params)
     _first_param = _sig_params[0] if _sig_params else 'graph'
-    _loop_targets = _build_loop_target_names(_user_code)
+    _exhausted_loop_vars = set()
 
     _visual_ds = VisualGraph(_payload)
 
@@ -371,15 +398,39 @@ try:
             loc.update(f_item.f_locals)
 
         loop_var_names = _loop_targets.get(executed_lineno, [])
+        if loop_var_names:
+            if _visual_ds._loop_exhausted_on_step:
+                # The `for` loop just terminated; mark its target variable(s) as exhausted
+                _exhausted_loop_vars.update(loop_var_names)
+            else:
+                # The `for` loop is actively yielding a new item
+                _exhausted_loop_vars.difference_update(loop_var_names)
+
         loop_var_vals = [
             loc[name] for name in loop_var_names
-            if name in loc and name not in _param_names
+            if name in loc and name not in _param_names and name not in _exhausted_loop_vars
         ]
-        _visual_ds.on_line_fallback(loop_var_vals, loc)
+        _visual_ds.on_line_fallback(
+            loop_var_vals,
+            loc,
+            is_while_line=(executed_lineno in _while_lines)
+        )
+
+        # Also update active_node if `node` was just assigned (e.g. `node = queue.pop(0)`)
+        if not _visual_ds.active_edge and executed_lineno not in _while_lines and not _visual_ds._loop_exhausted_on_step:
+            for k, v in loc.items():
+                if k not in _param_names and k not in _exhausted_loop_vars and isinstance(v, _NodeId) and str(v) in _visual_ds:
+                    _visual_ds.record_visit(str(v))
 
         state_vars = {}
         for k, v in loc.items():
-            if not k.startswith('_') and k != _first_param and not inspect.isfunction(v) and not inspect.ismodule(v):
+            if (
+                not k.startswith('_')
+                and k != _first_param
+                and k not in _exhausted_loop_vars
+                and not inspect.isfunction(v)
+                and not inspect.ismodule(v)
+            ):
                 state_vars[k] = _serialize(v)
         return state_vars
 
