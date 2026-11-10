@@ -410,6 +410,18 @@
       /* Prevents ghost-dragging PNG icons on touch/mouse */
     }
 
+    /* Hide input type number spinners */
+    input[type="number"] {
+      appearance: textfield;
+      -moz-appearance: textfield;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
     /* ========== Full-Screen Quickdraw Annotation Overlay ========== */
     #annotation-overlay {
       position: fixed;
@@ -4640,6 +4652,10 @@
                 <div id="algo-random-config-container" class="card-body-text"></div>
               </div>
 
+              <div id="algo-random-warning-msg"
+                style="display: none; width: 100%; margin-bottom: 0.5rem; padding: 0.5rem 0.65rem; background-color: rgba(238, 183, 0, 0.12); border: 0.0625rem solid var(--ds-primary); border-radius: 0.25rem; color: var(--ds-primary); font-size: 0.85em; line-height: 1.4;">
+              </div>
+
               <button type="button" id="algo-settings-random-btn" class="vscode-btn-secondary"
                 style="display: none; width: 100%; margin-bottom: 0rem;">Randomize Input</button>
 
@@ -7936,6 +7952,21 @@
       });
     }
 
+    let activeRandomModule = null;
+    async function resolveRandomDsModule(dsName) {
+      const lineage = (getDsLineage(dsName) || [dsName]).slice().reverse();
+      for (const candidateName of lineage) {
+        try {
+          return await import(`./data-structures/random/${candidateName}.js`);
+        } catch (e1) {
+          try {
+            return await import(`./data-structures/random/${toSnakeCase(candidateName)}.js`);
+          } catch (e2) { }
+        }
+      }
+      return null;
+    }
+
     async function updateAlgorithmSettings(name, parentDsName = null, itemType = 'algo') {
       const configHeading = document.getElementById('algo-config-heading');
       const configContainer = document.getElementById('algo-config-container');
@@ -8060,7 +8091,13 @@
       </div>
     `;
 
-        // 2. Random Adjustment Parameters + Generate Random Input Button
+        // 2. Random Adjustment Parameters + Generate Random Input Button (100% Generic)
+        const randomWarningEl = document.getElementById('algo-random-warning-msg');
+        if (randomWarningEl) {
+          randomWarningEl.style.display = 'none';
+          randomWarningEl.textContent = '';
+        }
+
         const randomEntries = Object.entries(collectedRandom);
         if (randomSection && randomContainer && randomEntries.length > 0) {
           const randomControlsHtml = randomEntries.map(([paramKey, cfg]) => {
@@ -8074,12 +8111,15 @@
               const defVal = cfg.default ?? min;
               return `
             <div style="display: flex; flex-direction: column; gap: 0.2rem;">
-              <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span>${paramKey}</span>
-                <span class="ds-random-range-val" style="font-family: 'Noto Sans Mono', monospace; color: var(--text-bright);">${defVal}</span>
-              </div>
-              <input type="range" class="vscode-slider ds-random-input" style="width: 100%;"
-                data-random-key="${safeKey}" min="${min}" max="${max}" step="${step}" value="${defVal}" />
+              <label style="color: var(--text-primary); font-weight: 500; font-size: 0.9em;">
+                <span style="display: flex; justify-content: space-between; align-items: center;">
+                  <span>${paramKey} <small class="ds-random-range-bounds" style="color: var(--text-muted); font-weight: 400;">(${min}–${max})</small></span>
+                  <span class="ds-random-range-val" style="font-family: 'Noto Sans Mono', monospace; color: var(--text-bright);">${defVal}</span>
+                </span>
+                <br>
+                <input type="range" class="vscode-slider ds-random-input" style="width: 100%; margin-top: 0.2rem;"
+                  data-random-key="${safeKey}" min="${min}" max="${max}" step="${step}" value="${defVal}" />
+              </label>
             </div>
           `;
             }
@@ -8112,48 +8152,114 @@
             return '';
           }).join('');
 
-          randomContainer.innerHTML = `<div style="display: flex; flex-direction: column; gap: 0.45rem;">${randomControlsHtml}</div>`;
+          randomContainer.innerHTML = `<div style="display: flex; flex-direction: column; gap: 0.55rem;">${randomControlsHtml}</div>`;
           randomSection.style.display = 'block';
           if (algoSettingsRandomBtn) algoSettingsRandomBtn.style.display = 'inline-flex';
 
-          // Live readout & dynamic constraints for range sliders (e.g., Vertex Count updating Edge Count max)
-          randomContainer.querySelectorAll('input[type="range"].ds-random-input').forEach(slider => {
-            const valSpan = slider.parentElement.querySelector('.ds-random-range-val');
-            slider.addEventListener('input', () => {
-              if (valSpan) valSpan.textContent = slider.value;
+          // Generic UI Controller API passed to any ./data-structures/random/<DS>.js module
+          const uiController = {
+            getValues() {
+              const settings = {};
+              randomContainer.querySelectorAll('.ds-random-input').forEach(inp => {
+                const k = inp.getAttribute('data-random-key');
+                if (!k) return;
+                if (inp.type === 'checkbox') settings[k] = inp.checked;
+                else if (inp.type === 'number' || inp.type === 'range') settings[k] = parseInt(inp.value, 10);
+                else settings[k] = inp.value.trim();
+              });
 
-              // If Vertex Count changes in Graph, cap Edge Count max to V*(V-1)/2
-              if (slider.getAttribute('data-random-key') === 'Vertex Count') {
-                const v = parseInt(slider.value, 10) || 2;
-                const maxEdges = Math.max(1, Math.floor((v * (v - 1)) / 2));
-                const edgeSlider = randomContainer.querySelector('input.ds-random-input[data-random-key="Edge Count"]');
-                if (edgeSlider) {
-                  edgeSlider.max = String(maxEdges);
-                  if (parseInt(edgeSlider.value, 10) > maxEdges) {
-                    edgeSlider.value = String(maxEdges);
-                    const edgeValSpan = edgeSlider.parentElement.querySelector('.ds-random-range-val');
-                    if (edgeValSpan) edgeValSpan.textContent = edgeSlider.value;
-                  }
-                }
+              const extraInputs = {};
+              configContainer.querySelectorAll('.ds-extra-input').forEach(inp => {
+                const k = inp.getAttribute('data-ds-input-key');
+                if (!k) return;
+                extraInputs[k] = inp.type === 'checkbox' ? inp.checked : inp.value.trim();
+              });
+
+              return { settings, extraInputs };
+            },
+
+            setRangeBounds(key, min, max) {
+              const inp = randomContainer.querySelector(`.ds-random-input[data-random-key="${key}"]`);
+              if (!inp) return;
+              if (min !== undefined) inp.min = String(min);
+              if (max !== undefined) inp.max = String(max);
+
+              const numVal = parseInt(inp.value, 10);
+              if (max !== undefined && numVal > max) inp.value = String(max);
+              if (min !== undefined && numVal < min) inp.value = String(min);
+
+              const labelEl = inp.closest('label');
+              const boundsSpan = labelEl?.querySelector('.ds-random-range-bounds');
+              const valSpan = labelEl?.querySelector('.ds-random-range-val');
+              if (boundsSpan) boundsSpan.textContent = `(${inp.min}–${inp.max})`;
+              if (valSpan) valSpan.textContent = inp.value;
+            },
+
+            setValue(key, val) {
+              const inp = randomContainer.querySelector(`.ds-random-input[data-random-key="${key}"]`);
+              if (!inp) return;
+              inp.value = String(val);
+              const valSpan = inp.closest('label')?.querySelector('.ds-random-range-val');
+              if (valSpan) valSpan.textContent = inp.value;
+            },
+
+            setChecked(key, checked) {
+              const inp = randomContainer.querySelector(`.ds-random-input[data-random-key="${key}"]`);
+              if (inp && inp.type === 'checkbox') inp.checked = Boolean(checked);
+            },
+
+            setWarning(warnings) {
+              if (!randomWarningEl) return;
+              const list = Array.isArray(warnings) ? warnings.filter(Boolean) : (warnings ? [warnings] : []);
+              if (list.length > 0) {
+                randomWarningEl.innerHTML = list.join('<br>');
+                randomWarningEl.style.display = 'block';
+              } else {
+                randomWarningEl.style.display = 'none';
+                randomWarningEl.textContent = '';
               }
-            });
+            }
+          };
+
+          activeRandomModule = await resolveRandomDsModule(name);
+          if (selectedDsaName !== name) return;
+
+          const triggerModuleSync = (changedKey = null, source = 'random') => {
+            if (activeRandomModule && typeof activeRandomModule.onSettingsChange === 'function') {
+              const { settings, extraInputs } = uiController.getValues();
+              activeRandomModule.onSettingsChange({
+                changedKey,
+                source,
+                settings,
+                extraInputs,
+                ui: uiController
+              });
+            }
+          };
+
+          // Generic listeners for random inputs and creation extra inputs
+          randomContainer.querySelectorAll('.ds-random-input').forEach(inp => {
+            const key = inp.getAttribute('data-random-key');
+            const handleEvent = () => {
+              if (inp.type === 'range') {
+                const valSpan = inp.closest('label')?.querySelector('.ds-random-range-val');
+                if (valSpan) valSpan.textContent = inp.value;
+              }
+              triggerModuleSync(key, 'random');
+            };
+            inp.addEventListener('input', handleEvent);
+            inp.addEventListener('change', handleEvent);
           });
 
-          // Mutual exclusivity for Sorted / Sorted (Desc) / Nearly Sorted checkboxes
-          const sortKeys = ['Sorted', 'Sorted (Desc)', 'Nearly Sorted'];
-          const sortBoxes = sortKeys
-            .map(k => randomContainer.querySelector(`input[type="checkbox"].ds-random-input[data-random-key="${k}"]`))
-            .filter(Boolean);
-          sortBoxes.forEach(box => {
-            box.addEventListener('change', () => {
-              if (box.checked) {
-                sortBoxes.forEach(other => {
-                  if (other !== box) other.checked = false;
-                });
-              }
-            });
+          configContainer.querySelectorAll('.ds-extra-input').forEach(inp => {
+            const key = inp.getAttribute('data-ds-input-key');
+            inp.addEventListener('change', () => triggerModuleSync(key, 'extra'));
           });
+
+          // Initial sync when the Data Structure settings pane opens
+          triggerModuleSync(null, 'init');
         } else {
+          activeRandomModule = null;
           if (randomSection) randomSection.style.display = 'none';
           if (algoSettingsRandomBtn) algoSettingsRandomBtn.style.display = 'none';
         }
@@ -8468,48 +8574,24 @@
       algoSettingsRandomBtn.addEventListener('click', async () => {
         if (selectedDsaType !== 'ds' || !selectedDsaName) return;
 
-        // 1. Collect random adjustment parameters
+        const randomModule = activeRandomModule || (await resolveRandomDsModule(selectedDsaName));
+        if (!randomModule) return;
+
         const randomSettings = {};
         document.querySelectorAll('#algo-random-config-container .ds-random-input').forEach(inp => {
-          const key = inp.getAttribute('data-random-key');
-          if (!key) return;
-          if (inp.type === 'checkbox') {
-            randomSettings[key] = inp.checked;
-          } else if (inp.type === 'number' || inp.type === 'range') {
-            randomSettings[key] = parseInt(inp.value, 10);
-          } else {
-            randomSettings[key] = inp.value.trim();
-          }
+          const k = inp.getAttribute('data-random-key');
+          if (!k) return;
+          if (inp.type === 'checkbox') randomSettings[k] = inp.checked;
+          else if (inp.type === 'number' || inp.type === 'range') randomSettings[k] = parseInt(inp.value, 10);
+          else randomSettings[k] = inp.value.trim();
         });
 
-        // 2. Also pass optional DS creation inputs (e.g., Directed / Weighted checkboxes)
         const extraInputs = {};
         document.querySelectorAll('#algo-config-container .ds-extra-input').forEach(inp => {
-          const key = inp.getAttribute('data-ds-input-key');
-          if (!key) return;
-          extraInputs[key] = inp.type === 'checkbox' ? inp.checked : inp.value.trim();
+          const k = inp.getAttribute('data-ds-input-key');
+          if (!k) return;
+          extraInputs[k] = inp.type === 'checkbox' ? inp.checked : inp.value.trim();
         });
-
-        // 3. Import ./data-structures/random/<DS>.js (checks exact name, then lineage ancestors)
-        const lineage = (getDsLineage(selectedDsaName) || [selectedDsaName]).slice().reverse();
-        let randomModule = null;
-
-        for (const candidateName of lineage) {
-          try {
-            randomModule = await import(`./data-structures/random/${candidateName}.js`);
-            break;
-          } catch (e1) {
-            try {
-              randomModule = await import(`./data-structures/random/${toSnakeCase(candidateName)}.js`);
-              break;
-            } catch (e2) { }
-          }
-        }
-
-        if (!randomModule) {
-          console.error(`Random generator module not found for ${selectedDsaName}`);
-          return;
-        }
 
         const generateFn = randomModule.generateRandomInput || randomModule.default;
         if (typeof generateFn === 'function') {
