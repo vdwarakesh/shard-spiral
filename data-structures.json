@@ -4,6 +4,47 @@
       "contiguous-memory",
       "random-access"
     ],
+    "placeholder": "content (e.g. 10, 20, 30)",
+    "inputs": {},
+    "random": {
+      "Array Length": {
+        "type": "range",
+        "min": 1,
+        "max": 26,
+        "step": 1,
+        "default": 8
+      },
+      "Min Value": {
+        "type": "number",
+        "min": -999,
+        "max": 999,
+        "step": 1,
+        "default": 1
+      },
+      "Max Value": {
+        "type": "number",
+        "min": -999,
+        "max": 999,
+        "step": 1,
+        "default": 50
+      },
+      "Sorted": {
+        "type": "checkbox",
+        "default": false
+      },
+      "Sorted (Desc)": {
+        "type": "checkbox",
+        "default": false
+      },
+      "Nearly Sorted": {
+        "type": "checkbox",
+        "default": false
+      },
+      "Duplicates": {
+        "type": "checkbox",
+        "default": true
+      }
+    },
     "children": {
       "Static Array": {
         "attributes": [
@@ -401,14 +442,42 @@
     }
   },
   "Graph": {
-    "attributes": [],
-    "inputs": [
-      {
-        "Directed": "checkbox",
-        "Weighted": "checkbox"
-      }
+    "attributes": [
+      "non-linear"
     ],
-    "placeholder": "Enter as adjacency list, adjacency matrix, or edge list. Non quoted values will automatically be considered strings.",
+    "placeholder": "edges (e.g. A-B, B-C, C-A)",
+    "inputs": {
+      "Directed": "checkbox",
+      "Weighted": "checkbox"
+    },
+    "random": {
+      "Vertex Count": {
+        "type": "range",
+        "min": 2,
+        "max": 26,
+        "step": 1,
+        "default": 6
+      },
+      "Edge Count": {
+        "type": "range",
+        "min": 1,
+        "max": 325,
+        "step": 1,
+        "default": 7
+      },
+      "Fully Connected": {
+        "type": "checkbox",
+        "default": false
+      },
+      "Sparse": {
+        "type": "checkbox",
+        "default": false
+      },
+      "Bipartite": {
+        "type": "checkbox",
+        "default": false
+      }
+    },
     "children": {}
   },
   "Disjoint Set Union": {

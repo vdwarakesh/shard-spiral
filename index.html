@@ -4632,8 +4632,17 @@
               </div>
               <button type="button" id="algo-settings-submit-btn" class="vscode-btn-secondary"
                 style="display: none; width: 100%; margin-bottom: 0rem;">Create</button>
+
+              <div id="algo-random-config-section"
+                style="display: none; margin-bottom: 0.75rem; padding-top: 0.75rem; border-top: 0.0625rem solid var(--border-color);">
+                <h4 id="algo-random-config-heading" class="card-body-text"
+                  style="font-weight: 600; margin-bottom: 0.45rem;">Random Input Parameters</h4>
+                <div id="algo-random-config-container" class="card-body-text"></div>
+              </div>
+
               <button type="button" id="algo-settings-random-btn" class="vscode-btn-secondary"
                 style="display: none; width: 100%; margin-bottom: 0rem;">Randomize Input</button>
+
               <div id="algo-settings-incompatible-msg"
                 style="display: none; width: 100%; text-align: center; color: var(--text-muted); padding: 0.65rem; background-color: var(--bg-card); border: 0.0625rem solid var(--border-color); border-radius: 0.25rem;">
               </div>
@@ -4906,6 +4915,7 @@
     const algoSettingsCard = document.getElementById('algo-settings-card');
     const algoSettingsCollapsedStrip = document.getElementById('algo-settings-collapsed-strip');
     const algoSettingsSubmitBtn = document.getElementById('algo-settings-submit-btn');
+    const algoSettingsRandomBtn = document.getElementById('algo-settings-random-btn');
     const splitterAlgoCode = document.getElementById('splitter-algo-code-v');
     const codeCard = document.getElementById('code-card');
     const codeCollapsedStrip = document.getElementById('code-collapsed-strip');
@@ -7927,15 +7937,16 @@
     }
 
     async function updateAlgorithmSettings(name, parentDsName = null, itemType = 'algo') {
-      /* Populates #algo-settings-card with either Attributes + "Creation Settings" (for DS) or Constraints & Tags + interactive <pre><code> signature (for Algorithms) */
       const configHeading = document.getElementById('algo-config-heading');
       const configContainer = document.getElementById('algo-config-container');
+      const randomSection = document.getElementById('algo-random-config-section');
+      const randomContainer = document.getElementById('algo-random-config-container');
       const metaSection = document.getElementById('algo-settings-meta-section');
       const metaContainer = document.getElementById('algo-settings-meta-container');
       const metaHeading = metaSection ? metaSection.querySelector('h4') : null;
       if (!configContainer || !configHeading) return;
 
-      /* Case 1: A Data Structure was clicked -> Show "Properties" & "Creation Settings" */
+      /* Case 1: A Data Structure was clicked -> Show "Properties", "Creation Settings", & "Random Input Parameters" */
       if (itemType === 'ds' && name) {
         if (algoSettingsSubmitBtn) {
           algoSettingsSubmitBtn.textContent = 'Create';
@@ -7944,17 +7955,17 @@
         const algoIncompatibleMsg = document.getElementById('algo-settings-incompatible-msg');
         if (algoIncompatibleMsg) algoIncompatibleMsg.style.display = 'none';
 
-        // Gather inherited + direct properties, placeholder, and inputs along the DS lineage
+        // Gather inherited + direct properties, placeholder, inputs, and random config along the DS lineage
         const lineage = getDsLineage(name) || [name];
         let collectedProperties = [];
         let resolvedPlaceholder = 'content (e.g. 10, 20, 30)';
         let collectedInputs = {};
+        let collectedRandom = {};
         let currNode = dataStructuresJson;
 
         for (const nodeName of lineage) {
           if (currNode && currNode[nodeName]) {
             const nodeData = currNode[nodeName];
-            // Support both "properties" and legacy "attributes"
             const props = nodeData.properties || nodeData.attributes;
             if (Array.isArray(props)) {
               collectedProperties.push(...props);
@@ -7971,6 +7982,9 @@
             } else if (nodeData.inputs && typeof nodeData.inputs === 'object') {
               Object.assign(collectedInputs, nodeData.inputs);
             }
+            if (nodeData.random && typeof nodeData.random === 'object') {
+              Object.assign(collectedRandom, nodeData.random);
+            }
             currNode = nodeData.children || {};
           } else {
             break;
@@ -7978,6 +7992,7 @@
         }
         collectedProperties = [...new Set(collectedProperties)];
 
+        // Render Properties badges
         if (metaSection && metaContainer) {
           metaContainer.innerHTML = '';
           if (collectedProperties.length > 0) {
@@ -7986,7 +8001,6 @@
 
             for (const propKey of collectedProperties) {
               const desc = attributesDescJson[propKey]?.description || '';
-
               const badge = document.createElement('span');
               badge.className = 'algo-meta-badge constraint-badge';
               if (desc) badge.setAttribute('title', desc);
@@ -8009,22 +8023,24 @@
           }
         }
 
-        // Build dynamic extra inputs (checkboxes, text inputs, etc.)
+        // 1. Primary + Optional Creation Inputs
         const extraInputsHtml = Object.entries(collectedInputs).map(([labelKey, inputType]) => {
           const safeKey = labelKey.replace(/"/g, '&quot;');
           const typeStr = String(inputType).toLowerCase().trim();
 
           if (typeStr === 'checkbox') {
             return `
-              <label style="display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; user-select: none; padding: 0.15rem 0; color: var(--text-primary);">
-                <input type="checkbox" class="filter-checkbox ds-extra-input" data-ds-input-key="${safeKey}" />
-                <span>${labelKey}</span>
-              </label>
-            `;
+          <label style="display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; user-select: none; padding: 0.15rem 0; color: var(--text-primary);">
+            <input type="checkbox" class="filter-checkbox ds-extra-input" data-ds-input-key="${safeKey}" />
+            <span>${labelKey}</span>
+          </label>
+        `;
           }
           return `
-            <input type="${typeStr}" class="param-input-field ds-extra-input" data-ds-input-key="${safeKey}" placeholder="${safeKey}" />
-          `;
+        <label style="color: var(--text-primary); font-weight: 500; font-size: 0.9em;">${labelKey}<br>
+          <input type="${typeStr}" class="param-input-field ds-extra-input" style="margin-top: 0.2rem;" data-ds-input-key="${safeKey}" placeholder="${safeKey}" />
+        </label>
+      `;
         }).join('');
 
         const safePlaceholder = resolvedPlaceholder.replace(/"/g, '&quot;');
@@ -8033,16 +8049,120 @@
         configHeading.textContent = 'Creation Settings';
         configContainer.style.color = 'inherit';
         configContainer.innerHTML = `
-          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
-            <input type="text" id="ds-input-name" class="param-input-field" placeholder="name (default: ${name})" data-param-name="name" />
-            <textarea id="ds-input-content" class="param-input-field" rows="3" placeholder="${safePlaceholder}" data-param-name="content"></textarea>
-            ${extraInputsHtml ? `<div style="display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.15rem;">${extraInputsHtml}</div>` : ''}
-          </div>
-        `;
+      <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+        <label style="color: var(--text-primary); font-weight: 500; font-size: 0.9em;">Name<br>
+          <input type="text" id="ds-input-name" class="param-input-field" style="margin-top: 0.2rem;" placeholder="name (default: ${name})" data-param-name="name" />
+        </label>
+        <label style="color: var(--text-primary); font-weight: 500; font-size: 0.9em;">Content<br>
+          <textarea id="ds-input-content" class="param-input-field" rows="3" style="margin-top: 0.2rem;" placeholder="${safePlaceholder}" data-param-name="content"></textarea>
+        </label>
+        ${extraInputsHtml ? `<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.15rem;">${extraInputsHtml}</div>` : ''}
+      </div>
+    `;
+
+        // 2. Random Adjustment Parameters + Generate Random Input Button
+        const randomEntries = Object.entries(collectedRandom);
+        if (randomSection && randomContainer && randomEntries.length > 0) {
+          const randomControlsHtml = randomEntries.map(([paramKey, cfg]) => {
+            const safeKey = paramKey.replace(/"/g, '&quot;');
+            const type = (cfg && cfg.type) ? String(cfg.type).toLowerCase() : 'text';
+
+            if (type === 'range') {
+              const min = cfg.min ?? 1;
+              const max = cfg.max ?? 26;
+              const step = cfg.step ?? 1;
+              const defVal = cfg.default ?? min;
+              return `
+            <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>${paramKey}</span>
+                <span class="ds-random-range-val" style="font-family: 'Noto Sans Mono', monospace; color: var(--text-bright);">${defVal}</span>
+              </div>
+              <input type="range" class="vscode-slider ds-random-input" style="width: 100%;"
+                data-random-key="${safeKey}" min="${min}" max="${max}" step="${step}" value="${defVal}" />
+            </div>
+          `;
+            }
+
+            if (type === 'number') {
+              const minAttr = cfg.min !== undefined ? `min="${cfg.min}"` : '';
+              const maxAttr = cfg.max !== undefined ? `max="${cfg.max}"` : '';
+              const stepAttr = cfg.step !== undefined ? `step="${cfg.step}"` : 'step="1"';
+              const defVal = cfg.default !== undefined ? cfg.default : '';
+              return `
+            <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+              <label style="color: var(--text-primary); font-weight: 500; font-size: 0.9em;">${paramKey}<br>
+                <input type="number" class="param-input-field ds-random-input" style="width: 100%; margin-top: 0.2rem;"
+                  data-random-key="${safeKey}" ${minAttr} ${maxAttr} ${stepAttr} value="${defVal}" />
+              </label>
+            </div>
+          `;
+            }
+
+            if (type === 'checkbox') {
+              const checkedAttr = cfg.default ? 'checked' : '';
+              return `
+            <label style="display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; user-select: none; padding: 0.15rem 0; color: var(--text-primary);">
+              <input type="checkbox" class="filter-checkbox ds-random-input" data-random-key="${safeKey}" ${checkedAttr} />
+              <span>${paramKey}</span>
+            </label>
+          `;
+            }
+
+            return '';
+          }).join('');
+
+          randomContainer.innerHTML = `<div style="display: flex; flex-direction: column; gap: 0.45rem;">${randomControlsHtml}</div>`;
+          randomSection.style.display = 'block';
+          if (algoSettingsRandomBtn) algoSettingsRandomBtn.style.display = 'inline-flex';
+
+          // Live readout & dynamic constraints for range sliders (e.g., Vertex Count updating Edge Count max)
+          randomContainer.querySelectorAll('input[type="range"].ds-random-input').forEach(slider => {
+            const valSpan = slider.parentElement.querySelector('.ds-random-range-val');
+            slider.addEventListener('input', () => {
+              if (valSpan) valSpan.textContent = slider.value;
+
+              // If Vertex Count changes in Graph, cap Edge Count max to V*(V-1)/2
+              if (slider.getAttribute('data-random-key') === 'Vertex Count') {
+                const v = parseInt(slider.value, 10) || 2;
+                const maxEdges = Math.max(1, Math.floor((v * (v - 1)) / 2));
+                const edgeSlider = randomContainer.querySelector('input.ds-random-input[data-random-key="Edge Count"]');
+                if (edgeSlider) {
+                  edgeSlider.max = String(maxEdges);
+                  if (parseInt(edgeSlider.value, 10) > maxEdges) {
+                    edgeSlider.value = String(maxEdges);
+                    const edgeValSpan = edgeSlider.parentElement.querySelector('.ds-random-range-val');
+                    if (edgeValSpan) edgeValSpan.textContent = edgeSlider.value;
+                  }
+                }
+              }
+            });
+          });
+
+          // Mutual exclusivity for Sorted / Sorted (Desc) / Nearly Sorted checkboxes
+          const sortKeys = ['Sorted', 'Sorted (Desc)', 'Nearly Sorted'];
+          const sortBoxes = sortKeys
+            .map(k => randomContainer.querySelector(`input[type="checkbox"].ds-random-input[data-random-key="${k}"]`))
+            .filter(Boolean);
+          sortBoxes.forEach(box => {
+            box.addEventListener('change', () => {
+              if (box.checked) {
+                sortBoxes.forEach(other => {
+                  if (other !== box) other.checked = false;
+                });
+              }
+            });
+          });
+        } else {
+          if (randomSection) randomSection.style.display = 'none';
+          if (algoSettingsRandomBtn) algoSettingsRandomBtn.style.display = 'none';
+        }
         return;
       }
 
-      /* Case 2: An Algorithm was clicked */
+      /* Case 2: An Algorithm was clicked -> Hide Random DS Controls */
+      if (randomSection) randomSection.style.display = 'none';
+      if (algoSettingsRandomBtn) algoSettingsRandomBtn.style.display = 'none';
 
       if (metaHeading) metaHeading.textContent = 'Constraints & Tags';
       if (algoSettingsSubmitBtn) {
@@ -8343,6 +8463,64 @@
         await startAlgorithmVisualization();
       }
     });
+
+    if (algoSettingsRandomBtn) {
+      algoSettingsRandomBtn.addEventListener('click', async () => {
+        if (selectedDsaType !== 'ds' || !selectedDsaName) return;
+
+        // 1. Collect random adjustment parameters
+        const randomSettings = {};
+        document.querySelectorAll('#algo-random-config-container .ds-random-input').forEach(inp => {
+          const key = inp.getAttribute('data-random-key');
+          if (!key) return;
+          if (inp.type === 'checkbox') {
+            randomSettings[key] = inp.checked;
+          } else if (inp.type === 'number' || inp.type === 'range') {
+            randomSettings[key] = parseInt(inp.value, 10);
+          } else {
+            randomSettings[key] = inp.value.trim();
+          }
+        });
+
+        // 2. Also pass optional DS creation inputs (e.g., Directed / Weighted checkboxes)
+        const extraInputs = {};
+        document.querySelectorAll('#algo-config-container .ds-extra-input').forEach(inp => {
+          const key = inp.getAttribute('data-ds-input-key');
+          if (!key) return;
+          extraInputs[key] = inp.type === 'checkbox' ? inp.checked : inp.value.trim();
+        });
+
+        // 3. Import ./data-structures/random/<DS>.js (checks exact name, then lineage ancestors)
+        const lineage = (getDsLineage(selectedDsaName) || [selectedDsaName]).slice().reverse();
+        let randomModule = null;
+
+        for (const candidateName of lineage) {
+          try {
+            randomModule = await import(`./data-structures/random/${candidateName}.js`);
+            break;
+          } catch (e1) {
+            try {
+              randomModule = await import(`./data-structures/random/${toSnakeCase(candidateName)}.js`);
+              break;
+            } catch (e2) { }
+          }
+        }
+
+        if (!randomModule) {
+          console.error(`Random generator module not found for ${selectedDsaName}`);
+          return;
+        }
+
+        const generateFn = randomModule.generateRandomInput || randomModule.default;
+        if (typeof generateFn === 'function') {
+          const generatedText = await generateFn(randomSettings, extraInputs);
+          const contentTextarea = document.getElementById('ds-input-content');
+          if (contentTextarea && typeof generatedText === 'string') {
+            contentTextarea.value = generatedText;
+          }
+        }
+      });
+    }
 
     renderHistoryList();
     loadDsaMetadata();
