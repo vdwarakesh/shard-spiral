@@ -445,10 +445,9 @@
     "attributes": [
       "non-linear"
     ],
-    "placeholder": "edges (e.g. A-B, B-C, C-A)",
+    "placeholder": "edges (e.g. (A,B,10), (B,C,5))",
     "inputs": {
-      "Directed": "checkbox",
-      "Weighted": "checkbox"
+      "Directed": "checkbox"
     },
     "random": {
       "Vertex Count": {
@@ -464,6 +463,20 @@
         "max": 325,
         "step": 1,
         "default": 7
+      },
+      "Min Weight": {
+        "type": "number",
+        "min": -999,
+        "max": 999,
+        "step": 1,
+        "default": 1
+      },
+      "Max Weight": {
+        "type": "number",
+        "min": -999,
+        "max": 999,
+        "step": 1,
+        "default": 20
       },
       "Fully Connected": {
         "type": "checkbox",
