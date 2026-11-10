@@ -4632,6 +4632,8 @@
               </div>
               <button type="button" id="algo-settings-submit-btn" class="vscode-btn-secondary"
                 style="display: none; width: 100%; margin-bottom: 0rem;">Create</button>
+              <button type="button" id="algo-settings-random-btn" class="vscode-btn-secondary"
+                style="display: none; width: 100%; margin-bottom: 0rem;">Randomize Input</button>
               <div id="algo-settings-incompatible-msg"
                 style="display: none; width: 100%; text-align: center; color: var(--text-muted); padding: 0.65rem; background-color: var(--bg-card); border: 0.0625rem solid var(--border-color); border-radius: 0.25rem;">
               </div>
@@ -7565,7 +7567,7 @@
 
       const introLabel = document.createElement('span');
       introLabel.className = 'tree-label';
-      introLabel.textContent = 'Implementation';
+      introLabel.textContent = 'Configure & Generate';
       introRow.appendChild(introLabel);
       introRow.appendChild(createFavStarButton(currentDsName));
 
