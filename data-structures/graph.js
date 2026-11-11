@@ -1800,3 +1800,99 @@ export {
   setupGraphInteractions as setupInteractions,
   getContainerGraphData as getData
 };
+
+export const practiceConfig = {
+  dsCategory: 'graph',
+  funcName: 'my_graph_algorithm',
+  template: `def my_graph_algorithm(graph, *args, **kwargs):\n    # Write your custom graph algorithm here.\n    # Only operations on 'graph' inside my_graph_algorithm are visualized.\n    for u in graph:\n        for v in graph[u]:\n            pass\n    return None\n`,
+
+  extractDsPayload(containerEl) {
+    const graphData = getContainerGraphData(containerEl);
+    const { nodes, edges, isDirected, isWeighted } = graphData;
+    const adj = {};
+
+    nodes.forEach((n) => {
+      adj[String(n.id)] = [];
+    });
+
+    edges.forEach((e) => {
+      const uId = String(typeof e.source === 'object' ? e.source.id : e.source);
+      const vId = String(typeof e.target === 'object' ? e.target.id : e.target);
+      const w = e.weight ?? 1;
+
+      if (adj[uId]) {
+        adj[uId].push(isWeighted ? [vId, w] : vId);
+      }
+      if (!isDirected && uId !== vId && adj[vId]) {
+        adj[vId].push(isWeighted ? [uId, w] : uId);
+      }
+    });
+
+    return adj;
+  },
+
+  extractNodeLabels(containerEl) {
+    const graphData = getContainerGraphData(containerEl);
+    const labels = {};
+    (graphData.nodes || []).forEach((n) => {
+      labels[String(n.id)] = String(n.label ?? n.id);
+    });
+    return labels;
+  },
+
+  buildSteps(pyFrames, error) {
+    const steps = [];
+    const fullExplanationLines = [];
+
+    pyFrames.forEach((frame, idx) => {
+      const pyLine = frame.line;
+      const sv = frame.stateVars || {};
+      const vis = frame.visual || {};
+
+      const stepDescription =
+        frame.event === 'return'
+          ? `Function returned ${sv.return}`
+          : `Executing line ${pyLine}`;
+
+      fullExplanationLines.push(`Step ${idx + 1}: ${stepDescription}`);
+
+      steps.push({
+        lines: { Python: { active: String(pyLine) } },
+        activeLineKey: 'active',
+        activeIndex: vis.activeIndex ?? -1,
+        foundIndex: vis.foundIndex ?? -1,
+        checkedIndices: vis.checkedIndices || [],
+        activeNodeId: vis.activeNodeId ?? null,
+        activeNodeIds: vis.activeNodeIds || [],
+        foundNodeId: vis.foundNodeId ?? null,
+        visitedNodes: vis.visitedNodes || [],
+        activeEdge: vis.activeEdge || null,
+        visitedEdges: vis.visitedEdges || [],
+        interaction: frame.interaction || null,
+        stateVars: sv,
+        stepDescription,
+      });
+    });
+
+    if (error) {
+      const errLine = error.line || (pyFrames.length ? pyFrames[pyFrames.length - 1].line : 1);
+      const lastStep = steps[steps.length - 1];
+      const errDesc = `${error.type}: ${error.message}`;
+      fullExplanationLines.push(`Error (Line ${errLine}): ${errDesc}`);
+
+      steps.push({
+        ...(lastStep || {}),
+        lines: { Python: { active: String(errLine) } },
+        activeLineKey: 'active',
+        stateVars: {
+          ...(lastStep ? lastStep.stateVars : {}),
+          error: errDesc,
+        },
+        stepDescription: errDesc,
+        isError: true,
+      });
+    }
+
+    return { steps, fullExplanationLines, error };
+  },
+};
