@@ -67,7 +67,7 @@ export async function depth_first_search_dfs_iterative(containerEl, rawKwargs = 
     } else if (pyLine === 12) {
       stepDescription = `Marking node '${sv.node}' as visited`;
     } else if (pyLine === 13) {
-      stepDescription = `Visiting node '${sv.node}' — order is now [${(sv.order || []).join(', ')}]`;
+      stepDescription = `Visiting node '${sv.node}' - order is now [${(sv.order || []).join(', ')}]`;
     } else if (pyLine === 14) {
       stepDescription =
         sv.neighbor !== undefined
@@ -76,7 +76,7 @@ export async function depth_first_search_dfs_iterative(containerEl, rawKwargs = 
     } else if (pyLine === 15) {
       stepDescription = `Checking if neighbor '${sv.neighbor}' is unvisited`;
     } else if (pyLine === 16) {
-      stepDescription = `Neighbor '${sv.neighbor}' is unvisited — recursing deeper into dfs('${sv.neighbor}')`;
+      stepDescription = `Neighbor '${sv.neighbor}' is unvisited - recursing deeper into dfs('${sv.neighbor}')`;
     } else if (pyLine === 18) {
       stepDescription = `Starting DFS from start_node '${sv.start_node}'`;
     } else if (pyLine === 19) {

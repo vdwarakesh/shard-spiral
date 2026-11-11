@@ -1261,6 +1261,7 @@
     let isSimPlaying = false;
     let simMode = 'auto'; // 'auto' | 'manual'
     let simUserChoices = []; // Stores user-selected node IDs at manual decision points
+    let simUserInputs = [];  // Stores user-entered strings for Python input() calls
     window.isSimulating = false; // Locks array editing while active
     /* ========== End of Centralized DOM References & Application State ========== */
 
@@ -3179,19 +3180,37 @@
         let manualPromptHtml = '';
         if (currentStep.interaction) {
           const inter = currentStep.interaction;
-          const btnsHtml = (inter.candidates || []).map(c => `
-            <button type="button" class="state-manual-candidate-btn" onclick="window.submitManualSimChoice('${c.id}')">
-              ${c.edgeLabel || c.label}
-            </button>
-          `).join('');
+          if (inter.type === 'stdin_input') {
+            const safePrompt = (inter.reason || 'Enter value:').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            manualPromptHtml = `
+              <div class="state-manual-prompt-box">
+                <div class="state-manual-prompt-title">${inter.title || 'Input Required'}</div>
+                <div class="state-manual-prompt-reason">${safePrompt}</div>
+                <div style="display: flex; align-items: stretch; gap: 0.45rem; margin-top: 0.4rem;">
+                  <input type="text" id="sim-stdin-input-field" class="param-input-field" placeholder="Type input and press Enter..."
+                    style="flex: 1; height: 2.15rem; margin: 0; padding: 0 0.6rem; box-sizing: border-box;"
+                    onkeydown="if (event.key === 'Enter') { event.preventDefault(); window.submitStdinSimInput(); }" />
+                  <button type="button" class="vscode-btn-secondary"
+                    style="height: 2.15rem; margin: 0; padding: 0 0.85rem; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: auto;"
+                    onclick="window.submitStdinSimInput()">Submit</button>
+                </div>
+              </div>
+            `;
+          } else {
+            const btnsHtml = (inter.candidates || []).map(c => `
+              <button type="button" class="state-manual-candidate-btn" onclick="window.submitManualSimChoice('${c.id}')">
+                ${c.edgeLabel || c.label}
+              </button>
+            `).join('');
 
-          manualPromptHtml = `
-            <div class="state-manual-prompt-box">
-              <div class="state-manual-prompt-title">${inter.title || 'Manual Choice Required'}</div>
-              <div class="state-manual-prompt-reason">${inter.reason || ''}</div>
-              <div class="state-manual-candidates">${btnsHtml}</div>
-            </div>
-          `;
+            manualPromptHtml = `
+              <div class="state-manual-prompt-box">
+                <div class="state-manual-prompt-title">${inter.title || 'Manual Choice Required'}</div>
+                <div class="state-manual-prompt-reason">${inter.reason || ''}</div>
+                <div class="state-manual-candidates">${btnsHtml}</div>
+              </div>
+            `;
+          }
         }
 
         const entries = Object.entries(currentStep.stateVars || {});
@@ -3205,6 +3224,23 @@
           `;
         }).join('');
 
+        const stdoutText = currentStep.stdout || '';
+        const escapedStdout = stdoutText
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+
+        const stdoutHtml = stdoutText
+          ? `
+            <div style="margin-top: 0.75rem;">
+              <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 0.3rem;">
+                Console Output (stdout)
+              </div>
+              <pre style="margin: 0; padding: 0.55rem 0.7rem; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 0.25rem; font-family: 'Noto Sans Mono', monospace; font-size: 0.85em; color: var(--text-bright); white-space: pre-wrap; word-break: break-word; max-height: 9rem; overflow-y: auto;">${escapedStdout}</pre>
+            </div>
+          `
+          : '';
+
         stateViewPane.innerHTML = `
           <div class="card-inner-pad">
             ${manualPromptHtml}
@@ -3214,8 +3250,14 @@
             <div class="state-vars-grid">
               ${rowsHtml}
             </div>
+            ${stdoutHtml}
           </div>
         `;
+
+        if (currentStep.interaction?.type === 'stdin_input') {
+          const inp = document.getElementById('sim-stdin-input-field');
+          if (inp) setTimeout(() => inp.focus(), 20);
+        }
       }
     }
 
@@ -4932,9 +4974,11 @@
     });
 
     async function rewindChoicesFromStep(targetStepIdx) {
-      const prevLen = simUserChoices.length;
+      const prevChoiceLen = simUserChoices.length;
+      const prevInputLen = simUserInputs.length;
       simUserChoices = simUserChoices.filter(c => c.stepIdx < targetStepIdx);
-      if (simUserChoices.length !== prevLen) {
+      simUserInputs = simUserInputs.filter(c => c.stepIdx < targetStepIdx);
+      if (simUserChoices.length !== prevChoiceLen || simUserInputs.length !== prevInputLen) {
         await buildSimulationIfNeeded();
       }
       applySimulationStep(targetStepIdx);
@@ -5089,19 +5133,20 @@
             rawKwargs,
             simMode,
             userChoices: simUserChoices.map(c => c.chosenId),
+            userInputs: simUserInputs.map(c => c.value),
           });
 
           const result = practiceCfg.buildSteps(traceRes.steps || [], traceRes.error);
-          if (result.error && (!result.steps || result.steps.length === 0)) {
-            if (stateViewPane) {
-              stateViewPane.innerHTML = `
-            <div class="card-inner-pad">
-              <span class="card-body-text" style="color: #ef4444; font-weight: 500;">
-                ${result.error.type}: ${result.error.message}
-              </span>
-            </div>`;
-            }
-            return false;
+          // Guarantee stdout and interaction from Python frames are preserved on every step
+          if (result.steps && Array.isArray(traceRes.steps)) {
+            result.steps.forEach((st, i) => {
+              if (i < traceRes.steps.length) {
+                if (st.stdout === undefined) st.stdout = traceRes.steps[i].stdout || '';
+                if (st.interaction === undefined) st.interaction = traceRes.steps[i].interaction || null;
+              } else if (traceRes.stdout !== undefined && st.stdout === undefined) {
+                st.stdout = traceRes.stdout || '';
+              }
+            });
           }
 
           simSteps = result.steps || [];
@@ -5165,6 +5210,7 @@
       simFullExplanation = [];
       simCurrentStepIdx = -1;
       simUserChoices = [];
+      simUserInputs = [];
       window.isSimulating = false;
 
       const activeObj = dsContainers.find(c => c.name === activeContainerName);
@@ -5268,6 +5314,28 @@
 
       if (await buildSimulationIfNeeded()) {
         // Advance immediately to the step that processes the user's chosen neighbor and continue playing
+        const nextIdx = Math.min(decisionStepIdx + 1, simSteps.length - 1);
+        applySimulationStep(nextIdx);
+        setPlayButtonIcons(true);
+        scheduleNextStep();
+      }
+    };
+
+    window.submitStdinSimInput = async function () {
+      if (!window.isSimulating) return;
+      stopAutoPlay();
+
+      const inputEl = document.getElementById('sim-stdin-input-field');
+      const val = inputEl ? inputEl.value : '';
+
+      const decisionStepIdx = simCurrentStepIdx;
+      simUserInputs = simUserInputs.filter(c => c.stepIdx < decisionStepIdx);
+      simUserInputs.push({
+        stepIdx: decisionStepIdx,
+        value: String(val),
+      });
+
+      if (await buildSimulationIfNeeded()) {
         const nextIdx = Math.min(decisionStepIdx + 1, simSteps.length - 1);
         applySimulationStep(nextIdx);
         setPlayButtonIcons(true);

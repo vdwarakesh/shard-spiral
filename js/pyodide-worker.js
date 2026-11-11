@@ -4,20 +4,19 @@ importScripts('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js');
 
 let pyodideReadyPromise = loadPyodide();
 
-let tracerScriptPromise = fetch('../python/pyodide-worker.py').then(res => {
+let tracerScriptPromise = fetch('../python/pyodide-worker.py', { cache: 'no-store' }).then(res => {
     if (!res.ok) {
         throw new Error(`Failed to load pyodide-worker.py (Status: ${res.status})`);
     }
     return res.text();
 });
 
-// Cache for separate per-data-structure Python proxy files (e.g. sequence.py, graph.py)
 const dsProxyScriptCache = new Map();
 
 function getDsProxyScript(category) {
     const safeCat = (category || 'sequence').toLowerCase().trim();
     if (!dsProxyScriptCache.has(safeCat)) {
-        const promise = fetch(`../python/${safeCat}.py`).then(res => {
+        const promise = fetch(`../python/${safeCat}.py`, { cache: 'no-store' }).then(res => {
             if (!res.ok) {
                 throw new Error(`Failed to load ../python/${safeCat}.py (Status: ${res.status})`);
             }
@@ -40,6 +39,7 @@ self.onmessage = async (event) => {
         rawKwargs,
         simMode,
         userChoices,
+        userInputs,
         maxSteps,
     } = event.data;
 
@@ -81,6 +81,7 @@ from collections import deque, OrderedDict
             py.globals.set('_raw_kwargs_json', JSON.stringify(rawKwargs || {}));
             py.globals.set('_sim_mode', simMode || 'auto');
             py.globals.set('_user_choices_json', JSON.stringify(userChoices || []));
+            py.globals.set('_user_inputs_json', JSON.stringify(userInputs || []));
             py.globals.set('_MAX_STEPS', maxSteps || 2500);
 
             const rawJson = await py.runPythonAsync(tracerScript);

@@ -1,5 +1,6 @@
 # python/pyodide-worker.py
 import sys
+import builtins
 import json
 import inspect
 import traceback
@@ -11,6 +12,7 @@ _trace_steps = []
 _error_info = None
 _step_count = 0
 _pending_steps = {}
+_stdout_buffer = []
 
 class _StepLimitExceeded(Exception):
     pass
@@ -22,6 +24,7 @@ class _WaitForUserChoice(Exception):
 _payload = json.loads(_ds_payload_json)
 _node_labels = json.loads(_node_labels_json)
 _user_choices = list(json.loads(_user_choices_json))
+_user_inputs = list(json.loads(_user_inputs_json)) if '_user_inputs_json' in globals() else []
 
 # Map display labels to canonical node keys first, then fallback to internal IDs
 _label_to_key = {}
@@ -52,6 +55,53 @@ def _serialize(v):
     if isinstance(v, dict):
         return {str(_serialize(k)): _serialize(val) for k, val in v.items()}
     return repr(v)
+
+
+def _format_for_print(v):
+    if '_NodeId' in globals() and isinstance(v, _NodeId):
+        return str(_node_labels.get(str(v), str(v)))
+    if isinstance(v, (list, tuple, set, deque)):
+        return str(_serialize(v))
+    if isinstance(v, dict):
+        return str(_serialize(v))
+    return str(v)
+
+
+def _custom_print(*args, sep=' ', end='\n', file=None, flush=False):
+    text = str(sep).join(_format_for_print(a) for a in args) + str(end)
+    _stdout_buffer.append(text)
+
+
+def _custom_input(prompt=''):
+    prompt_str = _format_for_print(prompt) if prompt is not None else ''
+    if _user_inputs:
+        val = str(_user_inputs.pop(0))
+        _stdout_buffer.append(f"{prompt_str}{val}\n")
+        return val
+
+    # Stop tracing BEFORE raising so Python does not emit a fake 'return' event
+    sys.settrace(None)
+    raise _WaitForUserChoice({
+        'type': 'stdin_input',
+        'prompt': prompt_str,
+        'title': 'Input Required — input()',
+        'reason': prompt_str if prompt_str else 'The algorithm is waiting for console input:'
+    })
+
+
+class _CustomStdout:
+    def write(self, s):
+        _stdout_buffer.append(str(s))
+        return len(str(s))
+    def flush(self):
+        pass
+
+
+class _CustomStdin:
+    def readline(self, *args):
+        return _custom_input() + '\n'
+    def read(self, *args):
+        return _custom_input()
 
 
 def _build_ast_line_info(code_str):
@@ -114,7 +164,22 @@ def _parse_arg_value(v_str):
 
 
 try:
-    _ns = {}
+    _old_rec_limit = sys.getrecursionlimit()
+    _old_builtin_input = builtins.input
+    _old_builtin_print = builtins.print
+    _old_stdin = sys.stdin
+    _old_stdout = sys.stdout
+
+    builtins.input = _custom_input
+    builtins.print = _custom_print
+    sys.stdin = _CustomStdin()
+    sys.stdout = _CustomStdout()
+
+    _ns = {
+        '__builtins__': builtins,
+        'print': _custom_print,
+        'input': _custom_input,
+    }
     exec(compile(_user_code, '<algorithm>', 'exec'), _ns)
 
     _loop_targets, _assign_targets, _while_lines, _top_level_funcs = _build_ast_line_info(_user_code)
@@ -131,7 +196,6 @@ try:
     _first_param = _sig_params[0] if _sig_params else 'graph'
     _exhausted_loop_vars = set()
 
-    # Unique ID per live frame so recursive calls never collide via CPython id(frame) reuse
     _frame_uid_map = {}
     _next_frame_uid = 0
 
@@ -173,9 +237,6 @@ try:
             _eval_kwargs[_k] = _parse_arg_value(_v_str)
 
     def _upgrade_graph_literals_in_frame(frame, assigned_names):
-        """When the user writes `queue = ['A']` or `start = 'A'` in Practice mode,
-        upgrade matching node labels to canonical `_NodeId` instances in-place so
-        `cur in visited` and canvas highlighting work seamlessly with `graph[cur]`."""
         if '_NodeId' not in globals() or not hasattr(_visual_ds, '_resolve_key'):
             return
         for name in assigned_names:
@@ -244,9 +305,6 @@ try:
             is_while_line=(executed_lineno in _while_lines)
         )
 
-        # Only clear active_edge and switch active_node if a variable assigned on THIS line
-        # holds a _NodeId (e.g., `node = queue.pop(0)` or `curr_dist, node = heapq.heappop(pq)`).
-        # Numeric assignments like `new_dist = curr_dist + weight` keep active_edge intact!
         if assigned_names and not getattr(_visual_ds, '_loop_exhausted_on_step', False) and '_NodeId' in globals():
             assigned_node_ids = []
             for name in assigned_names:
@@ -306,10 +364,9 @@ try:
                         'event': 'line',
                         'line': caller_pending['line'],
                         'stateVars': caller_state,
+                        'stdout': ''.join(_stdout_buffer),
                         'visual': _visual_ds.snapshot(),
                     })
-                # Entering a recursive helper call (e.g. `_dfs(neighbor)`):
-                # clear the parent's active_edge and highlight the new frame's _NodeId argument
                 if '_NodeId' in globals():
                     for k, v in frame.f_locals.items():
                         if k != _first_param and isinstance(v, _NodeId) and str(v) in _visual_ds:
@@ -324,11 +381,12 @@ try:
 
         state_vars = _build_state_vars(frame, executed_line)
 
-        if pending is not None and not (event == 'return' and pending['line'] == frame.f_lineno):
+        if pending is not None:
             _trace_steps.append({
                 'event': 'line',
                 'line': pending['line'],
                 'stateVars': state_vars,
+                'stdout': ''.join(_stdout_buffer),
                 'visual': _visual_ds.snapshot(),
             })
 
@@ -347,11 +405,10 @@ try:
                     'event': 'return',
                     'line': frame.f_lineno,
                     'stateVars': ret_state_vars,
+                    'stdout': ''.join(_stdout_buffer),
                     'visual': final_visual,
                 })
             else:
-                # Returning from recursive helper `_dfs` back to caller frame:
-                # restore caller's active node so backtracking highlights the parent node
                 caller = frame.f_back
                 if caller is not None and caller.f_code.co_filename == '<algorithm>' and '_NodeId' in globals():
                     _visual_ds.active_edge = None
@@ -362,14 +419,21 @@ try:
 
         return _tracer
 
-    _old_rec_limit = sys.getrecursionlimit()
     sys.setrecursionlimit(250)
+    builtins.input = _custom_input
+    builtins.print = _custom_print
+    sys.stdin = _CustomStdin()
+    sys.stdout = _CustomStdout()
 
     sys.settrace(_tracer)
     try:
         _fn(_visual_ds, *_eval_args, **_eval_kwargs)
     finally:
         sys.settrace(None)
+        builtins.input = _old_builtin_input
+        builtins.print = _old_builtin_print
+        sys.stdin = _old_stdin
+        sys.stdout = _old_stdout
         sys.setrecursionlimit(_old_rec_limit)
 
     _visual_ds.finalize_steps(_trace_steps)
@@ -392,13 +456,15 @@ except _WaitForUserChoice as pause_exc:
             _pstate.pop(_lvar, None)
         _pvis = _visual_ds.snapshot()
         _src_id = pause_exc.interaction.get('sourceNodeId')
-        _pvis['activeNodeId'] = _src_id
-        _pvis['activeNodeIds'] = [_src_id] if _src_id is not None else []
-        _pvis['activeEdge'] = None
+        if _src_id is not None:
+            _pvis['activeNodeId'] = _src_id
+            _pvis['activeNodeIds'] = [_src_id]
+            _pvis['activeEdge'] = None
         _trace_steps.append({
             'event': 'line',
             'line': _pline,
             'stateVars': _pstate,
+            'stdout': ''.join(_stdout_buffer),
             'visual': _pvis,
         })
 
@@ -439,5 +505,6 @@ except Exception as e:
 
 json.dumps({
     'steps': _trace_steps,
-    'error': _error_info
+    'error': _error_info,
+    'stdout': ''.join(_stdout_buffer)
 })

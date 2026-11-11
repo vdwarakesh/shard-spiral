@@ -1868,6 +1868,7 @@ export const practiceConfig = {
         visitedNodes: vis.visitedNodes || [],
         activeEdge: vis.activeEdge || null,
         visitedEdges: vis.visitedEdges || [],
+        stdout: frame.stdout || '',
         interaction: frame.interaction || null,
         stateVars: sv,
         stepDescription,
@@ -1884,6 +1885,7 @@ export const practiceConfig = {
         ...(lastStep || {}),
         lines: { Python: { active: String(errLine) } },
         activeLineKey: 'active',
+        stdout: lastStep ? (lastStep.stdout || '') : '',
         stateVars: {
           ...(lastStep ? lastStep.stateVars : {}),
           error: errDesc,

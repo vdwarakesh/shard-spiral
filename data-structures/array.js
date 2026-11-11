@@ -672,6 +672,8 @@ export const practiceConfig = {
         foundIndex: vis.foundIndex ?? -1,
         checkedIndices: vis.checkedIndices || [],
         arrayValues: vis.arrayValues || null,
+        stdout: frame.stdout || '',
+        interaction: frame.interaction || null,
         stateVars: sv,
         stepDescription,
       });
@@ -686,6 +688,7 @@ export const practiceConfig = {
       steps.push({
         lines: { Python: { active: String(errLine) } },
         activeLineKey: 'active',
+        stdout: lastStep ? (lastStep.stdout || '') : '',
         activeIndex: lastStep ? lastStep.activeIndex : -1,
         foundIndex: -1,
         checkedIndices: lastStep ? lastStep.checkedIndices : [],

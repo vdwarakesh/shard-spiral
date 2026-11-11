@@ -39,6 +39,7 @@ export function tracePythonAlgorithm({
   rawKwargs = {},
   simMode = 'auto',
   userChoices = [],
+  userInputs = [],
   maxSteps = 2500,
 }) {
   return new Promise((resolve) => {
@@ -56,6 +57,7 @@ export function tracePythonAlgorithm({
       rawKwargs,
       simMode,
       userChoices,
+      userInputs,
       maxSteps,
     });
   });
