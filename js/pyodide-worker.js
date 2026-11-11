@@ -1,18 +1,32 @@
 // js/pyodide-worker.js
 
-// 1. Load Pyodide from the CDN into the worker thread
 importScripts('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js');
 
-// 2. Start booting Pyodide immediately in the background
 let pyodideReadyPromise = loadPyodide();
 
-// 3. Fetch python script once so it's ready when needed
 let tracerScriptPromise = fetch('../python/pyodide-worker.py').then(res => {
     if (!res.ok) {
         throw new Error(`Failed to load pyodide-worker.py (Status: ${res.status})`);
     }
     return res.text();
 });
+
+// Cache for separate per-data-structure Python proxy files (e.g. sequence.py, graph.py)
+const dsProxyScriptCache = new Map();
+
+function getDsProxyScript(category) {
+    const safeCat = (category || 'sequence').toLowerCase().trim();
+    if (!dsProxyScriptCache.has(safeCat)) {
+        const promise = fetch(`../python/${safeCat}.py`).then(res => {
+            if (!res.ok) {
+                throw new Error(`Failed to load ../python/${safeCat}.py (Status: ${res.status})`);
+            }
+            return res.text();
+        });
+        dsProxyScriptCache.set(safeCat, promise);
+    }
+    return dsProxyScriptCache.get(safeCat);
+}
 
 self.onmessage = async (event) => {
     const {
@@ -51,15 +65,17 @@ from collections import deque, OrderedDict
 
     if (type === 'run') {
         try {
-            // Wait for Pyodide and the external Python script to finish loading
-            const [py, tracerScript] = await Promise.all([
-                pyodideReadyPromise, 
-                tracerScriptPromise
+            const category = dsCategory || 'sequence';
+            const [py, tracerScript, dsProxyCode] = await Promise.all([
+                pyodideReadyPromise,
+                tracerScriptPromise,
+                getDsProxyScript(category),
             ]);
 
             py.globals.set('_user_code', pythonCode);
             py.globals.set('_func_name', funcName);
-            py.globals.set('_ds_category', dsCategory || 'sequence');
+            py.globals.set('_ds_category', category);
+            py.globals.set('_ds_proxy_code', dsProxyCode);
             py.globals.set('_ds_payload_json', JSON.stringify(dsData ?? []));
             py.globals.set('_node_labels_json', JSON.stringify(nodeLabels || {}));
             py.globals.set('_raw_kwargs_json', JSON.stringify(rawKwargs || {}));
@@ -67,9 +83,8 @@ from collections import deque, OrderedDict
             py.globals.set('_user_choices_json', JSON.stringify(userChoices || []));
             py.globals.set('_MAX_STEPS', maxSteps || 2500);
 
-            // Execute the fetched python string
             const rawJson = await py.runPythonAsync(tracerScript);
-            
+
             self.postMessage({ id, result: JSON.parse(rawJson) });
         } catch (fatalErr) {
             self.postMessage({

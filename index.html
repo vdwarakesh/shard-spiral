@@ -452,6 +452,8 @@
                     data-tab-type="code">Code</button>
                   <button type="button" id="tab-notes" class="vscode-tab" data-tab-group="right-top"
                     data-tab-type="notes">Notes</button>
+                  <button type="button" id="tab-practice" class="vscode-tab" data-tab-group="right-top"
+                    data-tab-type="practice">Practice</button>
                 </div>
                 <!--==========-->
 
@@ -472,6 +474,9 @@
                     </div>
                     <div class="lang-option-item" role="option" aria-selected="false" data-tab-type="notes">
                       <span>Notes</span>
+                    </div>
+                    <div class="lang-option-item" role="option" aria-selected="false" data-tab-type="practice">
+                      <span>Practice</span>
                     </div>
                   </div>
                 </div>
@@ -969,7 +974,7 @@
 
   <script type="module">
     import { createQuickdraw } from './js/quickdraw/index.js';
-    import { warmUpPyodide } from './js/pyodide-runner.js';
+    import { warmUpPyodide, tracePythonAlgorithm } from './js/pyodide-runner.js';
 
     /* ========== 1. Layout, Breakpoint & Storage Configuration ========== */
     const LAYOUT_CONFIG = {
@@ -1245,6 +1250,7 @@
     let codeEditorInstance = null;
     let activeSimLineHandle = null;
     const editedCodeCache = {};
+    const practiceCodeCache = {};
     let resizeRafId = null;
 
     // Simulation & Playback State
@@ -2731,6 +2737,10 @@
       if (dsCardTitleEl) dsCardTitleEl.textContent = headerTitle;
       if (dsCollapsedLabelEl) dsCollapsedLabelEl.textContent = headerTitle;
 
+      if (activeRightTopTab === 'practice') {
+        updateCodeViewPane();
+      }
+
       renderHistoryList();
       if (isCompatibleFilterActive) {
         renderMainAlgoTree();
@@ -2939,18 +2949,20 @@
     }
 
     function getCurrentRunnablePythonCode() {
+      if (activeRightTopTab === 'practice') {
+        const activeObj = dsContainers.find(c => c.name === activeContainerName);
+        if (!activeObj) return null;
+        const practiceKey = `practice_${toSnakeCase(activeObj.dsType)}.py`;
+        if (codeEditorInstance && codeEditorInstance._loadedCacheKey === practiceKey) {
+          const liveCode = codeEditorInstance.getValue();
+          practiceCodeCache[practiceKey] = liveCode;
+          return liveCode;
+        }
+        return practiceCodeCache[practiceKey] || activeObj.dsModule?.practiceConfig?.template || null;
+      }
+
       const formattedTarget = toSnakeCase(selectedDsaName || '');
       const cacheKey = `${formattedTarget}.py`;
-      if (
-        codeEditorInstance &&
-        codeEditorInstance._loadedCacheKey === cacheKey &&
-        activeRightTopTab === 'code' &&
-        currentLangExt === '.py'
-      ) {
-        const liveCode = codeEditorInstance.getValue();
-        editedCodeCache[cacheKey] = liveCode;
-        return liveCode;
-      }
       return editedCodeCache[cacheKey] !== undefined ? editedCodeCache[cacheKey] : null;
     }
 
@@ -2975,21 +2987,83 @@
     }
 
     async function updateCodeViewPane() {
+      const currentTab = activeRightTopTab;
+
+      // 1. PRACTICE TAB: Editable, Data-Structure-Dependent Template
+      if (currentTab === 'practice') {
+        const activeObj = dsContainers.find(c => c.name === activeContainerName);
+        const practiceCfg = activeObj?.dsModule?.practiceConfig;
+
+        if (!activeObj || !practiceCfg) {
+          codeEditorInstance = null;
+          activeSimLineHandle = null;
+          codeViewPane.innerHTML = `
+        <div class="card-inner-pad">
+          <span class="card-body-text" style="color: var(--text-muted); text-align: center; display: block; margin-top: 1rem;">
+            Create or select a data structure to practice writing custom visualization code.
+          </span>
+        </div>
+      `;
+          updatePlaybackCompatibilityUI();
+          return;
+        }
+
+        const practiceKey = `practice_${toSnakeCase(activeObj.dsType)}.py`;
+        if (practiceCodeCache[practiceKey] === undefined) {
+          practiceCodeCache[practiceKey] = practiceCfg.template;
+        }
+
+        const text = practiceCodeCache[practiceKey];
+        codeViewPane.innerHTML = '';
+        codeEditorInstance = window.CodeMirror(codeViewPane, {
+          value: text,
+          mode: 'python',
+          lineNumbers: true,
+          lineWrapping: true,
+          readOnly: false, // Editable in Practice mode
+          indentUnit: 4,
+          tabSize: 4,
+          indentGuide: true
+        });
+        codeEditorInstance._loadedCacheKey = practiceKey;
+
+        renderSignatureEditorFromCode(text, practiceCfg.funcName);
+
+        codeEditorInstance.on('change', () => {
+          const updatedCode = codeEditorInstance.getValue();
+          practiceCodeCache[practiceKey] = updatedCode;
+
+          if (window.isSimulating && typeof resetSimulation === 'function') {
+            resetSimulation();
+          }
+          renderSignatureEditorFromCode(updatedCode, practiceCfg.funcName);
+        });
+
+        requestAnimationFrame(() => {
+          if (codeEditorInstance) {
+            codeEditorInstance.refresh();
+            highlightActiveCodeLine();
+          }
+        });
+        updatePlaybackCompatibilityUI();
+        return;
+      }
+
+      // 2. STANDARD CODE / NOTES TABS
       if (!selectedDsaName) {
         codeEditorInstance = null;
         activeSimLineHandle = null;
         codeViewPane.innerHTML = `
-        <div class="card-inner-pad">
-          <span class="card-body-text" style="color: var(--text-muted); text-align: center; display: block; margin-top: 1rem;">
-            Pick an algorithm or data structure from the sidebar and explore how it works.
-          </span>
-        </div>
-      `;
+      <div class="card-inner-pad">
+        <span class="card-body-text" style="color: var(--text-muted); text-align: center; display: block; margin-top: 1rem;">
+          Pick an algorithm or data structure from the sidebar and explore how it works.
+        </span>
+      </div>
+    `;
         return;
       }
 
       const currentTarget = selectedDsaName;
-      const currentTab = activeRightTopTab;
       const ext = currentTab === 'notes' ? '.html' : currentLangExt;
       const formattedTarget = toSnakeCase(currentTarget);
       const folder = selectedDsaType === 'ds' ? 'data-structures' : 'algorithms';
@@ -3029,26 +3103,12 @@
             mode: getCodeMirrorMode(currentPrismLang),
             lineNumbers: true,
             lineWrapping: true,
+            readOnly: true, // Disallow editing standard code
             indentUnit: 4,
             tabSize: 4,
             indentGuide: true
           });
           codeEditorInstance._loadedCacheKey = cacheKey;
-
-          codeEditorInstance.on('change', () => {
-            const updatedCode = codeEditorInstance.getValue();
-            editedCodeCache[cacheKey] = updatedCode;
-
-            // Reset active simulation if the user edits the code
-            if (window.isSimulating && typeof resetSimulation === 'function') {
-              resetSimulation();
-            }
-
-            // Re-sync Settings signature inputs if the user changes the Python def(...) line
-            if (selectedDsaType === 'algo' && currentLangExt === '.py') {
-              renderSignatureEditorFromCode(updatedCode);
-            }
-          });
 
           requestAnimationFrame(() => {
             if (codeEditorInstance) {
@@ -3062,10 +3122,10 @@
         codeEditorInstance = null;
         activeSimLineHandle = null;
         codeViewPane.innerHTML = `
-        <div class="card-inner-pad">
-          <span class="card-body-text">Algorithm/Data structure not implemented yet</span>
-        </div>
-      `;
+      <div class="card-inner-pad">
+        <span class="card-body-text">Algorithm/Data structure not implemented yet</span>
+      </div>
+    `;
       }
     }
 
@@ -3160,7 +3220,9 @@
     }
 
     function setActiveTab(tabType, tabText) {
-      /* setActiveTab synchronizes the active state between desktop Code/Notes tabs (#tab-code, #tab-notes) and the mobile dropdown (#tab-trigger-btn) */
+      if (window.isSimulating && typeof resetSimulation === 'function') {
+        resetSimulation();
+      }
       activeRightTopTab = tabType;
 
       desktopTabs.forEach(t => {
@@ -3174,7 +3236,16 @@
         opt.setAttribute('aria-selected', String(isActive));
       });
 
+      // Hide language selector on Practice tab (Practice runs in Python via Pyodide)
+      if (langWrapper) {
+        langWrapper.style.display = tabType === 'practice' ? 'none' : '';
+      }
+
       updateCodeViewPane();
+      if (tabType !== 'practice' && selectedDsaName) {
+        updateAlgorithmSettings(selectedDsaName, null, selectedDsaType);
+      }
+      updatePlaybackCompatibilityUI();
     }
 
     function setActiveStateTab(tabType, tabText) {
@@ -3920,6 +3991,25 @@
 
     function updatePlaybackCompatibilityUI() {
       const activeObj = dsContainers.find((c) => c.name === activeContainerName);
+      const isPracticeMode = activeRightTopTab === 'practice';
+
+      if (isPracticeMode) {
+        const canPractice = Boolean(activeObj && activeObj.dsModule?.practiceConfig);
+        document.querySelectorAll('.playback-bar').forEach((bar) => {
+          const controls = bar.querySelector('.playback-ui-controls');
+          const message = bar.querySelector('.playback-ui-message');
+          if (!controls || !message) return;
+          if (canPractice) {
+            controls.style.display = 'flex';
+            message.style.display = 'none';
+          } else {
+            controls.style.display = 'none';
+            message.style.display = 'block';
+            message.textContent = 'Create a data structure to practice custom algorithms';
+          }
+        });
+        return;
+      }
       const isAlgoSelected = selectedDsaType === 'algo' && selectedDsaName;
       const currentLang = langActiveLabel ? langActiveLabel.textContent.trim() : 'Python';
 
@@ -4055,9 +4145,11 @@
       return span;
     }
 
-    function parsePythonSignature(pyCode) {
-      /* Extracts function name and parameters (with optional defaults) from the first top-level non-dunder def */
-      const match = pyCode.match(/^def\s+(?!__\w+__)([a-zA-Z_]\w*)\s*\(([^)]*)\)/m);
+    function parsePythonSignature(pyCode, targetFuncName = null) {
+      const regex = targetFuncName
+        ? new RegExp(`^def\\s+(${targetFuncName})\\s*\\(([^)]*)\\)`, 'm')
+        : /^def\s+(?!__\w+__)([a-zA-Z_]\w*)\s*\(([^)]*)\)/m;
+      const match = pyCode.match(regex);
       if (!match) return null;
       const funcName = match[1];
       const rawParams = match[2].trim();
@@ -4098,10 +4190,11 @@
         const colonIdx = namePart.indexOf(':');
         if (colonIdx !== -1) namePart = namePart.slice(0, colonIdx).trim();
 
+        const isVariadic = namePart.startsWith('*');
         return {
           name: namePart,
-          hasDefault: eqIdx !== -1,
-          defaultVal,
+          hasDefault: eqIdx !== -1 || isVariadic,
+          defaultVal: isVariadic ? 'optional' : defaultVal,
           isDataStructure: idx === 0
         };
       });
@@ -4109,21 +4202,22 @@
       return { funcName, params };
     }
 
-    function renderSignatureEditorFromCode(pyCode) {
+    function renderSignatureEditorFromCode(pyCode, requiredFuncName = null) {
       const configContainer = document.getElementById('algo-config-container');
       if (!configContainer) return;
 
-      // Preserve any parameter values the user already typed
       const existingValues = {};
       configContainer.querySelectorAll('.sig-inline-input').forEach(inp => {
         existingValues[inp.getAttribute('data-param-name')] = inp.value;
       });
 
-      const sig = parsePythonSignature(pyCode);
+      const sig = parsePythonSignature(pyCode, requiredFuncName);
       if (!sig) {
         if (algoSettingsSubmitBtn) algoSettingsSubmitBtn.style.display = 'none';
         configContainer.style.color = 'var(--text-muted)';
-        configContainer.textContent = 'No top-level Python def found in editor.';
+        configContainer.textContent = requiredFuncName
+          ? `Define 'def ${requiredFuncName}(...)' to configure and visualize.`
+          : 'No top-level Python def found in editor.';
         return;
       }
 
@@ -4936,12 +5030,12 @@
 
     async function buildSimulationIfNeeded() {
       const activeObj = dsContainers.find((c) => c.name === activeContainerName);
-      if (!activeObj || selectedDsaType !== 'algo' || !selectedDsaName) return false;
+      const isPracticeMode = activeRightTopTab === 'practice';
+      if (!activeObj) return false;
+      if (!isPracticeMode && (selectedDsaType !== 'algo' || !selectedDsaName)) return false;
 
       // 1. Collect parameter values keyed by their exact Python parameter name
-      const paramInputs = document.querySelectorAll(
-        '#algo-settings-body input[data-param-name]'
-      );
+      const paramInputs = document.querySelectorAll('#algo-settings-body input[data-param-name]');
       const rawKwargs = {};
 
       for (const inp of paramInputs) {
@@ -4955,27 +5049,61 @@
           if (!hasDefault) {
             if (stateViewPane) {
               stateViewPane.innerHTML = `
-                <div class="card-inner-pad">
-                  <span class="card-body-text" style="color: #ef4444; font-weight: 500;">
-                    Missing required argument: '${paramName}'
-                  </span>
-                </div>`;
+            <div class="card-inner-pad">
+              <span class="card-body-text" style="color: #ef4444; font-weight: 500;">
+                Missing required argument: '${paramName}'
+              </span>
+            </div>`;
             }
             return false;
           }
-          continue; // Omit empty optional parameter so Python uses its default
+          continue;
         }
-
         rawKwargs[paramName] = rawVal;
       }
 
-      // 2. Show loading status while Pyodide executes
       if (stateViewPane) {
         stateViewPane.innerHTML = `<div class="card-inner-pad"><span class="card-body-text">Running Python (WASM)...</span></div>`;
       }
 
       try {
-        // 3. Dynamically resolve file path and function name
+        // 2A. Practice Mode Execution (delegated to the active Data Structure's practiceConfig)
+        if (isPracticeMode) {
+          const practiceCfg = activeObj.dsModule?.practiceConfig;
+          if (!practiceCfg) return false;
+
+          const pythonCodeToRun = getCurrentRunnablePythonCode();
+          const traceRes = await tracePythonAlgorithm({
+            dsCategory: practiceCfg.dsCategory,
+            pythonCode: pythonCodeToRun,
+            funcName: practiceCfg.funcName,
+            dsData: practiceCfg.extractDsPayload(activeObj.element),
+            nodeLabels: practiceCfg.extractNodeLabels ? practiceCfg.extractNodeLabels(activeObj.element) : {},
+            rawKwargs,
+            simMode,
+            userChoices: simUserChoices.map(c => c.chosenId),
+          });
+
+          const result = practiceCfg.buildSteps(traceRes.steps || [], traceRes.error);
+          if (result.error && (!result.steps || result.steps.length === 0)) {
+            if (stateViewPane) {
+              stateViewPane.innerHTML = `
+            <div class="card-inner-pad">
+              <span class="card-body-text" style="color: #ef4444; font-weight: 500;">
+                ${result.error.type}: ${result.error.message}
+              </span>
+            </div>`;
+            }
+            return false;
+          }
+
+          simSteps = result.steps || [];
+          simFullExplanation = result.fullExplanationLines || [];
+          window.isSimulating = simSteps.length > 0;
+          return window.isSimulating;
+        }
+
+        // 2B. Standard Algorithm Execution
         const fileBase = toSnakeCase(selectedDsaName);
         const fnName = toSnakeCase(selectedDsaName);
 
@@ -4987,7 +5115,6 @@
           return false;
         }
 
-        // 4. Pass the container element, rawKwargs, manual interaction options, AND live CodeMirror code
         let pythonCodeToRun = getCurrentRunnablePythonCode();
         if (!pythonCodeToRun) {
           const pyRes = await fetch(`algorithms/${fileBase}.py`);
@@ -5006,11 +5133,11 @@
         if (result.error && (!result.steps || result.steps.length === 0)) {
           if (stateViewPane) {
             stateViewPane.innerHTML = `
-              <div class="card-inner-pad">
-                <span class="card-body-text" style="color: #ef4444; font-weight: 500;">
-                  ${result.error.type}: ${result.error.message}
-                </span>
-              </div>`;
+          <div class="card-inner-pad">
+            <span class="card-body-text" style="color: #ef4444; font-weight: 500;">
+              ${result.error.type}: ${result.error.message}
+            </span>
+          </div>`;
           }
           return false;
         }
@@ -5020,7 +5147,7 @@
         window.isSimulating = simSteps.length > 0;
         return window.isSimulating;
       } catch (err) {
-        console.error(`Failed to run simulation for "${selectedDsaName}":`, err);
+        console.error('Failed to run simulation:', err);
         return false;
       }
     }

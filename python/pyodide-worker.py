@@ -1,3 +1,4 @@
+# python/pyodide-worker.py
 import sys
 import json
 import inspect
@@ -14,308 +15,26 @@ _pending_steps = {}
 class _StepLimitExceeded(Exception):
     pass
 
+class _WaitForUserChoice(Exception):
+    def __init__(self, interaction):
+        self.interaction = interaction
+
 _payload = json.loads(_ds_payload_json)
 _node_labels = json.loads(_node_labels_json)
 _user_choices = list(json.loads(_user_choices_json))
 
-# Map display labels to canonical node keys first, then fallback to internal IDs
 _label_to_key = {}
 for _k in _node_labels.keys():
     _label_to_key[str(_k)] = str(_k)
 for _k, _lbl in _node_labels.items():
     _label_to_key[str(_lbl)] = str(_k)
 
-
-class _NodeId(str):
-    """String subclass tagging graph node IDs so _serialize automatically
-    converts them to display labels."""
-    pass
-
-
-class _WaitForUserChoice(Exception):
-    def __init__(self, interaction):
-        self.interaction = interaction
-
-
-class _GraphNeighborList(list):
-    """In 'auto' mode, iterates in standard order.
-    In 'manual' mode, prompts the user whenever 2 or more incident edges remain."""
-    def __init__(self, graph, source_key, neighbors):
-        super().__init__(neighbors)
-        self._graph = graph
-        self._source = str(source_key)
-
-    def _iterate_items(self, items_list):
-        if _sim_mode != 'manual':
-            for nb in items_list:
-                self._graph._on_edge_inspect(self._source, nb)
-                yield nb
-            self._graph._on_neighbor_loop_end(self._source)
-            return
-
-        remaining = list(items_list)
-        while remaining:
-            if len(remaining) > 1:
-                if _user_choices:
-                    chosen_id = str(_user_choices.pop(0))
-                    match_idx = next(
-                        (i for i, nb in enumerate(remaining)
-                         if (str(nb[0]) if isinstance(nb, tuple) else str(nb)) == chosen_id),
-                        0
-                    )
-                    nb = remaining.pop(match_idx)
-                else:
-                    src_label = _node_labels.get(self._source, self._source)
-                    candidates = []
-                    for nb in remaining:
-                        nb_id = str(nb[0]) if isinstance(nb, tuple) else str(nb)
-                        nb_label = _node_labels.get(nb_id, nb_id)
-                        candidates.append({
-                            'id': nb_id,
-                            'label': nb_label,
-                            'edge': [self._source, nb_id],
-                            'edgeLabel': f"{src_label} → {nb_label}"
-                        })
-                    # Stop tracing BEFORE raising so Python does not emit a fake 'return' event
-                    sys.settrace(None)
-                    raise _WaitForUserChoice({
-                        'type': 'select_neighbor',
-                        'sourceNodeId': self._source,
-                        'candidateNodeIds': [c['id'] for c in candidates],
-                        'candidateEdges': [c['edge'] for c in candidates],
-                        'candidates': candidates,
-                        'title': f"Choose the next neighbor of '{src_label}' to inspect",
-                        'reason': (
-                            f"Node '{src_label}' has {len(candidates)} remaining incident edges to inspect "
-                            f"({', '.join(c['label'] for c in candidates)}). "
-                            f"Select any of these neighbors/edges to check whether it has been visited yet:"
-                        )
-                    })
-            else:
-                nb = remaining.pop(0)
-
-            self._graph._on_edge_inspect(self._source, nb)
-            yield nb
-
-        self._graph._on_neighbor_loop_end(self._source)
-
-    def __iter__(self):
-        return self._iterate_items(super().__iter__())
-
-    def __reversed__(self):
-        return self._iterate_items(super().__reversed__())
-
-
-class VisualGraph(dict):
-    """Graph proxy exclusively for adjacency list {u: [v1, v2, ...]}."""
-    def __init__(self, raw_adj):
-        wrapped = {}
-        for k, neighbors in raw_adj.items():
-            uk = _NodeId(str(k))
-            nb_list = []
-            for nb in neighbors:
-                if isinstance(nb, (list, tuple)) and len(nb) >= 2:
-                    nb_list.append((_NodeId(str(nb[0])), nb[1]))
-                else:
-                    nb_list.append(_NodeId(str(nb)))
-            wrapped[uk] = nb_list
-        super().__init__(wrapped)
-
-        # Precompute all incident edges (outgoing and incoming) per node
-        self._incident_edges = {str(k): [] for k in wrapped.keys()}
-        for u_key, nb_list in wrapped.items():
-            u_str = str(u_key)
-            for nb in nb_list:
-                v_str = str(nb[0]) if isinstance(nb, tuple) else str(nb)
-                edge = (u_str, v_str)
-                if edge not in self._incident_edges.setdefault(u_str, []):
-                    self._incident_edges[u_str].append(edge)
-                if edge not in self._incident_edges.setdefault(v_str, []):
-                    self._incident_edges[v_str].append(edge)
-
-        self.active_node = None
-        self._discovered_nodes = set()
-        self.active_edge = None
-        self.visited_edges = []
-        self.step_accessed_nodes = set()
-        self._loop_exhausted_on_step = False
-
-    def on_step_start(self):
-        self.step_accessed_nodes.clear()
-        self._loop_exhausted_on_step = False
-
-    def record_visit(self, node_key):
-        s_key = str(node_key)
-        if s_key not in self:
-            return
-        self.active_node = s_key
-        self.step_accessed_nodes.add(s_key)
-        self._discovered_nodes.add(s_key)
-
-    def _on_edge_inspect(self, u_key, v_entry):
-        u_str = str(u_key)
-        v_str = str(v_entry[0]) if isinstance(v_entry, tuple) else str(v_entry)
-        self._loop_exhausted_on_step = False
-        self.record_visit(u_str)
-        self.active_edge = [u_str, v_str]
-        if v_str in self:
-            self.step_accessed_nodes.add(v_str)
-
-    def _on_neighbor_loop_end(self, u_key):
-        self.active_edge = None
-        self._loop_exhausted_on_step = True
-        self.record_visit(str(u_key))
-
-    def _promote_discovered_edges(self, frame_locals):
-        for name, val in frame_locals.items():
-            if isinstance(val, (list, tuple, set, deque)):
-                for item in val:
-                    if isinstance(item, _NodeId) or str(item) in self:
-                        self._discovered_nodes.add(str(item))
-                    elif isinstance(item, (list, tuple)) and len(item) >= 2:
-                        # Support priority queue tuples like (dist, node) or (weight, u, v)
-                        for sub in item:
-                            if isinstance(sub, _NodeId) or (isinstance(sub, str) and sub in self):
-                                self._discovered_nodes.add(str(sub))
-            elif isinstance(val, dict) and val is not self:
-                # Support dict trackers like parent = {v: u} or dist = {v: d}
-                for k, v in val.items():
-                    if (isinstance(k, _NodeId) or str(k) in self) and v is not None and v != float('inf'):
-                        self._discovered_nodes.add(str(k))
-                    if isinstance(v, _NodeId) and str(v) in self:
-                        self._discovered_nodes.add(str(v))
-
-        if not self.active_edge:
-            return
-        u_str, v_str = self.active_edge
-        if v_str in self._discovered_nodes:
-            pair = [u_str, v_str]
-            if pair not in self.visited_edges:
-                self.visited_edges.append(pair)
-
-    def __getitem__(self, key):
-        s_key = _NodeId(str(key))
-        if s_key in self:
-            self.record_visit(s_key)
-            return _GraphNeighborList(self, s_key, super().__getitem__(s_key))
-        return super().__getitem__(key)
-
-    def get(self, key, default=None):
-        s_key = _NodeId(str(key))
-        if s_key in self:
-            return self[s_key]
-        return default
-
-    def __iter__(self):
-        for k in super().__iter__():
-            yield _NodeId(k)
-
-    def keys(self):
-        return [_NodeId(k) for k in super().keys()]
-
-    def on_line_fallback(self, loop_target_vars, frame_locals, is_while_line=False):
-        if is_while_line:
-            # When evaluating a `while` loop header (e.g. `while queue:`),
-            # clear active_edge and active_node so the previously inspected
-            # neighbor/node doesn't stay highlighted during the queue check.
-            self.active_edge = None
-            self.active_node = None
-        elif not self.active_edge and not self._loop_exhausted_on_step:
-            for val in loop_target_vars:
-                if isinstance(val, _NodeId) and str(val) in self:
-                    self.record_visit(str(val))
-                    break
-        self._promote_discovered_edges(frame_locals)
-
-    def on_return(self, ret_val):
-        self.active_node = None
-        self.active_edge = None
-        self.step_accessed_nodes.clear()
-        return self.snapshot()
-
-    def snapshot(self):
-        active_nodes = []
-        if self.active_node is not None:
-            active_nodes.append(self.active_node)
-        if self.active_edge:
-            for endpoint in self.active_edge:
-                if endpoint not in active_nodes:
-                    active_nodes.append(endpoint)
-        return {
-            'activeIndex': -1,
-            'foundIndex': -1,
-            'checkedIndices': [],
-            'activeNodeId': self.active_node,
-            'activeNodeIds': active_nodes,
-            'foundNodeId': None,
-            'visitedNodes': [],
-            'activeEdge': self.active_edge,
-            'visitedEdges': list(self.visited_edges),
-            '_accessed': list(self.step_accessed_nodes),
-        }
-
-    def finalize_steps(self, trace_steps, is_paused_for_choice=False):
-        last_access_step = {}
-        first_access_step = {}
-
-        for step_idx, step in enumerate(trace_steps):
-            vis = step['visual']
-            accessed = vis.pop('_accessed', [])
-            if vis['activeNodeId'] is not None and vis['activeNodeId'] not in accessed:
-                accessed.append(vis['activeNodeId'])
-            if vis.get('activeEdge'):
-                for ep in vis['activeEdge']:
-                    if str(ep) not in accessed:
-                        accessed.append(str(ep))
-            for node_id in accessed:
-                s_id = str(node_id)
-                if s_id not in first_access_step:
-                    first_access_step[s_id] = step_idx
-                last_access_step[s_id] = step_idx
-
-        ever_accessed_in_order = sorted(first_access_step.keys(), key=lambda k: first_access_step[k])
-
-        for step_idx, step in enumerate(trace_steps):
-            vis = step['visual']
-            active = vis['activeNodeId']
-            active_set = set(str(x) for x in (vis.get('activeNodeIds') or []))
-            if active is not None:
-                active_set.add(str(active))
-            if vis.get('activeEdge'):
-                for ep in vis['activeEdge']:
-                    active_set.add(str(ep))
-            found = vis['foundNodeId']
-
-            # Set of edges already visited by this step
-            visited_edge_set = set(
-                (str(e[0]), str(e[1])) for e in (vis.get('visitedEdges') or [])
-                if isinstance(e, (list, tuple)) and len(e) >= 2
-            )
-
-            visited = []
-            for k in ever_accessed_in_order:
-                if first_access_step[k] >= step_idx:
-                    continue
-                if k in active_set or k == found:
-                    continue
-                # A node is completely visited if:
-                # 1. All of its incident edges (outgoing and incoming) have been visited, OR
-                # 2. The full run finished (not paused) and it is never accessed again at or after step_idx
-                inc_edges = self._incident_edges.get(k, [])
-                all_inc_visited = bool(inc_edges) and all(e in visited_edge_set for e in inc_edges)
-
-                if is_paused_for_choice:
-                    if all_inc_visited:
-                        visited.append(k)
-                else:
-                    if all_inc_visited or last_access_step[k] < step_idx:
-                        visited.append(k)
-
-            vis['visitedNodes'] = visited
+# Load the data-structure-specific Python proxy (e.g. sequence.py or graph.py)
+exec(compile(_ds_proxy_code, '<ds_proxy>', 'exec'), globals())
 
 
 def _serialize(v):
-    if isinstance(v, _NodeId):
+    if '_NodeId' in globals() and isinstance(v, _NodeId):
         return _node_labels.get(str(v), str(v))
     if isinstance(v, bool) or v is None:
         return v
@@ -381,6 +100,18 @@ def _extract_algo_line(exc_tb):
     return _trace_steps[-1]['line'] if _trace_steps else None
 
 
+def _parse_arg_value(v_str):
+    try:
+        val = ast.literal_eval(v_str)
+    except (ValueError, SyntaxError):
+        val = v_str
+    if val is not None and '_NodeId' in globals():
+        s = str(val).strip()
+        if s in _label_to_key:
+            val = _NodeId(_label_to_key[s])
+    return val
+
+
 try:
     _ns = {}
     exec(compile(_user_code, '<algorithm>', 'exec'), _ns)
@@ -391,15 +122,14 @@ try:
         _func_name = _top_level_funcs[0]
 
     if _func_name not in _ns:
-        raise NameError(f"Function '{_func_name}' was not found in the algorithm file.")
+        raise NameError(f"Function '{_func_name}' was not found in the code.")
 
     _fn = _ns[_func_name]
     _sig_params = list(inspect.signature(_fn).parameters.keys())
     _param_names = set(_sig_params)
-    _first_param = _sig_params[0] if _sig_params else 'graph'
+    _first_param = _sig_params[0] if _sig_params else 'arr'
     _exhausted_loop_vars = set()
 
-    # Unique ID per live frame so recursive calls never collide via CPython id(frame) reuse
     _frame_uid_map = {}
     _next_frame_uid = 0
 
@@ -410,79 +140,93 @@ try:
             _frame_uid_map[f] = _next_frame_uid
         return _frame_uid_map[f]
 
-    _visual_ds = VisualGraph(_payload)
+    _visual_ds = create_visual_ds(_payload)
 
     _raw_kwargs = json.loads(_raw_kwargs_json)
+    _eval_args = []
     _eval_kwargs = {}
+
     for _k, _v_str in _raw_kwargs.items():
-        try:
-            _val = ast.literal_eval(_v_str)
-        except (ValueError, SyntaxError):
-            _val = _v_str
-        if _val is not None:
-            _s = str(_val).strip()
-            if _s in _label_to_key:
-                _val = _NodeId(_label_to_key[_s])
-        _eval_kwargs[_k] = _val
+        if _k == '*args':
+            try:
+                _parsed_star = ast.literal_eval(_v_str)
+                if isinstance(_parsed_star, (list, tuple)):
+                    _eval_args.extend(_parsed_star)
+                else:
+                    _eval_args.append(_parsed_star)
+            except (ValueError, SyntaxError):
+                for _tok in [t.strip() for t in _v_str.split(',') if t.strip()]:
+                    _eval_args.append(_parse_arg_value(_tok))
+        elif _k == '**kwargs':
+            try:
+                _parsed_kw = ast.literal_eval(_v_str)
+                if isinstance(_parsed_kw, dict):
+                    for _dk, _dv in _parsed_kw.items():
+                        _eval_kwargs[str(_dk)] = _dv
+            except (ValueError, SyntaxError):
+                for _pair in [p.strip() for p in _v_str.split(',') if '=' in p]:
+                    _pk, _pv = _pair.split('=', 1)
+                    _eval_kwargs[_pk.strip()] = _parse_arg_value(_pv.strip())
+        else:
+            _eval_kwargs[_k] = _parse_arg_value(_v_str)
 
     def _build_state_vars(frame, executed_lineno):
-        loc = {}
-        curr_f = frame
-        frames_chain = []
-        while curr_f is not None and curr_f.f_code.co_filename == '<algorithm>':
-            frames_chain.append(curr_f)
-            curr_f = curr_f.f_back
-        for f_item in reversed(frames_chain):
-            loc.update(f_item.f_locals)
+        # Strictly inspect the target algorithm frame so other helper functions'
+        # parameters (even if also named `arr`) do not override or pollute the visual DS
+        loc = dict(frame.f_locals)
+        is_entry_frame = (frame.f_code.co_name == _func_name)
 
         loop_var_names = _loop_targets.get(executed_lineno, [])
-        if loop_var_names:
-            if _visual_ds._loop_exhausted_on_step:
-                _exhausted_loop_vars.update(loop_var_names)
-            else:
-                _exhausted_loop_vars.difference_update(loop_var_names)
+        if is_entry_frame:
+            if loop_var_names:
+                if getattr(_visual_ds, '_loop_exhausted_on_step', False):
+                    _exhausted_loop_vars.update(loop_var_names)
+                else:
+                    _exhausted_loop_vars.difference_update(loop_var_names)
 
-        loop_var_vals = [
-            loc[name] for name in loop_var_names
-            if name in loc and name not in _param_names and name not in _exhausted_loop_vars
-        ]
-        _visual_ds.on_line_fallback(
-            loop_var_vals,
-            loc,
-            is_while_line=(executed_lineno in _while_lines)
-        )
+            loop_var_vals = [
+                loc[name] for name in loop_var_names
+                if name in loc and name not in _param_names and name not in _exhausted_loop_vars
+            ]
+            _visual_ds.on_line_fallback(
+                loop_var_vals,
+                loc,
+                is_while_line=(executed_lineno in _while_lines)
+            )
 
-        # Only clear active_edge and switch active_node if a variable assigned on THIS line
-        # holds a _NodeId (e.g., `node = queue.pop(0)` or `curr_dist, node = heapq.heappop(pq)`).
-        # Numeric assignments like `new_dist = curr_dist + weight` keep active_edge intact!
-        assigned_names = _assign_targets.get(executed_lineno, [])
-        if assigned_names and not _visual_ds._loop_exhausted_on_step:
-            assigned_node_ids = []
-            for name in assigned_names:
-                if name in _param_names:
-                    continue
-                val = loc.get(name)
-                if isinstance(val, _NodeId) and str(val) in _visual_ds:
-                    assigned_node_ids.append(str(val))
-                elif isinstance(val, (list, tuple)):
-                    for item in val:
-                        if isinstance(item, _NodeId) and str(item) in _visual_ds:
-                            assigned_node_ids.append(str(item))
-            if assigned_node_ids:
-                _visual_ds.active_edge = None
-                for nid in assigned_node_ids:
-                    _visual_ds.record_visit(nid)
+            assigned_names = _assign_targets.get(executed_lineno, [])
+            if assigned_names and not getattr(_visual_ds, '_loop_exhausted_on_step', False) and '_NodeId' in globals():
+                assigned_node_ids = []
+                for name in assigned_names:
+                    if name in _param_names:
+                        continue
+                    val = loc.get(name)
+                    if isinstance(val, _NodeId) and str(val) in _visual_ds:
+                        assigned_node_ids.append(str(val))
+                    elif isinstance(val, (list, tuple)):
+                        for item in val:
+                            if isinstance(item, _NodeId) and str(item) in _visual_ds:
+                                assigned_node_ids.append(str(item))
+                if assigned_node_ids:
+                    _visual_ds.active_edge = None
+                    for nid in assigned_node_ids:
+                        _visual_ds.record_visit(nid)
 
         state_vars = {}
         for k, v in loc.items():
             if (
                 not k.startswith('_')
-                and k != _first_param
+                and v is not _visual_ds
+                and (not is_entry_frame or k != _first_param)
                 and k not in _exhausted_loop_vars
                 and not inspect.isfunction(v)
                 and not inspect.ismodule(v)
             ):
                 state_vars[k] = _serialize(v)
+
+        if is_entry_frame and hasattr(_visual_ds, 'enhance_state_vars'):
+            _visual_ds.enhance_state_vars(state_vars, loc, _first_param)
+
         return state_vars
 
     def _tracer(frame, event, arg):
@@ -512,12 +256,11 @@ try:
                         'stateVars': caller_state,
                         'visual': _visual_ds.snapshot(),
                     })
-                # Entering a recursive helper call (e.g. `_dfs(neighbor)`):
-                # clear the parent's active_edge and highlight the new frame's _NodeId argument
-                for k, v in frame.f_locals.items():
-                    if k != _first_param and isinstance(v, _NodeId) and str(v) in _visual_ds:
-                        _visual_ds.active_edge = None
-                        _visual_ds.record_visit(str(v))
+                if '_NodeId' in globals():
+                    for k, v in frame.f_locals.items():
+                        if v is not _visual_ds and isinstance(v, _NodeId) and str(v) in _visual_ds:
+                            _visual_ds.active_edge = None
+                            _visual_ds.record_visit(str(v))
                 _visual_ds.on_step_start()
             return _tracer
 
@@ -553,13 +296,11 @@ try:
                     'visual': final_visual,
                 })
             else:
-                # Returning from recursive helper `_dfs` back to caller frame:
-                # restore caller's active node so backtracking highlights the parent node
                 caller = frame.f_back
-                if caller is not None and caller.f_code.co_filename == '<algorithm>':
+                if caller is not None and caller.f_code.co_filename == '<algorithm>' and '_NodeId' in globals():
                     _visual_ds.active_edge = None
                     for k, v in caller.f_locals.items():
-                        if k != _first_param and k not in _loop_targets.get(caller.f_lineno, []) and isinstance(v, _NodeId) and str(v) in _visual_ds:
+                        if v is not _visual_ds and k not in _loop_targets.get(caller.f_lineno, []) and isinstance(v, _NodeId) and str(v) in _visual_ds:
                             _visual_ds.record_visit(str(v))
                             break
 
@@ -570,7 +311,7 @@ try:
 
     sys.settrace(_tracer)
     try:
-        _fn(_visual_ds, **_eval_kwargs)
+        _fn(_visual_ds, *_eval_args, **_eval_kwargs)
     finally:
         sys.settrace(None)
         sys.setrecursionlimit(_old_rec_limit)

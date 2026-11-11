@@ -642,6 +642,67 @@ export function setupArrayInteractions(containerEl, requestRender) {
   canvas.addEventListener('pointercancel', endDrag, { capture: true });
 }
 
+export const practiceConfig = {
+  dsCategory: 'sequence',
+  funcName: 'my_array_algorithm',
+  template: `def my_array_algorithm(arr, *args, **kwargs):\n    # Write your custom array algorithm here.\n    # Only operations on 'arr' inside my_array_algorithm are visualized.\n    for i in range(len(arr)):\n        val = arr[i]\n    return -1\n`,
+  extractDsPayload(containerEl) {
+    return getContainerArrayData(containerEl).map((d) => d.value);
+  },
+  buildSteps(pyFrames, error) {
+    const steps = [];
+    const fullExplanationLines = [];
+
+    pyFrames.forEach((frame, idx) => {
+      const pyLine = frame.line;
+      const sv = frame.stateVars || {};
+      const vis = frame.visual || {};
+
+      const stepDescription =
+        frame.event === 'return'
+          ? `Function returned ${sv.return}`
+          : `Executing line ${pyLine}`;
+
+      fullExplanationLines.push(`Step ${idx + 1}: ${stepDescription}`);
+
+      steps.push({
+        lines: { Python: { active: String(pyLine) } },
+        activeLineKey: 'active',
+        activeIndex: vis.activeIndex ?? -1,
+        foundIndex: vis.foundIndex ?? -1,
+        checkedIndices: vis.checkedIndices || [],
+        arrayValues: vis.arrayValues || null,
+        stateVars: sv,
+        stepDescription,
+      });
+    });
+
+    if (error) {
+      const errLine = error.line || (pyFrames.length ? pyFrames[pyFrames.length - 1].line : 1);
+      const lastStep = steps[steps.length - 1];
+      const errDesc = `${error.type}: ${error.message}`;
+      fullExplanationLines.push(`Error (Line ${errLine}): ${errDesc}`);
+
+      steps.push({
+        lines: { Python: { active: String(errLine) } },
+        activeLineKey: 'active',
+        activeIndex: lastStep ? lastStep.activeIndex : -1,
+        foundIndex: -1,
+        checkedIndices: lastStep ? lastStep.checkedIndices : [],
+        arrayValues: lastStep ? lastStep.arrayValues : null,
+        stateVars: {
+          ...(lastStep ? lastStep.stateVars : {}),
+          error: errDesc,
+        },
+        stepDescription: errDesc,
+        isError: true,
+      });
+    }
+
+    return { steps, fullExplanationLines, error };
+  },
+};
+
 export {
   drawArray as draw,
   setupArrayInteractions as setupInteractions,
