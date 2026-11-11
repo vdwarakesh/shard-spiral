@@ -447,7 +447,8 @@
     ],
     "placeholder": "edges (e.g. (A,B,10), (B,C,5))",
     "inputs": {
-      "Directed": "checkbox"
+      "Directed": "checkbox",
+      "Weighted": "checkbox"
     },
     "random": {
       "Vertex Count": {
