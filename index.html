@@ -5034,7 +5034,14 @@
       if (!activeObj) return false;
       if (!isPracticeMode && (selectedDsaType !== 'algo' || !selectedDsaName)) return false;
 
-      // 1. Collect parameter values keyed by their exact Python parameter name
+      if (isPracticeMode) {
+        const practiceCfg = activeObj.dsModule?.practiceConfig;
+        const livePracticeCode = getCurrentRunnablePythonCode();
+        if (practiceCfg && livePracticeCode) {
+          renderSignatureEditorFromCode(livePracticeCode, practiceCfg.funcName);
+        }
+      }
+
       const paramInputs = document.querySelectorAll('#algo-settings-body input[data-param-name]');
       const rawKwargs = {};
 

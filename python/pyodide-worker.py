@@ -23,6 +23,7 @@ _payload = json.loads(_ds_payload_json)
 _node_labels = json.loads(_node_labels_json)
 _user_choices = list(json.loads(_user_choices_json))
 
+# Map display labels to canonical node keys first, then fallback to internal IDs
 _label_to_key = {}
 for _k in _node_labels.keys():
     _label_to_key[str(_k)] = str(_k)
@@ -122,14 +123,15 @@ try:
         _func_name = _top_level_funcs[0]
 
     if _func_name not in _ns:
-        raise NameError(f"Function '{_func_name}' was not found in the code.")
+        raise NameError(f"Function '{_func_name}' was not found in the algorithm file.")
 
     _fn = _ns[_func_name]
     _sig_params = list(inspect.signature(_fn).parameters.keys())
     _param_names = set(_sig_params)
-    _first_param = _sig_params[0] if _sig_params else 'arr'
+    _first_param = _sig_params[0] if _sig_params else 'graph'
     _exhausted_loop_vars = set()
 
+    # Unique ID per live frame so recursive calls never collide via CPython id(frame) reuse
     _frame_uid_map = {}
     _next_frame_uid = 0
 
@@ -151,9 +153,9 @@ try:
             try:
                 _parsed_star = ast.literal_eval(_v_str)
                 if isinstance(_parsed_star, (list, tuple)):
-                    _eval_args.extend(_parsed_star)
+                    _eval_args.extend(_parse_arg_value(repr(x)) for x in _parsed_star)
                 else:
-                    _eval_args.append(_parsed_star)
+                    _eval_args.append(_parse_arg_value(repr(_parsed_star)))
             except (ValueError, SyntaxError):
                 for _tok in [t.strip() for t in _v_str.split(',') if t.strip()]:
                     _eval_args.append(_parse_arg_value(_tok))
@@ -162,7 +164,7 @@ try:
                 _parsed_kw = ast.literal_eval(_v_str)
                 if isinstance(_parsed_kw, dict):
                     for _dk, _dv in _parsed_kw.items():
-                        _eval_kwargs[str(_dk)] = _dv
+                        _eval_kwargs[str(_dk)] = _parse_arg_value(repr(_dv))
             except (ValueError, SyntaxError):
                 for _pair in [p.strip() for p in _v_str.split(',') if '=' in p]:
                     _pk, _pv = _pair.split('=', 1)
@@ -170,61 +172,111 @@ try:
         else:
             _eval_kwargs[_k] = _parse_arg_value(_v_str)
 
+    def _upgrade_graph_literals_in_frame(frame, assigned_names):
+        """When the user writes `queue = ['A']` or `start = 'A'` in Practice mode,
+        upgrade matching node labels to canonical `_NodeId` instances in-place so
+        `cur in visited` and canvas highlighting work seamlessly with `graph[cur]`."""
+        if '_NodeId' not in globals() or not hasattr(_visual_ds, '_resolve_key'):
+            return
+        for name in assigned_names:
+            if name in _param_names or name not in frame.f_locals:
+                continue
+            val = frame.f_locals[name]
+            if isinstance(val, str) and not isinstance(val, _NodeId):
+                res = _visual_ds._resolve_key(val)
+                if res is not None:
+                    try:
+                        frame.f_locals[name] = _NodeId(res)
+                    except Exception:
+                        pass
+            elif isinstance(val, list) and not isinstance(val, _GraphNeighborList):
+                for idx, item in enumerate(val):
+                    if isinstance(item, str) and not isinstance(item, _NodeId):
+                        res = _visual_ds._resolve_key(item)
+                        if res is not None:
+                            val[idx] = _NodeId(res)
+            elif isinstance(val, set):
+                to_replace = []
+                for item in val:
+                    if isinstance(item, str) and not isinstance(item, _NodeId):
+                        res = _visual_ds._resolve_key(item)
+                        if res is not None:
+                            to_replace.append((item, _NodeId(res)))
+                for old_item, new_item in to_replace:
+                    val.discard(old_item)
+                    val.add(new_item)
+            elif isinstance(val, deque):
+                for idx in range(len(val)):
+                    item = val[idx]
+                    if isinstance(item, str) and not isinstance(item, _NodeId):
+                        res = _visual_ds._resolve_key(item)
+                        if res is not None:
+                            val[idx] = _NodeId(res)
+
     def _build_state_vars(frame, executed_lineno):
-        # Strictly inspect the target algorithm frame so other helper functions'
-        # parameters (even if also named `arr`) do not override or pollute the visual DS
-        loc = dict(frame.f_locals)
-        is_entry_frame = (frame.f_code.co_name == _func_name)
+        assigned_names = _assign_targets.get(executed_lineno, [])
+        if assigned_names:
+            _upgrade_graph_literals_in_frame(frame, assigned_names)
+
+        loc = {}
+        curr_f = frame
+        frames_chain = []
+        while curr_f is not None and curr_f.f_code.co_filename == '<algorithm>':
+            frames_chain.append(curr_f)
+            curr_f = curr_f.f_back
+        for f_item in reversed(frames_chain):
+            loc.update(f_item.f_locals)
 
         loop_var_names = _loop_targets.get(executed_lineno, [])
-        if is_entry_frame:
-            if loop_var_names:
-                if getattr(_visual_ds, '_loop_exhausted_on_step', False):
-                    _exhausted_loop_vars.update(loop_var_names)
-                else:
-                    _exhausted_loop_vars.difference_update(loop_var_names)
+        if loop_var_names:
+            if getattr(_visual_ds, '_loop_exhausted_on_step', False):
+                _exhausted_loop_vars.update(loop_var_names)
+            else:
+                _exhausted_loop_vars.difference_update(loop_var_names)
 
-            loop_var_vals = [
-                loc[name] for name in loop_var_names
-                if name in loc and name not in _param_names and name not in _exhausted_loop_vars
-            ]
-            _visual_ds.on_line_fallback(
-                loop_var_vals,
-                loc,
-                is_while_line=(executed_lineno in _while_lines)
-            )
+        loop_var_vals = [
+            loc[name] for name in loop_var_names
+            if name in loc and name not in _param_names and name not in _exhausted_loop_vars
+        ]
+        _visual_ds.on_line_fallback(
+            loop_var_vals,
+            loc,
+            is_while_line=(executed_lineno in _while_lines)
+        )
 
-            assigned_names = _assign_targets.get(executed_lineno, [])
-            if assigned_names and not getattr(_visual_ds, '_loop_exhausted_on_step', False) and '_NodeId' in globals():
-                assigned_node_ids = []
-                for name in assigned_names:
-                    if name in _param_names:
-                        continue
-                    val = loc.get(name)
-                    if isinstance(val, _NodeId) and str(val) in _visual_ds:
-                        assigned_node_ids.append(str(val))
-                    elif isinstance(val, (list, tuple)):
-                        for item in val:
-                            if isinstance(item, _NodeId) and str(item) in _visual_ds:
-                                assigned_node_ids.append(str(item))
-                if assigned_node_ids:
-                    _visual_ds.active_edge = None
-                    for nid in assigned_node_ids:
-                        _visual_ds.record_visit(nid)
+        # Only clear active_edge and switch active_node if a variable assigned on THIS line
+        # holds a _NodeId (e.g., `node = queue.pop(0)` or `curr_dist, node = heapq.heappop(pq)`).
+        # Numeric assignments like `new_dist = curr_dist + weight` keep active_edge intact!
+        if assigned_names and not getattr(_visual_ds, '_loop_exhausted_on_step', False) and '_NodeId' in globals():
+            assigned_node_ids = []
+            for name in assigned_names:
+                if name in _param_names:
+                    continue
+                val = loc.get(name)
+                if isinstance(val, _NodeId) and str(val) in _visual_ds:
+                    assigned_node_ids.append(str(val))
+                elif isinstance(val, (list, tuple)):
+                    for item in val:
+                        if isinstance(item, _NodeId) and str(item) in _visual_ds:
+                            assigned_node_ids.append(str(item))
+            if assigned_node_ids:
+                _visual_ds.active_edge = None
+                for nid in assigned_node_ids:
+                    _visual_ds.record_visit(nid)
 
         state_vars = {}
         for k, v in loc.items():
             if (
                 not k.startswith('_')
+                and k != _first_param
                 and v is not _visual_ds
-                and (not is_entry_frame or k != _first_param)
                 and k not in _exhausted_loop_vars
                 and not inspect.isfunction(v)
                 and not inspect.ismodule(v)
             ):
                 state_vars[k] = _serialize(v)
 
-        if is_entry_frame and hasattr(_visual_ds, 'enhance_state_vars'):
+        if hasattr(_visual_ds, 'enhance_state_vars'):
             _visual_ds.enhance_state_vars(state_vars, loc, _first_param)
 
         return state_vars
@@ -256,9 +308,11 @@ try:
                         'stateVars': caller_state,
                         'visual': _visual_ds.snapshot(),
                     })
+                # Entering a recursive helper call (e.g. `_dfs(neighbor)`):
+                # clear the parent's active_edge and highlight the new frame's _NodeId argument
                 if '_NodeId' in globals():
                     for k, v in frame.f_locals.items():
-                        if v is not _visual_ds and isinstance(v, _NodeId) and str(v) in _visual_ds:
+                        if k != _first_param and isinstance(v, _NodeId) and str(v) in _visual_ds:
                             _visual_ds.active_edge = None
                             _visual_ds.record_visit(str(v))
                 _visual_ds.on_step_start()
@@ -296,11 +350,13 @@ try:
                     'visual': final_visual,
                 })
             else:
+                # Returning from recursive helper `_dfs` back to caller frame:
+                # restore caller's active node so backtracking highlights the parent node
                 caller = frame.f_back
                 if caller is not None and caller.f_code.co_filename == '<algorithm>' and '_NodeId' in globals():
                     _visual_ds.active_edge = None
                     for k, v in caller.f_locals.items():
-                        if v is not _visual_ds and k not in _loop_targets.get(caller.f_lineno, []) and isinstance(v, _NodeId) and str(v) in _visual_ds:
+                        if k != _first_param and k not in _loop_targets.get(caller.f_lineno, []) and isinstance(v, _NodeId) and str(v) in _visual_ds:
                             _visual_ds.record_visit(str(v))
                             break
 
