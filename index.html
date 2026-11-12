@@ -867,7 +867,7 @@
               </div>
 
               <div id="algo-random-warning-msg"
-                style="display: none; width: 100%; margin-bottom: 0.5rem; padding: 0.5rem 0.65rem; background-color: rgba(238, 183, 0, 0.12); border: 0.0625rem solid var(--ds-primary); border-radius: 0.25rem; color: var(--ds-primary); font-size: 0.85em; line-height: 1.4;">
+                style="display: none; width: 100%; margin-bottom: 0.5rem; padding: 0.5rem 0.65rem; background-color: rgba(238, 183, 0, 0.12); border: 0.0625rem solid var(--ds-primary); border-radius: 0.25rem; color: var(--ds-primary); line-height: 1.4;">
               </div>
 
               <button type="button" id="algo-settings-random-btn" class="vscode-btn-secondary"
@@ -3229,10 +3229,10 @@
         const stdoutHtml = stdoutText
           ? `
             <div style="margin-top: 0.75rem;">
-              <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 0.3rem;">
+              <div style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 0.3rem;">
                 Console Output (stdout)
               </div>
-              <pre style="margin: 0; padding: 0.55rem 0.7rem; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 0.25rem; font-family: 'Noto Sans Mono', monospace; font-size: 0.85em; color: var(--text-bright); white-space: pre-wrap; word-break: break-word; max-height: 9rem; overflow-y: auto;">${escapedStdout}</pre>
+              <pre style="margin: 0; padding: 0.55rem 0.7rem; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 0.25rem; font-family: 'Noto Sans Mono', monospace; color: var(--text-bright); white-space: pre-wrap; word-break: break-word; max-height: 9rem; overflow-y: auto;">${escapedStdout}</pre>
             </div>
           `
           : '';
@@ -4409,7 +4409,7 @@
         `;
           }
           return `
-        <label style="color: var(--text-primary); font-weight: 500; font-size: 0.9em;">${labelKey}<br>
+        <label style="color: var(--text-primary); font-weight: 500;">${labelKey}<br>
           <input type="${typeStr}" class="param-input-field ds-extra-input" style="margin-top: 0.2rem;" data-ds-input-key="${safeKey}" placeholder="${safeKey}" />
         </label>
       `;
@@ -4422,10 +4422,10 @@
         configContainer.style.color = 'inherit';
         configContainer.innerHTML = `
       <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-        <label style="color: var(--text-primary); font-weight: 500; font-size: 0.9em;">Name<br>
+        <label style="color: var(--text-primary); font-weight: 500;">Name<br>
           <input type="text" id="ds-input-name" class="param-input-field" style="margin-top: 0.2rem;" placeholder="name (default: ${name})" data-param-name="name" />
         </label>
-        <label style="color: var(--text-primary); font-weight: 500; font-size: 0.9em;">Content<br>
+        <label style="color: var(--text-primary); font-weight: 500;">Content<br>
           <textarea id="ds-input-content" class="param-input-field" rows="3" style="margin-top: 0.2rem;" placeholder="${safePlaceholder}" data-param-name="content"></textarea>
         </label>
         ${extraInputsHtml ? `<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.15rem;">${extraInputsHtml}</div>` : ''}
@@ -4452,12 +4452,11 @@
               const defVal = cfg.default ?? min;
               return `
             <div style="display: flex; flex-direction: column; gap: 0.2rem;">
-              <label style="color: var(--text-primary); font-weight: 500; font-size: 0.9em;">
+              <label style="color: var(--text-primary); font-weight: 500;">
                 <span style="display: flex; justify-content: space-between; align-items: center;">
-                  <span>${paramKey} <small class="ds-random-range-bounds" style="color: var(--text-muted); font-weight: 400;">(${min}–${max})</small></span>
+                  <span>${paramKey} <small class="ds-random-range-bounds" style="color: var(--text-muted); font-weight: 400;">(${min}-${max})</small></span>
                   <span class="ds-random-range-val" style="font-family: 'Noto Sans Mono', monospace; color: var(--text-bright);">${defVal}</span>
                 </span>
-                <br>
                 <input type="range" class="vscode-slider ds-random-input" style="width: 100%; margin-top: 0.2rem;"
                   data-random-key="${safeKey}" min="${min}" max="${max}" step="${step}" value="${defVal}" />
               </label>
@@ -4472,7 +4471,7 @@
               const defVal = cfg.default !== undefined ? cfg.default : '';
               return `
             <div style="display: flex; flex-direction: column; gap: 0.2rem;">
-              <label style="color: var(--text-primary); font-weight: 500; font-size: 0.9em;">${paramKey}<br>
+              <label style="color: var(--text-primary); font-weight: 500;">${paramKey}<br>
                 <input type="number" class="param-input-field ds-random-input" style="width: 100%; margin-top: 0.2rem;"
                   data-random-key="${safeKey}" ${minAttr} ${maxAttr} ${stepAttr} value="${defVal}" />
               </label>
@@ -4532,7 +4531,7 @@
               const labelEl = inp.closest('label');
               const boundsSpan = labelEl?.querySelector('.ds-random-range-bounds');
               const valSpan = labelEl?.querySelector('.ds-random-range-val');
-              if (boundsSpan) boundsSpan.textContent = `(${inp.min}–${inp.max})`;
+              if (boundsSpan) boundsSpan.textContent = `(${inp.min}-${inp.max})`;
               if (valSpan) valSpan.textContent = inp.value;
             },
 

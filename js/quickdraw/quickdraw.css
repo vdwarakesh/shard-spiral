@@ -83,7 +83,7 @@
 
 /* ---- floating chrome ---- */
 /* The theme switch rides these transitions; hovers use the same clock, which
-   at 140–320ms still reads as instant. */
+   at 140-320ms still reads as instant. */
 .qd-ui { position: absolute; inset: 0; pointer-events: none; z-index: 40; }
 .qd-ui.qd-hidden { display: none; }
 .qd-ui button { -webkit-tap-highlight-color: transparent; }

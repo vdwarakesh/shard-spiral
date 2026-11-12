@@ -281,7 +281,7 @@ export function buildUI(editor, { hidden = false, onSave, themeToggle = true, gr
       b.addEventListener('click', (e) => { e.stopPropagation(); editor.setStyle('fill', f); restyle() })
       fills.appendChild(b)
     }
-    // opacity: one slider, 10–100%. A drag is a single undo step.
+    // opacity: one slider, 10-100%. A drag is a single undo step.
     const opac = row('qd-opacity')
     opac.innerHTML = '<span class="qd-opacity-label">Opacity</span><input type="range" min="10" max="100" step="5" aria-label="Opacity"><span class="qd-opacity-val"></span>'
     const range = opac.querySelector('input')
