@@ -84,7 +84,7 @@ def _custom_input(prompt=''):
     raise _WaitForUserChoice({
         'type': 'stdin_input',
         'prompt': prompt_str,
-        'title': 'Input Required — input()',
+        'title': 'Input Required - input()',
         'reason': prompt_str if prompt_str else 'The algorithm is waiting for console input:'
     })
 
