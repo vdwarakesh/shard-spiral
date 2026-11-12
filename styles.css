@@ -1974,7 +1974,9 @@ input[type="range"].vscode-slider::-moz-range-thumb:hover {
 
 /* Override the legacy 50% height limit from the old split-pane layout */
 .dsa-modal-split #algorithms-card,
-.dsa-modal-split #algo-settings-card {
+.dsa-modal-split #algo-settings-card,
+.dsa-modal-split #faq-questions-card,
+.dsa-modal-split #faq-answer-card {
     height: 100% !important;
     max-height: none !important;
 }
@@ -2821,148 +2823,70 @@ textarea.param-input-field {
 /* ========== End of Profile Floating Modal Window ========== */
 
 
-/* ========== Welcome Tour Spotlight & Card ========== */
-.tour-spotlight {
-    /* .tour-spotlight is used here on #tour-spotlight to highlight the target element and dim the rest of the screen with a box-shadow cutout */
-    position: fixed;
-    z-index: 9995;
-    border: 0.125rem solid var(--accent-primary);
-    border-radius: 0.45rem;
-    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.62);
-    pointer-events: none;
-    transition: top 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
-        left 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
-        width 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
-        height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.tour-card {
-    /* .tour-card is used here on #tour-card for the floating guided tour popover box */
-    position: fixed;
-    z-index: 9996;
-    display: none;
-    flex-direction: column;
-    gap: 0.55rem;
-    width: 21rem;
-    max-width: calc(100vw - 1.5rem);
-    padding: 0.9rem 1rem;
-    background-color: var(--bg-elevated);
-    border: 0.0625rem solid var(--accent-primary);
-    border-radius: 0.5rem;
-    box-shadow: 0 0.75rem 2.25rem rgba(0, 0, 0, 0.55);
-    color: var(--text-primary);
-    transition: top 0.22s ease, left 0.22s ease;
-}
-
-.tour-card.open {
-    /* .tour-card.open displays #tour-card while the welcome tour is running */
-    display: flex;
-}
-
-.tour-arrow {
-    /* .tour-arrow renders the rotated diamond pointer arrow on #tour-card pointing toward the highlighted element */
-    position: absolute;
-    width: 0.7rem;
-    height: 0.7rem;
-    background-color: var(--bg-elevated);
-    transform: rotate(45deg);
-    pointer-events: none;
-}
-
-.tour-card-header {
-    /* .tour-card-header aligns the step title and step counter badge at the top of .tour-card */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-}
-
-.tour-card-title {
-    /* .tour-card-title styles the bold heading of the current tour step */
+/* ========== Help & FAQ Modal Styles ========== */
+.faq-category-header {
+    padding: 0.45rem 0.35rem 0.2rem 0.35rem;
+    font-size: 0.8em;
     font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.faq-category-header:first-child {
+    padding-top: 0.15rem;
+}
+
+.faq-question-row {
+    align-items: flex-start;
+    padding: 0.38rem 0.45rem;
+}
+
+.faq-question-row .algo-dot {
+    margin: 0.42rem 0.5rem 0 0.25rem;
+}
+
+.faq-question-row.selected {
+    background-color: var(--bg-active-item);
     color: var(--text-bright);
 }
 
-.tour-step-counter {
-    /* .tour-step-counter styles the "1 / 17" step progress badge inside .tour-card-header */
+.faq-question-label {
+    white-space: normal;
+    line-height: 1.35;
+}
+
+.faq-question-row.selected .faq-question-label {
+    font-weight: 600;
+}
+
+.faq-answer-badge {
+    display: inline-block;
+    margin-bottom: 0.5rem;
     padding: 0.12rem 0.45rem;
-    background-color: var(--bg-card);
+    background-color: var(--bg-elevated);
     border: 0.0625rem solid var(--border-color);
     border-radius: 0.25rem;
+    font-size: 0.8em;
     font-weight: 600;
-    color: var(--text-muted);
+    color: var(--accent-primary);
 }
 
-.tour-card-desc {
-    /* .tour-card-desc styles the explanatory paragraph text inside .tour-card */
-    margin: 0;
-    line-height: 1.45;
-    color: var(--text-primary);
-}
-
-.tour-card-footer {
-    /* .tour-card-footer aligns the Skip, Back, and Next/Finish buttons at the bottom of .tour-card */
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 0.25rem;
-    padding-top: 0.55rem;
-    border-top: 0.0625rem solid var(--border-color);
-}
-
-.tour-btn {
-    /* .tour-btn gives the Skip tour (#tour-skip-btn), Back (#tour-prev-btn), and Next/Finish (#tour-next-btn) buttons their base layout and sizing styles */
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    height: 1.85rem;
-    padding: 0 0.75rem;
-    border-radius: 0.3rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
-}
-
-.tour-btn-skip {
-    /* .tour-btn-skip gives the "Skip tour" button (#tour-skip-btn) its transparent muted appearance */
-    padding-right: 0.35rem;
-    padding-left: 0.35rem;
-    background: transparent;
-    border: 0.0625rem solid transparent;
-    color: var(--text-muted);
-}
-
-.tour-btn-skip:hover {
-    /* .tour-btn-skip:hover brightens and underlines the "Skip tour" button on hover */
+.faq-answer-heading {
+    margin: 0 0 0.65rem 0;
+    font-size: 1.15em;
+    font-weight: 700;
+    line-height: 1.35;
     color: var(--text-bright);
-    text-decoration: underline;
 }
 
-.tour-btn-secondary {
-    /* .tour-btn-secondary gives the "Back" button (#tour-prev-btn) in the welcome tour its secondary button colors */
-    background-color: var(--bg-input);
-    border: 0.0625rem solid var(--border-color);
+.faq-answer-text {
+    margin: 0;
+    line-height: 1.6;
     color: var(--text-primary);
 }
 
-.tour-btn-secondary:hover {
-    /* .tour-btn-secondary:hover gives the tour "Back" button its hover background */
-    background-color: var(--bg-hover);
-}
-
-.tour-btn-primary {
-    /* .tour-btn-primary gives the "Next" / "Finish" button (#tour-next-btn) in the welcome tour its primary accent button colors */
-    background-color: var(--accent-primary);
-    border: 0.0625rem solid var(--accent-primary);
-    color: #ffffff;
-}
-
-.tour-btn-primary:hover {
-    /* .tour-btn-primary:hover gives the tour "Next" / "Finish" button its hover background */
-    background-color: var(--accent-hover);
-}
-
-/* ========== End of Welcome Tour Spotlight & Card ========== */
+/* ========== End of Help & FAQ Modal Styles ========== */
 
 /* ========== Interactive Code Signature Editor (Settings Card) ========== */
 .signature-editor-pre {
@@ -3543,7 +3467,9 @@ body.zen-mode #workspace.left-col-all-collapsed #right-column {
 
     /* Allow cards to expand based on content when stacked vertically on phones */
     .dsa-modal-split #algorithms-card,
-    .dsa-modal-split #algo-settings-card {
+    .dsa-modal-split #algo-settings-card,
+    .dsa-modal-split #faq-questions-card,
+    .dsa-modal-split #faq-answer-card {
         height: auto !important;
         flex: none !important;
         min-height: 22rem;

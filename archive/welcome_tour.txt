@@ -1,0 +1,579 @@
+Deprecated feature - Old welcome tour when user logs in to the application for the first time
+
+<!--========== Welcome Tour Spotlight ==========-->
+<div id="tour-spotlight" class="tour-spotlight" style="display: none;"></div>
+<div id="tour-card" class="tour-card" role="dialog" aria-modal="false" aria-labelledby="tour-card-title">
+<div id="tour-arrow" class="tour-arrow"></div>
+<div class="tour-card-header">
+    <span id="tour-card-title" class="tour-card-title"></span>
+    <span id="tour-step-counter" class="tour-step-counter"></span>
+</div>
+<p id="tour-card-desc" class="tour-card-desc"></p>
+<div class="tour-card-footer">
+    <button type="button" id="tour-skip-btn" class="tour-btn tour-btn-skip">Skip tour</button>
+    <div style="display: flex; gap: 0.4rem;">
+    <button type="button" id="tour-prev-btn" class="tour-btn tour-btn-secondary">Back</button>
+    <button type="button" id="tour-next-btn" class="tour-btn tour-btn-primary">Next</button>
+    </div>
+</div>
+</div>
+<!--====================-->
+
+<script>
+// ========== Modular welcome tour ========== //
+const TOUR_STORAGE_KEY = 'shard-spiral-welcome-tour-completed-v1';
+
+/* Tour UI Helpers (works independently of module-scoped functions) */
+const tourHelpers = {
+    isMobile: () => window.matchMedia && window.matchMedia('(max-width: 900px)').matches,
+
+    setDsaModal: (open) => {
+    const el = document.getElementById('dsa-modal-backdrop');
+    if (el) el.classList.toggle('open', Boolean(open));
+    },
+
+    setMobileHistoryModal: (open) => {
+    const el = document.getElementById('mobile-history-modal-backdrop');
+    if (el) el.classList.toggle('open', Boolean(open));
+    },
+
+    expandHeaderGroup: (side, targetId) => {
+    const tb = document.querySelector('.top-titlebar');
+    if (!tb) return;
+    if (side === 'left') {
+        tb.classList.add('expand-left');
+        tb.classList.remove('expand-right');
+    } else if (side === 'right') {
+        tb.classList.add('expand-right');
+        tb.classList.remove('expand-left');
+    }
+    if (targetId) {
+        const targetEl = document.getElementById(targetId);
+        if (targetEl && typeof targetEl.scrollIntoView === 'function') {
+        targetEl.scrollIntoView({ inline: 'center', block: 'nearest' });
+        }
+    }
+    },
+
+    scrollCardIntoModalView: (id) => {
+    const el = document.getElementById(id);
+    if (el && typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+    }
+};
+
+/**
+    * 1. TOUR STEPS REGISTRY
+    * - `id`: Primary HTML element ID to point to.
+    * - `fallbackIds`: Backup IDs if the primary element is collapsed or on mobile.
+    * - `onEnter`: Executed before measuring the element.
+    */
+const TOUR_STEPS_REGISTRY = {
+    dataStructures: {
+    id: 'ds-card',
+    fallbackIds: ['ds-collapsed-strip', 'left-main-stack'],
+    title: 'Data Structures & Canvas',
+    description: 'Interactive visualization canvas where data structures and algorithm steps are animated in real time.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        tourHelpers.setMobileHistoryModal(false);
+    }
+    },
+    codeAndNotes: {
+    id: 'code-card',
+    fallbackIds: ['tab-code', 'tab-trigger-btn', 'code-collapsed-strip'],
+    title: 'Code & Notes',
+    description: 'View the syntax-highlighted code implementation with real-time execution highlights, or switch tabs to read detailed conceptual notes, intuition, and complexity breakdowns.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        tourHelpers.setMobileHistoryModal(false);
+    }
+    },
+    algorithms: {
+    id: 'algorithms-card',
+    fallbackIds: ['btnCreate'],
+    title: 'Data structures and algorithms',
+    description: 'Browse data structures and algorithms like a file system, or search by full path.',
+    onEnter: () => {
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.setDsaModal(true);
+        tourHelpers.scrollCardIntoModalView('algorithms-card');
+    }
+    },
+    favourites: {
+    id: 'algo-fav-filter-btn',
+    fallbackIds: ['algorithms-card', 'btnCreate'],
+    title: 'Favourites',
+    description: 'Filter the list to show only the data structures and algorithms you have starred as favourites.',
+    onEnter: () => {
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.setDsaModal(true);
+        tourHelpers.scrollCardIntoModalView('algorithms-card');
+    }
+    },
+    syllabus: {
+    id: 'algo-syllabus-filter-btn',
+    fallbackIds: ['algorithms-card', 'btnCreate'],
+    title: 'Syllabus',
+    description: 'Filter the list to show only the data structures and algorithms assigned by your institution.',
+    onEnter: () => {
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.setDsaModal(true);
+        tourHelpers.scrollCardIntoModalView('algorithms-card');
+    }
+    },
+    filterByCompatible: {
+    id: 'algo-compatible-filter-btn',
+    fallbackIds: ['algorithms-card', 'btnCreate'],
+    title: 'Compatible algorithms',
+    description: 'Filter the list to show only the algorithms that are compatible with your selected data structure.',
+    onEnter: () => {
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.setDsaModal(true);
+        tourHelpers.scrollCardIntoModalView('algorithms-card');
+    }
+    },
+    algorithmSettings: {
+    id: 'algo-settings-card',
+    fallbackIds: ['btnCreate'],
+    title: 'Settings',
+    description: 'Configure creation settings for data structures or input parameters for algorithms.',
+    onEnter: () => {
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.setDsaModal(true);
+        tourHelpers.scrollCardIntoModalView('algo-settings-card');
+    }
+    },
+    stateAndExplanation: {
+    id: 'state-card',
+    fallbackIds: ['tab-state-variables', 'state-tab-trigger-btn'],
+    title: 'State Variables & Explanation',
+    description: 'Inspect live pointer values and algorithm counters at each step, or switch tabs to look at the algorithm execution steps all at once.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        tourHelpers.setMobileHistoryModal(false);
+    }
+    },
+    metadata: {
+    id: 'metadata-card',
+    fallbackIds: ['mobile-metadata-card', 'mobile-metadata-body', 'metadata-collapsed-strip', 'history-column', 'btnHistoryMobile'],
+    title: 'Metadata',
+    description: 'Displays key properties and structural details about the data structure.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        if (tourHelpers.isMobile()) {
+        tourHelpers.setMobileHistoryModal(true);
+        } else {
+        tourHelpers.setMobileHistoryModal(false);
+        }
+    }
+    },
+    history: {
+    id: 'history-card',
+    fallbackIds: ['mobile-history-card', 'mobile-history-body', 'history-collapsed-strip', 'history-column', 'btnHistoryMobile'],
+    title: 'History',
+    description: 'Tracks your recent operations and modifications so you can review or revisit previous data structures.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        if (tourHelpers.isMobile()) {
+        tourHelpers.setMobileHistoryModal(true);
+        } else {
+        tourHelpers.setMobileHistoryModal(false);
+        }
+    }
+    },
+    fullscreen: {
+    id: 'btnFullscreen',
+    title: 'Fullscreen',
+    description: 'Toggle fullscreen mode to maximize your workspace while visualizing complex structures.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.expandHeaderGroup('left', 'btnFullscreen');
+    }
+    },
+    createMenu: {
+    id: 'btnCreate',
+    title: 'Create & Settings',
+    description: 'Open the Data Structures & Settings window to create new containers, browse algorithms, and adjust properties.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.expandHeaderGroup('left', 'btnCreate');
+    }
+    },
+    historyMobile: {
+    id: 'btnHistoryMobile',
+    title: 'Metadata & History',
+    description: 'Access your container history and view the metadata for your active data structure.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.expandHeaderGroup('left', 'btnHistoryMobile');
+    }
+    },
+    grid: {
+    id: 'grid-dropdown-wrapper',
+    title: 'Grid varieties',
+    description: 'Choose your preferred background in the canvas.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.expandHeaderGroup('left', 'grid-dropdown-wrapper');
+    }
+    },
+    annotations: {
+    id: 'annotation-dropdown-wrapper',
+    title: 'Annotations',
+    description: 'Annotate on your screen to mark anything you wish to.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.expandHeaderGroup('left', 'annotation-dropdown-wrapper');
+    }
+    },
+    toggleAnnotations: {
+    id: 'btnToggleAnnotationsVis',
+    title: 'Toggle annotations',
+    description: 'Show/hide your drawn annotations on the screen.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.expandHeaderGroup('left', 'btnToggleAnnotationsVis');
+    }
+    },
+    zenMode: {
+    id: 'zen-mode-btn',
+    title: 'Zen Mode',
+    description: 'Automatically hides any collapsed panels and splitters for a clean, distraction-free workspace.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.expandHeaderGroup('right', 'zen-mode-btn');
+    }
+    },
+    resetLayout: {
+    id: 'reset-layout-btn',
+    title: 'Reset Layout',
+    description: 'Restore all resized or collapsed panels back to their default proportions with a single click.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.expandHeaderGroup('right', 'reset-layout-btn');
+    }
+    },
+    btnHelp: {
+    id: 'btnHelp',
+    title: 'Help',
+    description: 'If you are ever stuck, you can always revisit this tour by clicking this button.',
+    onEnter: () => {
+        tourHelpers.setDsaModal(false);
+        tourHelpers.setMobileHistoryModal(false);
+        tourHelpers.expandHeaderGroup('right', 'btnHelp');
+    }
+    }
+};
+
+/**
+    * 2. TOUR STEP ORDER
+    * Rearrange, remove, or add keys from `TOUR_STEPS_REGISTRY` here.
+    */
+const TOUR_STEP_ORDER = [
+    'dataStructures',
+    'codeAndNotes',
+    'createMenu',
+    'algorithms',
+    'favourites',
+    'syllabus',
+    'filterByCompatible',
+    'algorithmSettings',
+    'stateAndExplanation',
+    'historyMobile',
+    'metadata',
+    'history',
+    'fullscreen',
+    'grid',
+    'annotations',
+    'toggleAnnotations',
+    'zenMode',
+    'resetLayout',
+    'btnHelp'
+];
+
+// ========== TOUR ENGINE (LOCATION-INSENSITIVE DYNAMIC POSITIONING) ========== //
+
+(function initWelcomeTour() {
+    const spotlightEl = document.getElementById('tour-spotlight');
+    const cardEl = document.getElementById('tour-card');
+    const arrowEl = document.getElementById('tour-arrow');
+    const titleEl = document.getElementById('tour-card-title');
+    const counterEl = document.getElementById('tour-step-counter');
+    const descEl = document.getElementById('tour-card-desc');
+    const skipBtn = document.getElementById('tour-skip-btn');
+    const prevBtn = document.getElementById('tour-prev-btn');
+    const nextBtn = document.getElementById('tour-next-btn');
+    const btnHelp = document.getElementById('btnHelp');
+
+    let activeStepIndex = 0;
+    let isTourRunning = false;
+    let wasZenModeBeforeTour = false;
+
+    function isElementVisible(el) {
+    if (!el) return false;
+    const style = window.getComputedStyle(el);
+    if (style.display === 'none' || style.visibility === 'hidden' || parseFloat(style.opacity) === 0) {
+        return false;
+    }
+    const rect = el.getBoundingClientRect();
+    return rect.width > 1 && rect.height > 1;
+    }
+
+    function resolveStepTargetElement(stepConfig) {
+    const candidateIds = [stepConfig.id, ...(stepConfig.fallbackIds || [])];
+    for (const id of candidateIds) {
+        const el = document.getElementById(id);
+        if (isElementVisible(el)) return el;
+    }
+    return null;
+    }
+
+    function positionTourAroundTarget(targetEl) {
+    if (!targetEl || !isTourRunning) return;
+
+    const rect = targetEl.getBoundingClientRect();
+    const pad = 4;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    // 1. Position Spotlight Highlight Box
+    spotlightEl.style.display = 'block';
+    spotlightEl.style.top = `${Math.max(0, rect.top - pad)}px`;
+    spotlightEl.style.left = `${Math.max(0, rect.left - pad)}px`;
+    spotlightEl.style.width = `${Math.min(vw, rect.width + pad * 2)}px`;
+    spotlightEl.style.height = `${Math.min(vh, rect.height + pad * 2)}px`;
+
+    // 2. Measure Tour Card & Compute Best Placement Side
+    const cardRect = cardEl.getBoundingClientRect();
+    const cardW = cardRect.width || Math.min(320, vw - 24);
+    const cardH = cardRect.height || 165;
+    const gap = 12;
+    const edgeMargin = 10;
+
+    const spaceBottom = vh - rect.bottom;
+    const spaceTop = rect.top;
+    const spaceRight = vw - rect.right;
+    const spaceLeft = rect.left;
+
+    let placement = 'bottom';
+    if (spaceBottom >= cardH + gap) {
+        placement = 'bottom';
+    } else if (spaceTop >= cardH + gap) {
+        placement = 'top';
+    } else if (spaceRight >= cardW + gap) {
+        placement = 'right';
+    } else if (spaceLeft >= cardW + gap) {
+        placement = 'left';
+    } else {
+        placement = spaceBottom >= spaceTop ? 'bottom' : 'top';
+    }
+
+    const targetCenterX = rect.left + rect.width / 2;
+    const targetCenterY = rect.top + rect.height / 2;
+    let top = 0;
+    let left = 0;
+
+    if (placement === 'bottom') {
+        top = rect.bottom + gap;
+        left = targetCenterX - cardW / 2;
+    } else if (placement === 'top') {
+        top = rect.top - cardH - gap;
+        left = targetCenterX - cardW / 2;
+    } else if (placement === 'right') {
+        left = rect.right + gap;
+        top = targetCenterY - cardH / 2;
+    } else if (placement === 'left') {
+        left = rect.left - cardW - gap;
+        top = targetCenterY - cardH / 2;
+    }
+
+    // Clamp card coordinates so it never overflows the screen on mobile
+    left = Math.max(edgeMargin, Math.min(vw - cardW - edgeMargin, left));
+    top = Math.max(edgeMargin, Math.min(vh - cardH - edgeMargin, top));
+
+    cardEl.style.left = `${left}px`;
+    cardEl.style.top = `${top}px`;
+
+    // 3. Position the Pointer Arrow toward the target's center
+    arrowEl.style.top = '';
+    arrowEl.style.bottom = '';
+    arrowEl.style.left = '';
+    arrowEl.style.right = '';
+    arrowEl.style.borderTop = 'none';
+    arrowEl.style.borderLeft = 'none';
+    arrowEl.style.borderRight = 'none';
+    arrowEl.style.borderBottom = 'none';
+
+    const arrowHalf = 6;
+    const arrowOffsetLimitX = Math.max(16, Math.min(cardW - 22, targetCenterX - left - arrowHalf));
+    const arrowOffsetLimitY = Math.max(16, Math.min(cardH - 22, targetCenterY - top - arrowHalf));
+
+    if (placement === 'bottom') {
+        arrowEl.style.top = '-0.38rem';
+        arrowEl.style.left = `${arrowOffsetLimitX}px`;
+        arrowEl.style.borderTop = '0.0625rem solid var(--accent-primary)';
+        arrowEl.style.borderLeft = '0.0625rem solid var(--accent-primary)';
+    } else if (placement === 'top') {
+        arrowEl.style.bottom = '-0.38rem';
+        arrowEl.style.left = `${arrowOffsetLimitX}px`;
+        arrowEl.style.borderBottom = '0.0625rem solid var(--accent-primary)';
+        arrowEl.style.borderRight = '0.0625rem solid var(--accent-primary)';
+    } else if (placement === 'right') {
+        arrowEl.style.left = '-0.38rem';
+        arrowEl.style.top = `${arrowOffsetLimitY}px`;
+        arrowEl.style.borderBottom = '0.0625rem solid var(--accent-primary)';
+        arrowEl.style.borderLeft = '0.0625rem solid var(--accent-primary)';
+    } else if (placement === 'left') {
+        arrowEl.style.right = '-0.38rem';
+        arrowEl.style.top = `${arrowOffsetLimitY}px`;
+        arrowEl.style.borderTop = '0.0625rem solid var(--accent-primary)';
+        arrowEl.style.borderRight = '0.0625rem solid var(--accent-primary)';
+    }
+    }
+
+    function showStep(index, direction = 1) {
+    if (index < 0 || index >= TOUR_STEP_ORDER.length) {
+        endTour(true);
+        return;
+    }
+
+    activeStepIndex = index;
+    const stepKey = TOUR_STEP_ORDER[activeStepIndex];
+    const stepConfig = TOUR_STEPS_REGISTRY[stepKey];
+
+    if (!stepConfig) {
+        showStep(index + direction, direction);
+        return;
+    }
+
+    if (typeof stepConfig.onEnter === 'function') {
+        stepConfig.onEnter();
+    }
+
+    // Wait a frame so any DOM layout/modal changes from `onEnter` settle before measuring
+    requestAnimationFrame(() => {
+        const targetEl = resolveStepTargetElement(stepConfig);
+        if (!targetEl) {
+        showStep(index + direction, direction);
+        return;
+        }
+
+        titleEl.textContent = stepConfig.title;
+        descEl.textContent = stepConfig.description;
+        counterEl.textContent = `${activeStepIndex + 1} / ${TOUR_STEP_ORDER.length}`;
+
+        prevBtn.style.display = activeStepIndex === 0 ? 'none' : 'inline-flex';
+        nextBtn.textContent = activeStepIndex === TOUR_STEP_ORDER.length - 1 ? 'Finish' : 'Next';
+
+        cardEl.classList.add('open');
+        requestAnimationFrame(() => positionTourAroundTarget(targetEl));
+    });
+    }
+
+    function refreshCurrentStepPosition() {
+    if (!isTourRunning) return;
+    const stepKey = TOUR_STEP_ORDER[activeStepIndex];
+    const stepConfig = TOUR_STEPS_REGISTRY[stepKey];
+    if (!stepConfig) return;
+    if (typeof stepConfig.onEnter === 'function') {
+        stepConfig.onEnter();
+    }
+    requestAnimationFrame(() => {
+        const targetEl = resolveStepTargetElement(stepConfig);
+        if (targetEl) positionTourAroundTarget(targetEl);
+    });
+    }
+
+    function endTour(markCompleted = true) {
+    isTourRunning = false;
+    cardEl.classList.remove('open');
+    spotlightEl.style.display = 'none';
+
+    // Close any modals opened during the tour and restore left mobile header tools
+    tourHelpers.setDsaModal(false);
+    tourHelpers.setMobileHistoryModal(false);
+    tourHelpers.expandHeaderGroup('left');
+
+    if (wasZenModeBeforeTour) {
+        document.body.classList.add('zen-mode');
+    }
+
+    if (markCompleted) {
+        try {
+        localStorage.setItem(TOUR_STORAGE_KEY, 'true');
+        } catch (e) { }
+    }
+    }
+
+    function startTour(force = false) {
+    try {
+        if (!force && localStorage.getItem(TOUR_STORAGE_KEY) === 'true') {
+        return;
+        }
+    } catch (e) { }
+
+    wasZenModeBeforeTour = document.body.classList.contains('zen-mode');
+    if (wasZenModeBeforeTour) {
+        document.body.classList.remove('zen-mode');
+    }
+
+    isTourRunning = true;
+    showStep(0, 1);
+    }
+
+    nextBtn.addEventListener('click', () => {
+    if (activeStepIndex < TOUR_STEP_ORDER.length - 1) {
+        showStep(activeStepIndex + 1, 1);
+    } else {
+        endTour(true);
+    }
+    });
+
+    prevBtn.addEventListener('click', () => {
+    if (activeStepIndex > 0) {
+        showStep(activeStepIndex - 1, -1);
+    }
+    });
+
+    skipBtn.addEventListener('click', () => endTour(true));
+
+    if (btnHelp) {
+    btnHelp.addEventListener('click', () => {
+        startTour(true);
+    });
+    }
+
+    window.addEventListener('resize', refreshCurrentStepPosition);
+    window.addEventListener('orientationchange', () => setTimeout(refreshCurrentStepPosition, 150));
+    window.addEventListener('mousemove', () => {
+    if (isTourRunning && document.querySelector('.dragging')) {
+        refreshCurrentStepPosition();
+    }
+    });
+    window.addEventListener('touchmove', () => {
+    if (isTourRunning && document.querySelector('.dragging')) {
+        refreshCurrentStepPosition();
+    }
+    }, { passive: true });
+
+    window.startShardSpiralTour = startTour;
+
+    if (document.readyState === 'complete') {
+    setTimeout(() => startTour(false), 450);
+    } else {
+    window.addEventListener('load', () => {
+        setTimeout(() => startTour(false), 450);
+    });
+    }
+})();
+</script>
