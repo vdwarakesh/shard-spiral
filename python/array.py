@@ -1,7 +1,7 @@
-# python/sequence.py
+# python/array.py
 
-class VisualSequence(list):
-    """Sequence/Array proxy that records bar inspections, swaps/mutations, and return matches.
+class VisualArray(list):
+    """Array proxy that records bar inspections, swaps/mutations, and return matches.
     Only this specific object instance is visualized on the canvas."""
     def __init__(self, raw_list):
         super().__init__(raw_list)
@@ -94,4 +94,4 @@ class VisualSequence(list):
 
 
 def create_visual_ds(payload):
-    return VisualSequence(payload if isinstance(payload, list) else [])
+    return VisualArray(payload if isinstance(payload, list) else [])

@@ -13,8 +13,17 @@ let tracerScriptPromise = fetch('../python/pyodide-worker.py', { cache: 'no-stor
 
 const dsProxyScriptCache = new Map();
 
+const toSnakeCase = (str) =>
+    String(str || 'array')
+        .trim()
+        .replace(/['’]/g, '')
+        .replace(/\+/g, 'plus')
+        .replace(/[^a-zA-Z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+        .toLowerCase();
+
 function getDsProxyScript(category) {
-    const safeCat = (category || 'sequence').toLowerCase().trim();
+    const safeCat = toSnakeCase(category);
     if (!dsProxyScriptCache.has(safeCat)) {
         const promise = fetch(`../python/${safeCat}.py`, { cache: 'no-store' }).then(res => {
             if (!res.ok) {
@@ -65,7 +74,7 @@ from collections import deque, OrderedDict
 
     if (type === 'run') {
         try {
-            const category = dsCategory || 'sequence';
+            const category = toSnakeCase(dsCategory || 'array');
             const [py, tracerScript, dsProxyCode] = await Promise.all([
                 pyodideReadyPromise,
                 tracerScriptPromise,

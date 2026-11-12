@@ -9,7 +9,7 @@ export async function linear_search(containerEl, rawKwargs = {}) {
   const pythonCode = await res.text();
 
   const { steps: pyFrames, error } = await tracePythonAlgorithm({
-    dsCategory: 'sequence',
+    dsCategory: 'array',
     pythonCode,
     funcName: 'linear_search',
     dsData: arrValues,

@@ -31,7 +31,7 @@ export function warmUpPyodide() {
  * @param {number} [config.maxSteps=2500] - Maximum execution steps before InfiniteLoopError
  */
 export function tracePythonAlgorithm({
-  dsCategory = 'sequence',
+  dsCategory = 'array',
   pythonCode,
   funcName,
   dsData,
