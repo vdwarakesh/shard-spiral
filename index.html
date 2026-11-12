@@ -219,8 +219,7 @@
           <img src="images/reset-layout.png" alt="Reset Layout" class="activity-icon-img" />
         </button>
 
-        <button type="button" id="btnHelp" class="activity-btn" title="Help & FAQ"
-          aria-label="Help & FAQ">
+        <button type="button" id="btnHelp" class="activity-btn" title="Help & FAQ" aria-label="Help & FAQ">
           <img src="images/help.png" alt="Help" class="activity-icon-img" />
         </button>
 
@@ -898,7 +897,8 @@
   <!--========== End of Mobile Metadata & History Floating Window ==========-->
 
   <!--========== Help & FAQ Floating Window ==========-->
-  <div id="help-modal-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="help-modal-title">
+  <div id="help-modal-backdrop" class="modal-backdrop" role="dialog" aria-modal="true"
+    aria-labelledby="help-modal-title">
     <div class="modal-window dsa-modal-window">
       <div class="modal-header">
         <span id="help-modal-title">Help &amp; FAQ</span>
@@ -912,7 +912,8 @@
           <div class="vscode-card-header">
             <span>Questions</span>
           </div>
-          <div id="faq-questions-body" style="display: flex; flex: 1; flex-direction: column; gap: 0.45rem; min-height: 0; padding: 0.45rem; overflow: hidden;">
+          <div id="faq-questions-body"
+            style="display: flex; flex: 1; flex-direction: column; gap: 0.45rem; min-height: 0; padding: 0.45rem; overflow: hidden;">
             <div class="algo-search-row">
               <div class="algo-search-input-wrapper">
                 <input type="text" id="faq-search-input" placeholder="Search questions or topics..."
@@ -2537,12 +2538,12 @@
       }
 
       if (dsCardHintEl) dsCardHintEl.style.display = 'inline';
-      
+
       let currentItems = (activeObj.userInput || '').trim();
       if (activeObj.dsModule && typeof activeObj.dsModule.getData === 'function') {
         currentItems = activeObj.dsModule.getData(activeObj.element);
       }
-      
+
       const isEmpty = Array.isArray(currentItems) ? currentItems.length === 0 : !currentItems;
 
       if (dsEmptyWarningBtn) {
@@ -2686,6 +2687,12 @@
             setMobileHistoryModalOpen(false);
           });
 
+          row.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openContainerOptionsModal(item);
+          });
+
           wrapper.appendChild(row);
         });
 
@@ -2792,10 +2799,17 @@
       ro.observe(containerEl);
     }
 
-    function exportActiveDsCanvas(mode = 'normal') {
-      /* Exports the active DS canvas as PNG (normal, transparent, or printable) */
-      const activeObj = dsContainers.find(c => c.name === activeContainerName);
+    function exportDsContainerCanvas(targetObj, mode = 'normal') {
+      /* Exports the specified DS container canvas as PNG (normal, transparent, or printable) */
+      const activeObj = targetObj || dsContainers.find(c => c.name === activeContainerName);
       if (!activeObj || !activeObj.canvas) return;
+
+      // Temporarily activate the container if it is hidden so its canvas has non-zero dimensions
+      const wasActive = activeObj.element.classList.contains('active');
+      if (!wasActive) {
+        activeObj.element.classList.add('active');
+        renderDsContainer(activeObj);
+      }
 
       const srcCanvas = activeObj.canvas;
       const outCanvas = document.createElement('canvas');
@@ -2829,6 +2843,10 @@
         renderDsContainer(activeObj);
       }
 
+      if (!wasActive) {
+        activeObj.element.classList.remove('active');
+      }
+
       const a = document.createElement('a');
       a.href = outCanvas.toDataURL('image/png');
       let suffix = '';
@@ -2853,54 +2871,65 @@
       });
     }
 
-    // Right-Click on DS Card Header -> Container Options Floating Window
-    if (dsCardHeaderEl) {
-      dsCardHeaderEl.addEventListener('contextmenu', (e) => {
-        const activeObj = dsContainers.find(c => c.name === activeContainerName);
-        if (!activeObj) return; // Ignore if still on splash screen
-        e.preventDefault();
+    // Right-Click on DS Card Header/ History item -> Container Options Floating Window
+    function openContainerOptionsModal(targetObj) {
+      if (!targetObj) return;
 
-        setFloatingWindowTitle(sharedFloatingWindow, `${activeObj.name} - Header Options`);
-        sharedFloatingWindow.setContent(`
+      setFloatingWindowTitle(sharedFloatingWindow, `${targetObj.name} - Options`);
+      sharedFloatingWindow.setContent(`
         <button type="button" id="fw-btn-dup" class="vscode-btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">Duplicate container</button>
         <button type="button" id="fw-btn-png" class="vscode-btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">Save canvas content as PNG</button>
         <button type="button" id="fw-btn-trans-png" class="vscode-btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">Save canvas content as transparent PNG</button>
         <button type="button" id="fw-btn-print-png" class="vscode-btn-secondary" style="width: 100%; margin-bottom: 0.5rem;">Save as printable PNG</button>
         <button type="button" id="fw-btn-del" class="vscode-btn-secondary" style="width: 100%; color: #f87777;">Delete container</button>
       `);
-        sharedFloatingWindow.open();
+      sharedFloatingWindow.open();
 
-        sharedFloatingWindow.body.querySelector('#fw-btn-dup').onclick = () => {
-          sharedFloatingWindow.close();
-          const currentInput = activeObj.element.userInput ?? activeObj.userInput ?? '';
-          createDataStructureContainer(activeObj.dsType, activeObj.name, currentInput, { ...activeObj.dsInputs });
-        };
+      sharedFloatingWindow.body.querySelector('#fw-btn-dup').onclick = () => {
+        sharedFloatingWindow.close();
+        const currentInput = targetObj.element.userInput ?? targetObj.userInput ?? '';
+        createDataStructureContainer(targetObj.dsType, targetObj.name, currentInput, { ...targetObj.dsInputs });
+      };
 
-        sharedFloatingWindow.body.querySelector('#fw-btn-png').onclick = () => {
-          sharedFloatingWindow.close();
-          exportActiveDsCanvas('normal');
-        };
+      sharedFloatingWindow.body.querySelector('#fw-btn-png').onclick = () => {
+        sharedFloatingWindow.close();
+        exportDsContainerCanvas(targetObj, 'normal');
+      };
 
-        sharedFloatingWindow.body.querySelector('#fw-btn-trans-png').onclick = () => {
-          sharedFloatingWindow.close();
-          exportActiveDsCanvas('transparent');
-        };
+      sharedFloatingWindow.body.querySelector('#fw-btn-trans-png').onclick = () => {
+        sharedFloatingWindow.close();
+        exportDsContainerCanvas(targetObj, 'transparent');
+      };
 
-        sharedFloatingWindow.body.querySelector('#fw-btn-print-png').onclick = () => {
-          sharedFloatingWindow.close();
-          exportActiveDsCanvas('printable');
-        };
+      sharedFloatingWindow.body.querySelector('#fw-btn-print-png').onclick = () => {
+        sharedFloatingWindow.close();
+        exportDsContainerCanvas(targetObj, 'printable');
+      };
 
-        sharedFloatingWindow.body.querySelector('#fw-btn-del').onclick = () => {
-          sharedFloatingWindow.close();
-          const idx = dsContainers.findIndex(c => c.name === activeObj.name);
-          if (idx !== -1) {
-            activeObj.element.remove();
-            dsContainers.splice(idx, 1);
-          }
+      sharedFloatingWindow.body.querySelector('#fw-btn-del').onclick = () => {
+        sharedFloatingWindow.close();
+        const wasDeletingActive = (targetObj.name === activeContainerName);
+        const idx = dsContainers.findIndex(c => c.name === targetObj.name);
+        if (idx !== -1) {
+          targetObj.element.remove();
+          dsContainers.splice(idx, 1);
+        }
+
+        if (wasDeletingActive) {
           const nextContainer = dsContainers.length > 0 ? dsContainers[dsContainers.length - 1].name : null;
           selectContainer(nextContainer);
-        };
+        } else {
+          renderHistoryList();
+        }
+      };
+    }
+
+    if (dsCardHeaderEl) {
+      dsCardHeaderEl.addEventListener('contextmenu', (e) => {
+        const activeObj = dsContainers.find(c => c.name === activeContainerName);
+        if (!activeObj) return; // Ignore if still on splash screen
+        e.preventDefault();
+        openContainerOptionsModal(activeObj);
       });
     }
     /* ========== End of Data Structure Containers, History & Header Options ========== */
