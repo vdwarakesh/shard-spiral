@@ -645,7 +645,7 @@ export function setupArrayInteractions(containerEl, requestRender) {
 export const practiceConfig = {
   dsCategory: 'sequence',
   funcName: 'my_array_algorithm',
-  template: `def my_array_algorithm(arr, *args, **kwargs):\n    # Write your custom array algorithm here.\n    # Only operations on 'arr' inside my_array_algorithm are visualized.\n    for i in range(len(arr)):\n        val = arr[i]\n    return -1\n`,
+  template: `def my_array_algorithm(arr):\n    # This function serves as the entry point to your custom code.\n    # The arr argument in this function is what will be visualized. You can pass it to other functions and it will still work.\n    pass\n`,
   extractDsPayload(containerEl) {
     return getContainerArrayData(containerEl).map((d) => d.value);
   },

@@ -209,32 +209,9 @@ try:
     _visual_ds = create_visual_ds(_payload)
 
     _raw_kwargs = json.loads(_raw_kwargs_json)
-    _eval_args = []
     _eval_kwargs = {}
-
     for _k, _v_str in _raw_kwargs.items():
-        if _k == '*args':
-            try:
-                _parsed_star = ast.literal_eval(_v_str)
-                if isinstance(_parsed_star, (list, tuple)):
-                    _eval_args.extend(_parse_arg_value(repr(x)) for x in _parsed_star)
-                else:
-                    _eval_args.append(_parse_arg_value(repr(_parsed_star)))
-            except (ValueError, SyntaxError):
-                for _tok in [t.strip() for t in _v_str.split(',') if t.strip()]:
-                    _eval_args.append(_parse_arg_value(_tok))
-        elif _k == '**kwargs':
-            try:
-                _parsed_kw = ast.literal_eval(_v_str)
-                if isinstance(_parsed_kw, dict):
-                    for _dk, _dv in _parsed_kw.items():
-                        _eval_kwargs[str(_dk)] = _parse_arg_value(repr(_dv))
-            except (ValueError, SyntaxError):
-                for _pair in [p.strip() for p in _v_str.split(',') if '=' in p]:
-                    _pk, _pv = _pair.split('=', 1)
-                    _eval_kwargs[_pk.strip()] = _parse_arg_value(_pv.strip())
-        else:
-            _eval_kwargs[_k] = _parse_arg_value(_v_str)
+        _eval_kwargs[_k] = _parse_arg_value(_v_str)
 
     def _upgrade_graph_literals_in_frame(frame, assigned_names):
         if '_NodeId' not in globals() or not hasattr(_visual_ds, '_resolve_key'):
@@ -427,7 +404,7 @@ try:
 
     sys.settrace(_tracer)
     try:
-        _fn(_visual_ds, *_eval_args, **_eval_kwargs)
+        _fn(_visual_ds, **_eval_kwargs)
     finally:
         sys.settrace(None)
         builtins.input = _old_builtin_input

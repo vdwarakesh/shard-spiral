@@ -2990,7 +2990,6 @@
     async function updateCodeViewPane() {
       const currentTab = activeRightTopTab;
 
-      // 1. PRACTICE TAB: Editable, Data-Structure-Dependent Template
       if (currentTab === 'practice') {
         const activeObj = dsContainers.find(c => c.name === activeContainerName);
         const practiceCfg = activeObj?.dsModule?.practiceConfig;
@@ -3021,14 +3020,12 @@
           mode: 'python',
           lineNumbers: true,
           lineWrapping: true,
-          readOnly: false, // Editable in Practice mode
+          readOnly: false,
           indentUnit: 4,
           tabSize: 4,
           indentGuide: true
         });
         codeEditorInstance._loadedCacheKey = practiceKey;
-
-        renderSignatureEditorFromCode(text, practiceCfg.funcName);
 
         codeEditorInstance.on('change', () => {
           const updatedCode = codeEditorInstance.getValue();
@@ -3037,7 +3034,6 @@
           if (window.isSimulating && typeof resetSimulation === 'function') {
             resetSimulation();
           }
-          renderSignatureEditorFromCode(updatedCode, practiceCfg.funcName);
         });
 
         requestAnimationFrame(() => {
@@ -5076,19 +5072,71 @@
       const activeObj = dsContainers.find((c) => c.name === activeContainerName);
       const isPracticeMode = activeRightTopTab === 'practice';
       if (!activeObj) return false;
-      if (!isPracticeMode && (selectedDsaType !== 'algo' || !selectedDsaName)) return false;
 
+      // 1. PRACTICE MODE: Pass ONLY the active data structure (no extra args/kwargs or Settings menu)
       if (isPracticeMode) {
         const practiceCfg = activeObj.dsModule?.practiceConfig;
-        const livePracticeCode = getCurrentRunnablePythonCode();
-        if (practiceCfg && livePracticeCode) {
-          renderSignatureEditorFromCode(livePracticeCode, practiceCfg.funcName);
+        if (!practiceCfg) return false;
+
+        if (stateViewPane) {
+          stateViewPane.innerHTML = `<div class="card-inner-pad"><span class="card-body-text">Running Python (WASM)...</span></div>`;
+        }
+
+        try {
+          const pythonCodeToRun = getCurrentRunnablePythonCode();
+          const traceRes = await tracePythonAlgorithm({
+            dsCategory: practiceCfg.dsCategory,
+            pythonCode: pythonCodeToRun,
+            funcName: practiceCfg.funcName,
+            dsData: practiceCfg.extractDsPayload(activeObj.element),
+            nodeLabels: practiceCfg.extractNodeLabels ? practiceCfg.extractNodeLabels(activeObj.element) : {},
+            rawKwargs: {},
+            simMode,
+            userChoices: simUserChoices.map(c => c.chosenId),
+            userInputs: simUserInputs.map(c => c.value),
+          });
+
+          const result = practiceCfg.buildSteps(traceRes.steps || [], traceRes.error);
+          if (result.steps && Array.isArray(traceRes.steps)) {
+            result.steps.forEach((st, i) => {
+              if (i < traceRes.steps.length) {
+                if (st.stdout === undefined) st.stdout = traceRes.steps[i].stdout || '';
+                if (st.interaction === undefined) st.interaction = traceRes.steps[i].interaction || null;
+              } else if (traceRes.stdout !== undefined && st.stdout === undefined) {
+                st.stdout = traceRes.stdout || '';
+              }
+            });
+          }
+
+          if (result.error && (!result.steps || result.steps.length === 0)) {
+            if (stateViewPane) {
+              stateViewPane.innerHTML = `
+            <div class="card-inner-pad">
+              <span class="card-body-text" style="color: #ef4444; font-weight: 500;">
+                ${result.error.type}: ${result.error.message}
+              </span>
+            </div>`;
+            }
+            return false;
+          }
+
+          simSteps = result.steps || [];
+          simFullExplanation = result.fullExplanationLines || [];
+          window.isSimulating = simSteps.length > 0;
+          return window.isSimulating;
+        } catch (err) {
+          console.error('Failed to run practice simulation:', err);
+          return false;
         }
       }
 
-      const paramInputs = document.querySelectorAll('#algo-settings-body input[data-param-name]');
-      const rawKwargs = {};
+      // 2. STANDARD ALGORITHM MODE: Collect parameters from Settings card
+      if (selectedDsaType !== 'algo' || !selectedDsaName) return false;
 
+      const paramInputs = document.querySelectorAll(
+        '#algo-settings-body input[data-param-name]'
+      );
+      const rawKwargs = {};
       for (const inp of paramInputs) {
         const paramName = inp.getAttribute('data-param-name');
         if (!paramName || paramName === 'name' || paramName === 'content') continue;

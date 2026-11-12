@@ -1804,7 +1804,7 @@ export {
 export const practiceConfig = {
   dsCategory: 'graph',
   funcName: 'my_graph_algorithm',
-  template: `def my_graph_algorithm(graph, *args, **kwargs):\n    # Write your custom graph algorithm here.\n    # Only operations on 'graph' inside my_graph_algorithm are visualized.\n    for u in graph:\n        for v in graph[u]:\n            pass\n    return None\n`,
+  template: `def my_graph_algorithm(graph):\n    # This function serves as the entry point to your custom code.\n    # The graph argument in this function is what will be visualized. Graph is a Python adjacency list. You can pass it to other functions and it will still work.\n    pass\n`,
 
   extractDsPayload(containerEl) {
     const graphData = getContainerGraphData(containerEl);
