@@ -150,6 +150,68 @@ export function getContainerArrayData(containerEl) {
   return containerEl._arrayData;
 }
 
+export function getArrayMetadata(containerEl, containerObj) {
+  const data = getContainerArrayData(containerEl) || [];
+  const len = data.length;
+  let isSorted = 'Yes';
+  let isUnique = 'Yes';
+  let minVal = 'N/A';
+  let maxVal = 'N/A';
+
+  if (len === 0) {
+    isSorted = 'N/A';
+    isUnique = 'N/A';
+  } else {
+    let asc = true;
+    let desc = true;
+    const uniqueSet = new Set();
+
+    minVal = data[0].value;
+    maxVal = data[0].value;
+    let minNum = data[0].numericValue;
+    let maxNum = data[0].numericValue;
+
+    for (let i = 0; i < len; i++) {
+      const num = data[i].numericValue;
+      const val = data[i].value;
+
+      uniqueSet.add(val);
+
+      if (num < minNum) { minNum = num; minVal = val; }
+      if (num > maxNum) { maxNum = num; maxVal = val; }
+
+      if (i > 0) {
+        const prevNum = data[i - 1].numericValue;
+        if (num < prevNum) asc = false;
+        if (num > prevNum) desc = false;
+      }
+    }
+
+    if (asc && desc) {
+      isSorted = 'Yes (All identical)';
+    } else if (asc) {
+      isSorted = 'Yes (Ascending)';
+    } else if (desc) {
+      isSorted = 'Yes (Descending)';
+    } else {
+      isSorted = 'No';
+    }
+
+    isUnique = uniqueSet.size === len ? 'Yes' : 'No';
+  }
+
+  const name = containerObj?.name || containerEl?.containerName || 'Array';
+
+  return [
+    ['Name', name],
+    ['Length', len],
+    ['Sorted', isSorted],
+    ['All Unique', isUnique],
+    ['Min Value', minVal],
+    ['Max Value', maxVal],
+  ];
+}
+
 /**
  * Draws the array onto the canvas inside `containerEl` using D3 scales.
  */
@@ -709,5 +771,6 @@ export const practiceConfig = {
 export {
   drawArray as draw,
   setupArrayInteractions as setupInteractions,
-  getContainerArrayData as getData
+  getContainerArrayData as getData,
+  getArrayMetadata as getMetadata
 };
