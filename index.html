@@ -1290,7 +1290,7 @@
     let simMode = 'auto'; // 'auto' | 'manual'
     let simUserChoices = []; // Stores user-selected node IDs at manual decision points
     let simUserInputs = [];  // Stores user-entered strings for Python input() calls
-    window.isSimulating = false; // Locks array editing while active
+    window.isSimulating = false; // Locks canvas editing while active
     /* ========== End of Centralized DOM References & Application State ========== */
 
 
@@ -1515,7 +1515,7 @@
           targetWorldY = (sb.minY + sb.maxY) / 2;
 
           if (contentW > 0 && contentH > 0) {
-            // Leave a 10% margin so the array doesn't touch the absolute edges of the canvas
+            // Leave a 10% margin so the data structure doesn't touch the absolute edges of the canvas
             const padX = r.width * 0.9;
             const padY = r.height * 0.9;
             targetZoom = Math.min(padX / contentW, padY / contentH);
@@ -1540,7 +1540,7 @@
           }
         }
 
-        // Cap zoom at 1x so tiny arrays don't scale up gigantically, but allow shrinking to fit
+        // Cap zoom at 1x so tiny data structures don't scale up gigantically, but allow shrinking to fit
         camera.z = Math.max(DS_ZOOM_MIN, Math.min(1, targetZoom));
         camera.x = (r.width / 2) / camera.z - targetWorldX;
         camera.y = (r.height / 2) / camera.z - targetWorldY;
@@ -2537,9 +2537,12 @@
       }
 
       if (dsCardHintEl) dsCardHintEl.style.display = 'inline';
-      const currentItems = activeObj.element._arrayData
-        ? activeObj.element._arrayData
-        : (activeObj.userInput || '').trim();
+      
+      let currentItems = (activeObj.userInput || '').trim();
+      if (activeObj.dsModule && typeof activeObj.dsModule.getData === 'function') {
+        currentItems = activeObj.dsModule.getData(activeObj.element);
+      }
+      
       const isEmpty = Array.isArray(currentItems) ? currentItems.length === 0 : !currentItems;
 
       if (dsEmptyWarningBtn) {
@@ -3180,7 +3183,7 @@
 
         const entries = Object.entries(currentStep.stateVars || {});
         const rowsHtml = entries.map(([k, v]) => {
-          const isHighlightVal = isFoundStep && (k.startsWith('arr[') || k === 'return');
+          const isHighlightVal = isFoundStep && (k.includes('[') || k === 'return');
           return `
             <div class="state-var-row">
               <div class="state-var-key">${k}</div>
@@ -5359,7 +5362,7 @@
       }
     };
 
-    // "Reset" icon button -> Clears simulation and unlocks array editing
+    // "Reset" icon button -> Clears simulation and unlocks canvas editing
     document.querySelectorAll('.sync-reset').forEach(btn => {
       btn.addEventListener('click', resetSimulation);
     });
