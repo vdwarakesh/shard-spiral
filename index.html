@@ -427,20 +427,20 @@
           <!--========== Code / Notes card ==========-->
           <section id="code-card" class="vscode-card">
 
-            <!--===== Card header for Code and Notes =====-->
+            <!--===== Card header for Notes, Template, and Playground =====-->
             <div class="vscode-card-header code-card-header">
 
-              <!--========== Contains Code and Notes tabs ==========-->
+              <!--========== Contains Notes, Template, and Playground tabs ==========-->
               <div class="code-tabs-container">
 
                 <!--===== Desktop Tabs - Placed side by side (Hidden on Mobile) =====-->
                 <div class="card-tabs-group desktop-tabs">
-                  <button type="button" id="tab-code" class="vscode-tab active" data-tab-group="right-top"
-                    data-tab-type="code">Code</button>
-                  <button type="button" id="tab-notes" class="vscode-tab" data-tab-group="right-top"
+                  <button type="button" id="tab-notes" class="vscode-tab active" data-tab-group="right-top"
                     data-tab-type="notes">Notes</button>
                   <button type="button" id="tab-practice" class="vscode-tab" data-tab-group="right-top"
                     data-tab-type="practice">Template</button>
+                  <button type="button" id="tab-playground" class="vscode-tab" data-tab-group="right-top"
+                    data-tab-type="playground">Playground</button>
                 </div>
                 <!--==========-->
 
@@ -448,7 +448,7 @@
                 <div class="tab-dropdown-wrapper mobile-tabs" id="tab-dropdown-wrapper">
                   <button type="button" id="tab-trigger-btn" class="lang-trigger-btn" aria-haspopup="listbox"
                     aria-expanded="false">
-                    <span id="tab-active-label">Code</span>
+                    <span id="tab-active-label">Notes</span>
                     <svg class="lang-chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                       stroke-width="2">
                       <polyline points="6 9 12 15 18 9" />
@@ -456,103 +456,41 @@
                   </button>
 
                   <div id="tab-dropdown-menu" class="lang-dropdown-menu" role="listbox" aria-label="Select Content Tab">
-                    <div class="lang-option-item active" role="option" aria-selected="true" data-tab-type="code">
-                      <span>Code</span>
-                    </div>
-                    <div class="lang-option-item" role="option" aria-selected="false" data-tab-type="notes">
+                    <div class="lang-option-item active" role="option" aria-selected="true" data-tab-type="notes">
                       <span>Notes</span>
                     </div>
                     <div class="lang-option-item" role="option" aria-selected="false" data-tab-type="practice">
                       <span>Template</span>
+                    </div>
+                    <div class="lang-option-item" role="option" aria-selected="false" data-tab-type="playground">
+                      <span>Playground</span>
                     </div>
                   </div>
                 </div>
                 <!--====================-->
 
               </div>
-              <!--========== End of Code and Notes Tabs ==========-->
+              <!--========== End of Notes, Template, and Playground Tabs ==========-->
 
-              <!--========== Language selector, copy and code download buttons ==========-->
+              <!--========== Playground Run, Copy and Download buttons ==========-->
               <div style="display: flex; align-items: center; gap: 0.25rem;">
-
-                <!--========== Language Selector: Python, C++, Java ==========-->
-                <div class="lang-dropdown-wrapper" id="lang-dropdown-wrapper">
-
-                  <!--===== Shown initially =====-->
-                  <button type="button" id="lang-trigger-btn" class="lang-trigger-btn" aria-haspopup="listbox"
-                    aria-expanded="false">
-
-
-                    <span id="lang-active-dot" class="lang-badge-dot dot-python"></span>
-                    <span id="lang-active-label">Python</span>
-
-                    <!--===== The small downward arrow mark =====-->
-                    <svg class="lang-chevron-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                      stroke-width="2">
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                    <!--==========-->
-
-                  </button>
-                  <!--==========-->
-
-                  <!--========== Language selector dropdown menu ==========-->
-                  <div id="lang-dropdown-menu" class="lang-dropdown-menu" role="listbox"
-                    aria-label="Select Programming Language">
-
-                    <!--===== Python =====-->
-                    <div class="lang-option-item active" role="option" aria-selected="true" data-lang="Python"
-                      data-color="#3572A5" data-ext=".py" data-prism="python">
-                      <span class="lang-option-label">
-                        <span class="lang-badge-dot dot-python"></span>
-                        <span>Python</span>
-                      </span>
-                      <span class="playback-muted-label">.py</span>
-                    </div>
-                    <!--==========-->
-
-                    <!--===== C++ =====-->
-                    <div class="lang-option-item" role="option" aria-selected="false" data-lang="C++"
-                      data-color="#f34b7d" data-ext=".cpp" data-prism="cpp">
-                      <span class="lang-option-label">
-                        <span class="lang-badge-dot dot-cpp"></span>
-                        <span>C++</span>
-                      </span>
-                      <span class="playback-muted-label">.cpp</span>
-                    </div>
-                    <!--==========-->
-
-                    <!--==== Java =====-->
-                    <div class="lang-option-item" role="option" aria-selected="false" data-lang="Java"
-                      data-color="#b07219" data-ext=".java" data-prism="java">
-                      <span class="lang-option-label">
-                        <span class="lang-badge-dot dot-java"></span>
-                        <span>Java</span>
-                      </span>
-                      <span class="playback-muted-label">.java</span>
-                    </div>
-                    <!--==========-->
-
-                  </div>
-                  <!--========== End of language selector dropdown ==========-->
-
-                </div>
-                <!--========== End of language selector ==========-->
-
-                <!--===== Copy and Download Buttons =====-->
-                <button type="button" id="btn-copy-code" class="card-icon-btn" title="Copy Code">
-                  <img id="img-copy-code" src="images/copy.png" alt="Copy Code" class="sidebar-toggle-img" />
+                <button type="button" id="btn-run-playground" class="vscode-btn-secondary"
+                  style="display: none; height: var(--tab-height-desktop); min-height: var(--tab-height-desktop); padding: 0 0.6rem;"
+                  title="Run Playground Code">
+                  <img src="images/run.png" alt="Run" class="playback-icon-img"
+                    style="width: 0.9rem; height: 0.9rem;" />
+                  <span>Run</span>
                 </button>
-                <button type="button" id="btn-download-code" class="card-icon-btn" title="Download Code">
-                  <img src="images/download.png" alt="Download Code" class="sidebar-toggle-img" />
+                <button type="button" id="btn-copy-code" class="card-icon-btn" title="Copy Content">
+                  <img id="img-copy-code" src="images/copy.png" alt="Copy Content" class="sidebar-toggle-img" />
                 </button>
-                <!--==========-->
-
+                <button type="button" id="btn-download-code" class="card-icon-btn" title="Download File">
+                  <img src="images/download.png" alt="Download File" class="sidebar-toggle-img" />
+                </button>
               </div>
-              <!--========== End of code selection, copy and download buttons ==========-->
+              <!--========== End of Playground Run, Copy and Download buttons ==========-->
 
             </div>
-            <!--==========-->
 
             <!--========== Code / Notes Content ==========-->
             <div id="codeViewPane" class="card-scroll-body">
@@ -952,6 +890,11 @@
   </div>
   <!--========== End of Help & FAQ Floating Window ==========-->
 
+  <!--========== Local File/Folder Upload Inputs & Context Menu ==========-->
+  <input type="file" id="user-fs-file-input" multiple style="display: none;" />
+  <input type="file" id="user-fs-folder-input" webkitdirectory directory multiple style="display: none;" />
+  <!--====================-->
+
   <script type="module">
 
     /* ========== Floating window ========== */
@@ -966,7 +909,7 @@
       <div class="modal-window" style="width: ${width}; height: ${height};">
         <div class="modal-header">
           <span>${title}</span>
-          <span class="modal-close" title="Close">&times;</span>
+          <button type="button" class="modal-close" title="Close" aria-label="Close modal">&times;</button>
         </div>
         <div class="modal-body"></div>
       </div>
@@ -1014,15 +957,12 @@
 
     /* ========== 1. Layout, Breakpoint & Storage Configuration ========== */
     const LAYOUT_CONFIG = {
-      /* LAYOUT_CONFIG is used here to centralize breakpoint queries, localStorage keys, and CSS custom property references across the app */
-
       /* Responsive Breakpoints */
       MOBILE_BREAKPOINT_QUERY: '(max-width: 900px)',
 
       /* LocalStorage Persistence Keys */
       THEME_STORAGE_KEY: 'shard-spiral-theme-preference',
       LAYOUT_STORAGE_KEY: 'shard-spiral-layout-state',
-      LANG_STORAGE_KEY: 'shard-spiral-lang-pref',
       FAVOURITES_STORAGE_KEY: 'shard-spiral-favourites',
       COLLAPSED_SIM_WARNING_KEY: 'shard-spiral-collapsed-sim-warning-shown',
       ZEN_STORAGE_KEY: 'shard-spiral-zen-mode',
@@ -1053,7 +993,7 @@
     };
 
     const toSnakeCase = (str) =>
-      str
+      String(str || '')
         .trim()
         .replace(/['’]/g, '')
         .replace(/\+/g, 'plus')
@@ -1077,14 +1017,11 @@
       }
     };
 
-    /* Core Math & CSS Variable Resolution Helpers */
     function clampVal(v, lo, hi) {
-      /* Clamps a numeric value v between lo and hi */
       return v < lo ? lo : v > hi ? hi : v;
     }
 
     function getRootCssVarRem(varName, fallbackRem) {
-      /* getRootCssVarRem is used here to resolve a CSS custom property on :root (including nested var() references) into a numeric rem value */
       let rawVal = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
       while (rawVal.startsWith('var(')) {
         const innerVar = rawVal.slice(4, -1).split(',')[0].trim();
@@ -1095,7 +1032,6 @@
     }
 
     function getRootCssVarUnits(varName, fallbackRem) {
-      /* getRootCssVarUnits is used here to convert a resolved rem CSS variable into actual pixel units based on the current root font size */
       const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
       return getRootCssVarRem(varName, fallbackRem) * rootFontSize;
     }
@@ -1106,7 +1042,7 @@
     const phoneMedia = window.matchMedia(LAYOUT_CONFIG.MOBILE_BREAKPOINT_QUERY);
     const systemDarkMedia = window.matchMedia('(prefers-color-scheme: dark)');
 
-    /* Top Title Bar: Left Group (Fullscreen, Reload, Quickdraw Annotations, Grid Menu) */
+    /* Top Title Bar: Left Group */
     const btnFullscreen = document.getElementById('btnFullscreen');
     const imgFullscreen = document.getElementById('imgFullscreen');
     const btnReload = document.getElementById('btnReload');
@@ -1138,7 +1074,7 @@
     const gridTypesMenu = document.getElementById('grid-types-menu');
     const gridTypeBtns = gridTypesMenu.querySelectorAll('button[data-grid-type]');
 
-    /* Top Title Bar: Right Group (Theme Switcher, Zen Mode, Reset Layout, Profile) */
+    /* Top Title Bar: Right Group */
     const themeOptionButtons = document.querySelectorAll('.theme-option-btn');
     const mobileThemeCycleBtn = document.getElementById('mobile-theme-cycle-btn');
     const mobileThemeCycleImg = document.getElementById('mobile-theme-cycle-img');
@@ -1146,7 +1082,7 @@
     const resetLayoutBtn = document.getElementById('reset-layout-btn');
     const btnProfile = document.getElementById('btnProfile');
 
-    /* Main Workspace & Left Column DOM Elements (History, Metadata, DS) */
+    /* Main Workspace & Left Column DOM Elements */
     const workspace = document.getElementById('workspace');
     const leftColumn = document.getElementById('left-column');
     const historyColumn = document.getElementById('history-column');
@@ -1171,7 +1107,7 @@
     const btnToggleHistory = document.getElementById('btn-toggle-history');
     const imgToggleHistory = document.getElementById('img-toggle-history');
 
-    /* Right Column DOM Elements (Algorithms, Settings, Code, State Variables) */
+    /* Right Column DOM Elements */
     const rightColumn = document.getElementById('right-column');
     const rightTopRow = document.getElementById('right-top-row');
     const algoColumn = document.getElementById('algo-column');
@@ -1182,14 +1118,11 @@
     const algoSettingsCollapsedStrip = document.getElementById('algo-settings-collapsed-strip');
     const algoSettingsSubmitBtn = document.getElementById('algo-settings-submit-btn');
     const algoSettingsRandomBtn = document.getElementById('algo-settings-random-btn');
-    const splitterAlgoCode = document.getElementById('splitter-algo-code-v');
     const codeCard = document.getElementById('code-card');
     const codeCollapsedStrip = document.getElementById('code-collapsed-strip');
     const splitterRightH = document.getElementById('splitter-right-h');
     const bottomSplitRow = document.getElementById('bottom-split-row');
     const stateCard = document.getElementById('state-card');
-    const btnToggleAlgo = document.getElementById('btn-toggle-algo');
-    const imgToggleAlgo = document.getElementById('img-toggle-algo');
 
     /* Algorithms Tree, Search & Filter DOM Elements */
     const algoSearchInput = document.getElementById('algo-search-input');
@@ -1209,13 +1142,6 @@
     const tabMenu = document.getElementById('tab-dropdown-menu');
     const tabActiveLabel = document.getElementById('tab-active-label');
     const tabOptions = tabMenu ? tabMenu.querySelectorAll('.lang-option-item') : [];
-
-    const langWrapper = document.getElementById('lang-dropdown-wrapper');
-    const langTriggerBtn = document.getElementById('lang-trigger-btn');
-    const langMenu = document.getElementById('lang-dropdown-menu');
-    const langActiveDot = document.getElementById('lang-active-dot');
-    const langActiveLabel = document.getElementById('lang-active-label');
-    const langOptions = document.querySelectorAll('#lang-dropdown-menu .lang-option-item');
 
     const btnCopyCode = document.getElementById('btn-copy-code');
     const imgCopyCode = document.getElementById('img-copy-code');
@@ -1243,10 +1169,9 @@
     const profilePaneShortcuts = document.getElementById('profile-pane-shortcuts');
 
     /* Application State Variables */
-    // Grid & Containers State
-    let currentDsGridType = 'dots'; // Default grid is Dots
-    const dsContainers = []; // Stores { name, dsType, userInput, element, canvas, camera }
-    let activeContainerName = null; // null means splash screen is shown
+    let currentDsGridType = 'dots';
+    const dsContainers = [];
+    let activeContainerName = null;
     let currentFsPath = [];
 
     // Panel Collapse & Saved Dimension State
@@ -1258,36 +1183,44 @@
     let isCodeCollapsed = false;
     let isZenMode = false;
     let savedMetadataHeight = '';
-    let savedAlgoCardHeight = '';
 
-    // DSA Metadata, Tree & Filter State
-    let dataStructuresJson = {};
-    let algorithmsJson = {};
+    // DSA Directory, Descriptions, Tags & Filter State
     let constraintsJson = {};
     let attributesDescJson = {};
-    let dsDirectAlgorithmsMap = {};
-    let selectedDsaName = null;
-    let selectedDsaType = null; // 'ds' | 'algo'
-    let isFavFilterActive = false;
     let syllabusJson = { "data-structures": [], "algorithms": [] };
+    const dsDescriptionCache = {}; // caches dsa-implementation/<ds-name>/description.json
+    const algoTxtTagsCache = {};   // caches dsa/<ds-path>/Algorithms/<algo>.txt -> { tags: [], constraints: {} }
+
+    let selectedDsaName = null;      // DS folder name or algorithm base name
+    let selectedDsaType = null;      // 'ds' | 'algo' | 'file'
+    let selectedAlgoParentDs = null; // Strict DS folder name that owns the selected algorithm
+    let selectedAlgoDirPath = [];    // Path array to the DS folder owning the selected algorithm
+
+    let isFavFilterActive = false;
     let isSyllabusFilterActive = true;
     let isCompatibleFilterActive = false;
-    let isAlgosHidden = false;
     let favouritesSet = new Set();
-    const expandedMainFolders = new Set();
-    const expandedFilterFolders = new Set();
-    const activeDsFilterSet = new Set();
 
     // Code / Notes & State / Explanation Tab State
-    let activeRightTopTab = 'code';
+    let activeRightTopTab = 'notes';
     let activeStateBottomTab = 'state';
-    let currentLangExt = '.py';
-    let currentPrismLang = 'python';
+    let selectedFileExt = '';
+    let selectedFilePath = null;
+    let selectedIsUserFile = false;
     let codeEditorInstance = null;
     let activeSimLineHandle = null;
     const editedCodeCache = {};
     const practiceCodeCache = {};
+    let playgroundCode = '# Write and run Python code anytime (not visualized)\nprint("Hello from Shard Spiral Playground!")\n';
     let resizeRafId = null;
+
+    // Directory & User Local FS State (5 MB cumulative limit)
+    const MAX_USER_STORAGE_BYTES = 5 * 1024 * 1024;
+    let dsaDirectoryTree = { name: 'dsa', type: 'directory', children: [] };
+    let userVirtualFs = { bytesUsed: 0, entries: {} };
+    const btnRunPlayground = document.getElementById('btn-run-playground');
+    const userFsFileInput = document.getElementById('user-fs-file-input');
+    const userFsFolderInput = document.getElementById('user-fs-folder-input');
 
     // Simulation & Playback State
     let simSteps = [];
@@ -1295,19 +1228,16 @@
     let simCurrentStepIdx = -1;
     let simTimer = null;
     let isSimPlaying = false;
-    let simMode = 'auto'; // 'auto' | 'manual'
-    let simUserChoices = []; // Stores user-selected node IDs at manual decision points
-    let simUserInputs = [];  // Stores user-entered strings for Python input() calls
-    window.isSimulating = false; // Locks canvas editing while active
+    let simMode = 'auto';
+    let simUserChoices = [];
+    let simUserInputs = [];
+    window.isSimulating = false;
     /* ========== End of Centralized DOM References & Application State ========== */
 
 
     /* ========== 3. Loading Screen Handler ========== */
     window.addEventListener('load', () => {
-      // Tell the background worker to start caching its modules silently
       warmUpPyodide();
-
-      /* Fades out and removes the full-screen loading overlay immediately */
       const loadingScreen = document.getElementById('loading-screen');
       if (loadingScreen) {
         loadingScreen.classList.add('fade-out');
@@ -1322,7 +1252,6 @@
     /* ========== 4. Data Structure Grid Engine, Camera & Dropdown ========== */
     function drawStandaloneGrid(canvas, gridType, cam = { x: 0, y: 0, z: 1 }) {
       if (!canvas) return;
-      // Measure the canvas itself (excludes parent's 0.75rem padding, header, and playback bar)
       const rect = canvas.getBoundingClientRect();
       const w = rect.width;
       const h = rect.height;
@@ -1394,7 +1323,7 @@
             ctx.moveTo(px - arm, py);
             ctx.lineTo(px + arm, py);
             ctx.moveTo(px, py - arm);
-            ctx.lineTo(px, py + arm);
+            ctx.moveTo(px, py + arm);
           }
         }
         ctx.strokeStyle = ink;
@@ -1433,33 +1362,11 @@
 
     function renderDsContainer(containerObj) {
       if (!containerObj || !containerObj.canvas) return;
-
       drawStandaloneGrid(containerObj.canvas, currentDsGridType, containerObj.camera);
-
-      // Call the standardized draw function for whatever data structure this is
       if (containerObj.dsModule && typeof containerObj.dsModule.draw === 'function') {
         containerObj.element._camera = containerObj.camera;
         containerObj.dsModule.draw(containerObj.element, containerObj.camera);
       }
-    }
-
-    function centerGridForMaxPoints(canvas, camera) {
-      const rect = canvas.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
-
-      const z = camera.z;
-      const stepScreen = STANDALONE_GRID_STEP * z;
-
-      // Maximum number of grid tracks that can fit horizontally and vertically
-      const maxCols = Math.floor(rect.width / stepScreen) + 1;
-      const maxRows = Math.floor(rect.height / stepScreen) + 1;
-
-      // Odd count -> grid point at center; Even count -> half-step offset so center sits between two points
-      const offsetX = (maxCols % 2 === 0) ? (STANDALONE_GRID_STEP / 2) : 0;
-      const offsetY = (maxRows % 2 === 0) ? (STANDALONE_GRID_STEP / 2) : 0;
-
-      camera.x = (rect.width / (2 * z)) + offsetX;
-      camera.y = (rect.height / (2 * z)) + offsetY;
     }
 
     function redrawAllDsCanvases() {
@@ -1469,7 +1376,7 @@
     function attachStandaloneCameraControls(containerObj) {
       const { canvas, camera } = containerObj;
       const pointers = new Map();
-      let session = null; // { type: 'pan' | 'pinch', ... }
+      let session = null;
       let lastDown = { t: 0, x: 0, y: 0, type: '' };
 
       const getLocalPt = (e) => {
@@ -1477,9 +1384,7 @@
         return { x: e.clientX - r.left, y: e.clientY - r.top };
       };
 
-      const render = () => {
-        renderDsContainer(containerObj);
-      };
+      const render = () => renderDsContainer(containerObj);
 
       const panBy = (dxScreen, dyScreen) => {
         camera.x += dxScreen / camera.z;
@@ -1511,19 +1416,15 @@
 
         let targetWorldX = el._worldOrigin ? el._worldOrigin.x : (r.width / (2 * prevZ) - prevCamX);
         let targetWorldY = el._worldOrigin ? el._worldOrigin.y : (r.height / (2 * prevZ) - prevCamY);
-
         let targetZoom = 1;
 
         if (el._structureBounds) {
           const sb = el._structureBounds;
           const contentW = sb.maxX - sb.minX;
           const contentH = sb.maxY - sb.minY;
-
           targetWorldX = (sb.minX + sb.maxX) / 2;
           targetWorldY = (sb.minY + sb.maxY) / 2;
-
           if (contentW > 0 && contentH > 0) {
-            // Leave a 10% margin so the data structure doesn't touch the absolute edges of the canvas
             const padX = r.width * 0.9;
             const padY = r.height * 0.9;
             targetZoom = Math.min(padX / contentW, padY / contentH);
@@ -1538,7 +1439,6 @@
           }
           targetWorldX = (minX + maxX) / 2;
           targetWorldY = (minY + maxY) / 2;
-
           const contentW = maxX - minX;
           const contentH = maxY - minY;
           if (contentW > 0 && contentH > 0) {
@@ -1548,20 +1448,15 @@
           }
         }
 
-        // Cap zoom at 1x so tiny data structures don't scale up gigantically, but allow shrinking to fit
         camera.z = Math.max(DS_ZOOM_MIN, Math.min(1, targetZoom));
         camera.x = (r.width / 2) / camera.z - targetWorldX;
         camera.y = (r.height / 2) / camera.z - targetWorldY;
-
         render();
       };
       containerObj.centerView = centerDataStructureToCurrentView;
 
-      // 1. Wheel: Touchpad 2-finger pinch (ctrlKey) or Mouse scroll wheel -> Zoom from Center
-      // Touchpad 2-finger move -> Pan
       canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
-
         const isTouchpadPinch = e.ctrlKey || e.metaKey;
         const isDiscreteMouseWheel =
           !isTouchpadPinch &&
@@ -1572,12 +1467,10 @@
           const factor = -e.deltaY * 0.0025;
           zoomCenter(Math.exp(factor));
         } else {
-          // Two-finger touchpad move pans the canvas
           panBy(-e.deltaX, -e.deltaY);
         }
       }, { passive: false });
 
-      // 2. Pointer Down
       canvas.addEventListener('pointerdown', (e) => {
         if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 1) return;
         if (e.button === 1) e.preventDefault();
@@ -1588,7 +1481,6 @@
         pointers.set(e.pointerId, pt);
         try { canvas.setPointerCapture(e.pointerId); } catch { }
 
-        // Two fingers on touch device -> Pinch zoom + two-finger pan
         if (pointers.size === 2) {
           const [a, b] = [...pointers.values()];
           session = {
@@ -1619,18 +1511,15 @@
             session = { type: 'pan', last: pt };
             canvas.style.cursor = 'grabbing';
           } else if (isDoublePress) {
-            // Wait to see if the user drags (pan) or releases immediately (center)
             session = { type: 'double-press', start: pt, last: pt };
           }
         }
       });
 
-      // 3. Pointer Move
       canvas.addEventListener('pointermove', (e) => {
         if (!pointers.has(e.pointerId)) return;
         const pt = getLocalPt(e);
         pointers.set(e.pointerId, pt);
-
         if (!session) return;
 
         if (session.type === 'pinch' && pointers.size >= 2) {
@@ -1650,7 +1539,6 @@
           camera.y = cy / nextZ - pCenterY + (center.y - session.center.y) / nextZ;
           render();
         } else if (session.type === 'double-press') {
-          // If moved past 5px threshold, promote double-click into a double-click drag pan
           if (Math.hypot(pt.x - session.start.x, pt.y - session.start.y) > 5) {
             session.type = 'pan';
             canvas.style.cursor = 'grabbing';
@@ -1663,14 +1551,12 @@
         }
       });
 
-      // 4. Pointer Up / Cancel
       const endPointer = (e) => {
         pointers.delete(e.pointerId);
         if (session?.type === 'pinch' && pointers.size < 2) {
           session = null;
           canvas.style.cursor = '';
         } else if (session?.type === 'double-press' && pointers.size === 0) {
-          // Clean double-click / double-tap without dragging -> Center the data structure
           session = null;
           canvas.style.cursor = '';
           if (e.type !== 'pointercancel') {
@@ -1686,7 +1572,6 @@
       canvas.addEventListener('pointercancel', endPointer);
     }
 
-    /* Grid Dropdown UI Controls */
     function toggleGridMenu(e) {
       e.stopPropagation();
       const isOpen = gridTypesMenu.classList.toggle('open');
@@ -1700,11 +1585,8 @@
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         currentDsGridType = btn.getAttribute('data-grid-type');
-
-        // Update main button to show the currently active grid SVG icon and title
         btnGrid.innerHTML = btn.innerHTML;
         btnGrid.title = btn.title;
-
         gridTypeBtns.forEach(b => b.classList.toggle('active', b === btn));
         gridTypesMenu.classList.remove('open');
         btnGridMenuTrigger.setAttribute('aria-expanded', 'false');
@@ -1722,7 +1604,6 @@
 
 
     /* ========== 5. Top Title Bar: Left Group (Quickdraw Annotations, Fullscreen & Reload) ========== */
-    // Initialize Quickdraw with default UI hidden
     const { editor: annotationEditor } = createQuickdraw({
       container: annotationOverlay,
       grid: 'none',
@@ -1731,7 +1612,6 @@
       theme: document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark'
     });
 
-    // Track current active tool (Default: laser pointer)
     let currentAnnotationTool = 'laser';
     let currentAnnotationGeo = null;
     annotationEditor.setTool('laser');
@@ -1777,12 +1657,9 @@
         ? 'Show Annotations'
         : 'Hide Annotations';
 
-      // Return control to the app UI
       setDrawingMode(false);
     }
 
-    // Keep the custom button state synced if Quickdraw switches tools internally
-    // (e.g., after placing a text box, Quickdraw automatically switches to 'select')
     annotationEditor.on('tool', () => {
       if (annotationEditor.tool === 'select' && currentAnnotationTool !== 'select') {
         currentAnnotationTool = 'select';
@@ -1794,7 +1671,6 @@
       }
     });
 
-    // 1. Clicking the main tool icon toggles drawing mode on/off
     btnAnnotations.addEventListener('click', (e) => {
       e.stopPropagation();
       if (!isDrawingMode && areAnnotationsHidden) {
@@ -1803,14 +1679,12 @@
       setDrawingMode(!isDrawingMode);
     });
 
-    // 2. Clicking the chevron arrow opens/closes the tool dropdown
     btnAnnotationMenuTrigger.addEventListener('click', (e) => {
       e.stopPropagation();
       const isOpen = annotationToolsMenu.classList.toggle('open');
       btnAnnotationMenuTrigger.setAttribute('aria-expanded', String(isOpen));
     });
 
-    // 3. Selecting a tool from the dropdown switches the tool and activates drawing mode
     annotationToolBtns.forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1818,12 +1692,10 @@
         currentAnnotationGeo = btn.getAttribute('data-qd-geo') || null;
         const iconPath = btn.getAttribute('data-icon');
 
-        // Update main button icon & active state in menu
         imgActiveAnnotationTool.src = iconPath;
         imgActiveAnnotationTool.alt = btn.title;
         annotationToolBtns.forEach(b => b.classList.toggle('active', b === btn));
 
-        // Close menu, unhide annotations if hidden, and enable drawing mode
         annotationToolsMenu.classList.remove('open');
         btnAnnotationMenuTrigger.setAttribute('aria-expanded', 'false');
         if (areAnnotationsHidden) {
@@ -1833,7 +1705,6 @@
       });
     });
 
-    // 4. Clicking Clear Board wipes all drawings and closes the menu
     btnClearBoard.addEventListener('click', (e) => {
       e.stopPropagation();
       annotationEditor.clearBoard();
@@ -1841,12 +1712,10 @@
       btnAnnotationMenuTrigger.setAttribute('aria-expanded', 'false');
     });
 
-    // 5. Hide / Show annotations button
     btnToggleAnnotationsVis.addEventListener('click', () => {
       setAnnotationsHidden(!areAnnotationsHidden);
     });
 
-    // 6. Close the tool dropdown when clicking outside
     window.addEventListener('click', (e) => {
       if (!annotationDropdownWrapper.contains(e.target)) {
         annotationToolsMenu.classList.remove('open');
@@ -1854,9 +1723,7 @@
       }
     });
 
-    /* Fullscreen & Mobile Reload Button Handlers */
     function updateFullscreenIcon() {
-      /* updateFullscreenIcon swaps the Fullscreen button (#btnFullscreen) icon between fullscreen.png and windowed.png */
       const isFs = Boolean(document.fullscreenElement);
       imgFullscreen.src = isFs ? 'images/windowed.png' : 'images/fullscreen.png';
       imgFullscreen.alt = isFs ? 'Windowed' : 'Fullscreen';
@@ -1875,12 +1742,11 @@
     btnReload.addEventListener('click', () => {
       window.location.reload();
     });
-    /* ========== End of Top Title Bar: Left Group (Quickdraw Annotations, Fullscreen & Reload) ========== */
+    /* ========== End of Top Title Bar: Left Group ========== */
 
 
     /* ========== 6. Top Title Bar: Right Group (Theme Switcher & Profile Modal) ========== */
     function getStoredThemePreference() {
-      /* getStoredThemePreference reads the saved theme ('system', 'light', or 'dark') from localStorage */
       try {
         return localStorage.getItem(LAYOUT_CONFIG.THEME_STORAGE_KEY) || 'system';
       } catch (err) {
@@ -1889,13 +1755,11 @@
     }
 
     function resolveEffectiveTheme(pref) {
-      /* resolveEffectiveTheme maps 'system' to 'dark' or 'light' based on OS media query preferences */
       if (pref === 'light' || pref === 'dark') return pref;
       return systemDarkMedia.matches ? 'dark' : 'light';
     }
 
     function applyThemePreference(pref, save = true) {
-      /* applyThemePreference updates data-theme on <html>, highlights the active desktop theme button (.theme-option-btn), and updates the mobile theme cycle button (#mobile-theme-cycle-btn) */
       const effectiveTheme = resolveEffectiveTheme(pref);
       document.documentElement.setAttribute('data-theme', effectiveTheme);
 
@@ -1920,7 +1784,6 @@
       } catch (err) { }
     }
 
-    /* Initial Theme Application & Event Listeners for Desktop and Mobile Theme Buttons */
     let currentThemePref = getStoredThemePreference();
     applyThemePreference(currentThemePref, false);
 
@@ -1942,9 +1805,7 @@
       applyThemePreference(currentThemePref, true);
     });
 
-    /* Profile Floating Modal Window */
     function setProfileModalOpen(open) {
-      /* setProfileModalOpen shows or hides the Profile modal overlay (#profile-modal-backdrop) */
       profileModalBackdrop.classList.toggle('open', open);
     }
 
@@ -1973,7 +1834,6 @@
       });
     });
 
-    /* DSA & Settings Floating Modal Window */
     function setDsaModalOpen(open) {
       if (!dsaModalBackdrop) return;
       dsaModalBackdrop.classList.toggle('open', Boolean(open));
@@ -1993,7 +1853,6 @@
       });
     }
 
-    /* Mobile Metadata & History Floating Modal Window */
     function setMobileHistoryModalOpen(open) {
       if (!mobileHistoryModalBackdrop) return;
       mobileHistoryModalBackdrop.classList.toggle('open', Boolean(open));
@@ -2020,39 +1879,36 @@
       }
     });
 
-    /* ========== Top Bar Mobile Toggle Logic ========== */
     const topTitlebar = document.querySelector('.top-titlebar');
     const mobileLeftToggleBtn = document.getElementById('mobile-left-toggle-btn');
     const mobileRightToggleBtn = document.getElementById('mobile-right-toggle-btn');
 
     if (mobileLeftToggleBtn && mobileRightToggleBtn && topTitlebar) {
-      // Keep left side (essential tools) expanded by default on mobile
       topTitlebar.classList.add('expand-left');
 
       mobileLeftToggleBtn.addEventListener('click', () => {
         if (topTitlebar.classList.contains('expand-left')) {
-          topTitlebar.classList.remove('expand-left'); // Close it
+          topTitlebar.classList.remove('expand-left');
         } else {
-          topTitlebar.classList.add('expand-left'); // Open it
-          topTitlebar.classList.remove('expand-right'); // Auto-close right side
+          topTitlebar.classList.add('expand-left');
+          topTitlebar.classList.remove('expand-right');
         }
       });
 
       mobileRightToggleBtn.addEventListener('click', () => {
         if (topTitlebar.classList.contains('expand-right')) {
-          topTitlebar.classList.remove('expand-right'); // Close it
+          topTitlebar.classList.remove('expand-right');
         } else {
-          topTitlebar.classList.add('expand-right'); // Open it
-          topTitlebar.classList.remove('expand-left'); // Auto-close left side
+          topTitlebar.classList.add('expand-right');
+          topTitlebar.classList.remove('expand-left');
         }
       });
     }
-    /* ========== End of Top Title Bar: Right Group (Theme Switcher & Profile Modal) ========== */
+    /* ========== End of Top Title Bar: Right Group ========== */
 
 
     /* ========== 7. Workspace Layout, Panel Collapse & Persistence ========== */
     function syncParentCollapseClasses() {
-      /* Syncs parent helper classes so browsers without CSS :has() support work identically */
       if (leftColumn) {
         leftColumn.classList.toggle('history-is-collapsed', isHistoryCollapsed);
         leftColumn.classList.toggle('ds-is-collapsed', isDsCollapsed);
@@ -2066,14 +1922,13 @@
     }
 
     function updateHorizontalCollapsedStates() {
-      /* Checks panel heights against minimum thresholds and applies horizontal collapse helper classes */
       syncParentCollapseClasses();
 
       const isPhone = phoneMedia.matches;
       const minCardH = isPhone
         ? getRootCssVarUnits(LAYOUT_CONFIG.CARD_MIN_HEIGHT_MOBILE_VAR, 1.6)
         : getRootCssVarUnits(LAYOUT_CONFIG.CARD_MIN_HEIGHT_DESKTOP_VAR, 2.15);
-      const tolerance = 6; // Increased tolerance for tablet sub-pixel & border rounding
+      const tolerance = 6;
 
       const checkCardMinHeight = (cardEl, parentCollapsed = false) => {
         if (!cardEl) return false;
@@ -2090,7 +1945,6 @@
         return isAtMin;
       };
 
-      /* 1. Check individual cards */
       const dsHCollapsed = checkCardMinHeight(dsCard, isDsCollapsed);
       const stateCollapsed = checkCardMinHeight(stateCard, false);
       const algoTopCollapsed = checkCardMinHeight(algoCard, isAlgoCollapsed);
@@ -2099,7 +1953,6 @@
       const histHCollapsed = checkCardMinHeight(historyCard, isHistoryCollapsed);
       const codeHCollapsed = checkCardMinHeight(codeCard, isCodeCollapsed);
 
-      /* Sync parent helper classes for individual card horizontal collapses */
       if (algoColumn) {
         algoColumn.classList.toggle('algo-h-collapsed', algoTopCollapsed);
         algoColumn.classList.toggle('settings-h-collapsed', algoBotCollapsed);
@@ -2109,14 +1962,12 @@
         historyColumn.classList.toggle('history-h-collapsed', histHCollapsed);
       }
 
-      /* 2. Check #bottom-split-row */
       let isBottomRowMin = false;
       if (bottomSplitRow) {
         isBottomRowMin = stateCollapsed;
         bottomSplitRow.classList.toggle('is-row-h-collapsed', isBottomRowMin);
       }
 
-      /* 3. Check #right-top-row */
       let isRightTopMin = false;
       if (rightTopRow) {
         const rtRect = rightTopRow.getBoundingClientRect();
@@ -2138,7 +1989,6 @@
         }
       }
 
-      /* 4. Check #right-column and #left-column */
       const isRightColCollapsed = isRightTopMin && isBottomRowMin;
       if (rightColumn) {
         rightColumn.classList.toggle('top-row-collapsed', isRightTopMin);
@@ -2179,7 +2029,7 @@
       const minCardH = isPhone
         ? getRootCssVarUnits(LAYOUT_CONFIG.CARD_MIN_HEIGHT_MOBILE_VAR, 1.6)
         : getRootCssVarUnits(LAYOUT_CONFIG.CARD_MIN_HEIGHT_DESKTOP_VAR, 2.15);
-      const minVisibleRatio = 0.35; // Minimum 35% height when expanding a horizontally collapsed row
+      const minVisibleRatio = 0.35;
 
       const expandRowIfCollapsed = (rowEl, parentEl, nextSiblingRowEl = null) => {
         if (!rowEl || !parentEl) return;
@@ -2197,7 +2047,6 @@
         }
       };
 
-      // 1. Mobile top row (#left-column) vs bottom row (#right-column)
       if (isPhone && leftColumn.contains(cardEl)) {
         expandRowIfCollapsed(leftColumn, workspace, rightColumn);
       }
@@ -2214,12 +2063,10 @@
         }
       }
 
-      // 2. Right column top row (#right-top-row) vs bottom row (#bottom-split-row)
       if (rightTopRow.contains(cardEl)) {
         expandRowIfCollapsed(rightTopRow, rightColumn, bottomSplitRow);
       }
 
-      // 3. Inner stacked cards (Metadata/History or Algorithms/Settings)
       if (cardEl === metadataCard || cardEl === historyCard) {
         const colH = historyColumn.getBoundingClientRect().height;
         const cardH = cardEl.getBoundingClientRect().height;
@@ -2227,14 +2074,6 @@
           metadataCard.classList.remove('is-h-collapsed');
           historyCard.classList.remove('is-h-collapsed');
           metadataCard.style.height = '50%';
-        }
-      } else if (cardEl === algoCard || cardEl === algoSettingsCard) {
-        const colH = algoColumn.getBoundingClientRect().height;
-        const cardH = cardEl.getBoundingClientRect().height;
-        if (cardEl.classList.contains('is-h-collapsed') || (colH > 0 && cardH <= minCardH + 8)) {
-          algoCard.classList.remove('is-h-collapsed');
-          algoSettingsCard.classList.remove('is-h-collapsed');
-          algoCard.style.height = '50%';
         }
       }
 
@@ -2281,7 +2120,7 @@
       updateHorizontalCollapsedStates();
     }
 
-    function setAlgoCollapsed(collapse, customExpandedWidth, targetCard = null) {
+    function setAlgoCollapsed(collapse) {
       if (collapse) setDsaModalOpen(false); else setDsaModalOpen(true);
     }
 
@@ -2296,7 +2135,6 @@
     }
 
     function setZenMode(enabled) {
-      /* setZenMode toggles Zen Mode on body.zen-mode, updates the Zen Mode header button (#zen-mode-btn), and persists state to localStorage */
       isZenMode = Boolean(enabled);
       if (isZenMode) {
         updateHorizontalCollapsedStates();
@@ -2314,7 +2152,6 @@
       } catch (e) { }
     }
 
-    /* REPLACE syncResponsiveStructure() WITH: */
     function syncResponsiveStructure() {
       const isPhone = phoneMedia.matches;
 
@@ -2340,7 +2177,6 @@
     }
 
     function saveLayoutState() {
-      /* saveLayoutState serializes all custom splitter dimensions and collapse flags to localStorage */
       try {
         const layout = {
           leftColumnW: leftColumn.style.width,
@@ -2360,7 +2196,6 @@
     }
 
     function loadLayoutState() {
-      /* loadLayoutState restores saved panel widths, heights, and collapsed states from localStorage */
       try {
         const stored = localStorage.getItem(LAYOUT_CONFIG.LAYOUT_STORAGE_KEY);
         if (stored) {
@@ -2374,7 +2209,7 @@
           savedAlgoWidth = layout.savedAlgoWidth || (phoneMedia.matches ? LAYOUT_CONFIG.ALGO_DEFAULT_WIDTH_MOBILE : LAYOUT_CONFIG.ALGO_DEFAULT_WIDTH_DESKTOP);
           savedHistoryWidth = layout.savedHistoryWidth || (phoneMedia.matches ? LAYOUT_CONFIG.HISTORY_DEFAULT_WIDTH_MOBILE : LAYOUT_CONFIG.HISTORY_DEFAULT_WIDTH_DESKTOP);
 
-          setAlgoCollapsed(layout.isAlgoCollapsed, layout.isAlgoCollapsed ? null : savedAlgoWidth);
+          setAlgoCollapsed(layout.isAlgoCollapsed);
           setHistoryCollapsed(layout.isHistoryCollapsed, layout.isHistoryCollapsed ? null : savedHistoryWidth);
           setDsCollapsed(Boolean(layout.isDsCollapsed));
           setCodeCollapsed(Boolean(layout.isCodeCollapsed));
@@ -2385,9 +2220,7 @@
     }
 
     function resetAllProportions() {
-      /* resetAllProportions is triggered by the Reset Layout button (#reset-layout-btn) to clear Zen mode, expand collapsed panels, and restore default panel sizes */
       setZenMode(false);
-
       savedAlgoWidth = LAYOUT_CONFIG.ALGO_DEFAULT_WIDTH_DESKTOP;
       savedHistoryWidth = LAYOUT_CONFIG.HISTORY_DEFAULT_WIDTH_DESKTOP;
       setDsCollapsed(false);
@@ -2404,7 +2237,6 @@
       syncResponsiveStructure();
     }
 
-    /* Event Listeners for Collapsed Strips, Zen Mode, Reset Layout, and Responsive Breakpoint */
     metadataCollapsedStrip.addEventListener('click', () => {
       setHistoryCollapsed(false, null, metadataCard);
       saveLayoutState();
@@ -2419,20 +2251,6 @@
       setDsCollapsed(false);
       saveLayoutState();
     });
-
-    if (algoCollapsedStrip) {
-      algoCollapsedStrip.addEventListener('click', () => {
-        setAlgoCollapsed(false, null, algoCard);
-        saveLayoutState();
-      });
-    }
-
-    if (algoSettingsCollapsedStrip) {
-      algoSettingsCollapsedStrip.addEventListener('click', () => {
-        setAlgoCollapsed(false, null, algoSettingsCard);
-        saveLayoutState();
-      });
-    }
 
     [metadataCard, historyCard, dsCard, algoCard, algoSettingsCard, codeCard, stateCard].forEach(card => {
       const header = card?.querySelector('.vscode-card-header');
@@ -2460,20 +2278,6 @@
       saveLayoutState();
     });
 
-    if (algoCollapsedStrip) {
-      algoCollapsedStrip.addEventListener('click', () => {
-        setAlgoCollapsed(false);
-        saveLayoutState();
-      });
-    }
-
-    if (algoSettingsCollapsedStrip) {
-      algoSettingsCollapsedStrip.addEventListener('click', () => {
-        setAlgoCollapsed(false);
-        saveLayoutState();
-      });
-    }
-
     if (codeCollapsedStrip) {
       codeCollapsedStrip.addEventListener('click', () => {
         setCodeCollapsed(false);
@@ -2491,7 +2295,6 @@
 
     phoneMedia.addEventListener('change', syncResponsiveStructure);
 
-    /* Initialize Responsive Structure, Saved Layout Proportions, and Zen Mode State */
     syncResponsiveStructure();
     loadLayoutState();
 
@@ -2512,15 +2315,12 @@
     }
 
     function getActiveContainerDsType() {
-      /* Returns the data structure type (e.g. "Array", "Tree") of the currently active container, or null if on splash screen */
       if (!activeContainerName) return null;
       const activeObj = dsContainers.find(c => c.name === activeContainerName);
       return activeObj ? activeObj.dsType : null;
     }
 
     function getUniqueContainerName(rawInputName, defaultDsName) {
-      /* Uses user input if non-empty, otherwise defaults to the Data Structure name.
-         If the name already exists, appends _1, _2, etc. (e.g. Tree -> Tree_1 -> Tree_2, or Tree_1 -> Tree_1_1) */
       const baseName = (rawInputName && rawInputName.trim()) ? rawInputName.trim() : defaultDsName;
       const existingNames = new Set(dsContainers.map(c => c.name));
 
@@ -2536,7 +2336,6 @@
     }
 
     function updateDsHeaderWarningState() {
-      /* Toggles the Empty Input Warning icon in the DS Card header if the active container is empty */
       const activeObj = dsContainers.find(c => c.name === activeContainerName);
       if (!activeObj) {
         if (dsCardHintEl) dsCardHintEl.style.display = 'none';
@@ -2560,7 +2359,6 @@
     window.updateDsHeaderWarningState = updateDsHeaderWarningState;
 
     function updateMetadataUI() {
-      /* Dynamically renders structure properties inside #metadata-body from the active DS module */
       const metadataBody = document.getElementById('metadata-body');
       if (!metadataBody) return;
 
@@ -2587,7 +2385,6 @@
         }
       }
 
-      // Fallback if a data structure module hasn't implemented getMetadata yet
       if (rows.length === 0) {
         rows = [
           ['Name', activeObj.name],
@@ -2617,7 +2414,6 @@
     window.updateMetadataUI = updateMetadataUI;
 
     window.showSimulationRunningWarning = function () {
-      /* Displays a warning if the user attempts to edit the data structure during an active simulation */
       if (sharedFloatingWindow) {
         setFloatingWindowTitle(sharedFloatingWindow, 'Simulation Running');
         sharedFloatingWindow.setContent(`
@@ -2709,7 +2505,6 @@
     }
 
     function selectContainer(containerName) {
-      /* Switches which container is currently displayed on screen and updates the DS card header */
       activeContainerName = containerName;
 
       if (dsSplashContainerEl) {
@@ -2738,8 +2533,17 @@
       redrawAllDsCanvases();
     }
 
+    async function importDataStructureModule(dsType) {
+      const formattedType = toSnakeCase(dsType);
+      try {
+        return await import(`./dsa-implementation/data-structures/${formattedType}/${formattedType}.js`);
+      } catch (e) {
+        console.error(`Failed to load module for Data Structure: ${dsType}`, e);
+        return null;
+      }
+    }
+
     async function createDataStructureContainer(dsType, rawNameInput, contentInput, extraInputs = {}) {
-      /* Creates a new container DOM element with a standalone grid canvas, appends it to the DS card, adds it to History, and selects it */
       const uniqueName = getUniqueContainerName(rawNameInput, dsType);
 
       const containerEl = document.createElement('div');
@@ -2759,15 +2563,7 @@
 
       if (dsCanvasAreaEl) dsCanvasAreaEl.appendChild(containerEl);
 
-      // 1. DYNAMICALLY IMPORT THE DATA STRUCTURE MODULE
-      let dsModule = null;
-      try {
-
-        const formattedType = toSnakeCase(dsType);
-        dsModule = await import(`./data-structures/${formattedType}.js`);
-      } catch (err) {
-        console.error(`Failed to load module for Data Structure: ${dsType}`, err);
-      }
+      const dsModule = await importDataStructureModule(dsType);
 
       const containerObj = {
         name: uniqueName,
@@ -2776,14 +2572,13 @@
         element: containerEl,
         canvas: canvasEl,
         camera: { x: 0, y: 0, z: 1 },
-        dsModule // 2. Store the module on the object for later use
+        dsModule
       };
 
       dsContainers.push(containerObj);
       selectContainer(uniqueName);
       attachStandaloneCameraControls(containerObj);
 
-      // 3. Setup interactions using the standardized interface
       if (dsModule && typeof dsModule.setupInteractions === 'function') {
         dsModule.setupInteractions(containerEl, () => renderDsContainer(containerObj));
       }
@@ -2807,11 +2602,9 @@
     }
 
     function exportDsContainerCanvas(targetObj, mode = 'normal') {
-      /* Exports the specified DS container canvas as PNG (normal, transparent, or printable) */
       const activeObj = targetObj || dsContainers.find(c => c.name === activeContainerName);
       if (!activeObj || !activeObj.canvas) return;
 
-      // Temporarily activate the container if it is hidden so its canvas has non-zero dimensions
       const wasActive = activeObj.element.classList.contains('active');
       if (!wasActive) {
         activeObj.element.classList.add('active');
@@ -2830,7 +2623,6 @@
         outCtx.fillRect(0, 0, outCanvas.width, outCanvas.height);
         outCtx.drawImage(srcCanvas, 0, 0);
       } else {
-        // Both 'transparent' and 'printable' require temporarily hiding the grid
         const tempContainer = activeObj.element;
         drawStandaloneGrid(srcCanvas, 'none', activeObj.camera);
         if (activeObj.dsModule && typeof activeObj.dsModule.draw === 'function') {
@@ -2838,14 +2630,13 @@
         }
 
         if (mode === 'printable') {
-          outCtx.fillStyle = '#ffffff'; // White background
+          outCtx.fillStyle = '#ffffff';
           outCtx.fillRect(0, 0, outCanvas.width, outCanvas.height);
-          outCtx.filter = 'grayscale(100%)'; // Black and white filter
+          outCtx.filter = 'grayscale(100%)';
         }
 
         outCtx.drawImage(srcCanvas, 0, 0);
 
-        // Restore filter and grid on screen
         if (mode === 'printable') outCtx.filter = 'none';
         renderDsContainer(activeObj);
       }
@@ -2864,21 +2655,19 @@
       a.click();
     }
 
-    // Empty Input Warning Click -> Floating Window
     if (dsEmptyWarningBtn) {
       dsEmptyWarningBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         setFloatingWindowTitle(sharedFloatingWindow, 'Empty Input Warning');
         sharedFloatingWindow.setContent(`
-        <p style="margin: 0; line-height: 1.45;">
-          Input is empty, you may not see anything on the canvas. Right click to add elements.
-        </p>
-      `);
+          <p style="margin: 0; line-height: 1.45;">
+            Input is empty, you may not see anything on the canvas. Right click to add elements.
+          </p>
+        `);
         sharedFloatingWindow.open();
       });
     }
 
-    // Right-Click on DS Card Header/ History item -> Container Options Floating Window
     function openContainerOptionsModal(targetObj) {
       if (!targetObj) return;
 
@@ -2934,7 +2723,7 @@
     if (dsCardHeaderEl) {
       dsCardHeaderEl.addEventListener('contextmenu', (e) => {
         const activeObj = dsContainers.find(c => c.name === activeContainerName);
-        if (!activeObj) return; // Ignore if still on splash screen
+        if (!activeObj) return;
         e.preventDefault();
         openContainerOptionsModal(activeObj);
       });
@@ -2942,22 +2731,43 @@
     /* ========== End of Data Structure Containers, History & Header Options ========== */
 
 
-    /* ========== 9. Right Column: Code / Notes Card & Bottom State / Explanation Card ========== */
+    /* ========== 9. Right Column: Notes / Template / Playground & State / Explanation Card ========== */
+    function getFileExtension(filename = '') {
+      const base = filename.split('/').pop() || '';
+      const dotIdx = base.lastIndexOf('.');
+      if (dotIdx <= 0) return '';
+      return base.slice(dotIdx).toLowerCase();
+    }
+
+    function stripFileExtension(filename = '') {
+      const base = filename.split('/').pop() || '';
+      const dotIdx = base.lastIndexOf('.');
+      return dotIdx <= 0 ? base : base.slice(0, dotIdx);
+    }
+
+    function getCodeMirrorModeFromExt(ext) {
+      if (ext === '.py') return 'python';
+      if (ext === '.cpp' || ext === '.c' || ext === '.h' || ext === '.hpp') return 'text/x-c++src';
+      if (ext === '.java') return 'text/x-java';
+      return null;
+    }
+
     function getActiveSimulationLine() {
-      /* Returns the active code line number for the current simulation step and selected language */
       if (simCurrentStepIdx < 0 || simCurrentStepIdx >= simSteps.length) return '';
       const step = simSteps[simCurrentStepIdx];
-      const langName = langActiveLabel ? langActiveLabel.textContent.trim() : 'Python';
+      const langMap = { '.py': 'Python', '.cpp': 'C++', '.java': 'Java' };
+      const langName = langMap[selectedFileExt] || 'Python';
       return step.lines?.[langName] ? step.lines[langName][step.activeLineKey] : '';
     }
 
-    function getCodeMirrorMode(lang) {
-      if (lang === 'cpp') return 'text/x-c++src';
-      if (lang === 'java') return 'text/x-java';
-      return 'python';
-    }
-
     function getCurrentRunnablePythonCode() {
+      if (activeRightTopTab === 'playground') {
+        if (codeEditorInstance && codeEditorInstance._loadedCacheKey === '__playground__') {
+          playgroundCode = codeEditorInstance.getValue();
+        }
+        return playgroundCode;
+      }
+
       if (activeRightTopTab === 'practice') {
         const activeObj = dsContainers.find(c => c.name === activeContainerName);
         if (!activeObj) return null;
@@ -2970,29 +2780,18 @@
         return practiceCodeCache[practiceKey] || activeObj.dsModule?.practiceConfig?.template || null;
       }
 
-      const formattedTarget = toSnakeCase(selectedDsaName || '');
-      const cacheKey = `${formattedTarget}.py`;
-      return editedCodeCache[cacheKey] !== undefined ? editedCodeCache[cacheKey] : null;
-    }
-
-    function highlightActiveCodeLine() {
-      if (!codeEditorInstance) return;
-
-      if (activeSimLineHandle !== null) {
-        codeEditorInstance.removeLineClass(activeSimLineHandle, 'background', 'cm-active-sim-line');
-        activeSimLineHandle = null;
+      if (selectedIsUserFile && selectedFilePath && selectedFileExt === '.py') {
+        if (codeEditorInstance && codeEditorInstance._loadedCacheKey === `user:${selectedFilePath}`) {
+          return codeEditorInstance.getValue();
+        }
+        return userVirtualFs.entries[selectedFilePath]?.content ?? null;
       }
 
-      const lineStr = getActiveSimulationLine();
-      const lineNum = parseInt(lineStr, 10);
-      if (!Number.isNaN(lineNum) && lineNum >= 1 && lineNum <= codeEditorInstance.lineCount()) {
-        activeSimLineHandle = codeEditorInstance.addLineClass(
-          lineNum - 1,
-          'background',
-          'cm-active-sim-line'
-        );
-        codeEditorInstance.scrollIntoView({ line: lineNum - 1, ch: 0 }, 60);
+      if (selectedFilePath && editedCodeCache[selectedFilePath] !== undefined && selectedFileExt === '.py') {
+        return editedCodeCache[selectedFilePath];
       }
+
+      return null;
     }
 
     async function jediPythonHint(editor) {
@@ -3000,8 +2799,12 @@
       const token = editor.getTokenAt(cursor);
       if (token.type === 'comment' || token.type === 'string') return null;
 
-      const activeObj = dsContainers.find(c => c.name === activeContainerName);
-      const dsCategory = activeObj?.dsModule?.practiceConfig?.dsCategory || activeObj?.dsType || 'array';
+      // In Playground tab, always provide standard Python completions without requiring a DS container
+      let dsCategory = 'python';
+      if (activeRightTopTab !== 'playground') {
+        const activeObj = dsContainers.find(c => c.name === activeContainerName);
+        dsCategory = activeObj?.dsModule?.practiceConfig?.dsCategory || toSnakeCase(activeObj?.dsType || 'array');
+      }
 
       const items = await getPythonCompletions({
         dsCategory,
@@ -3035,9 +2838,126 @@
       };
     }
 
+    function attachPythonIntellisense(cm) {
+      if (!cm) return;
+      let hintDebounceTimer = null;
+      cm.on('inputRead', (editor, change) => {
+        if (change.origin !== '+input') return;
+        const typed = change.text[0];
+        if (/^[a-zA-Z0-9_.]$/.test(typed)) {
+          clearTimeout(hintDebounceTimer);
+          hintDebounceTimer = setTimeout(() => {
+            editor.showHint({
+              hint: jediPythonHint,
+              completeSingle: false
+            });
+          }, 90);
+        }
+      });
+    }
+
+    async function runPlaygroundCode() {
+      const codeToRun = getCurrentRunnablePythonCode() || '';
+      if (stateViewPane) {
+        stateViewPane.innerHTML = `<div class="card-inner-pad"><span class="card-body-text">Running Playground (WASM)...</span></div>`;
+      }
+
+      const wrappedCode = `def __playground_main__(_ds=None):\n` +
+        (codeToRun.trim()
+          ? codeToRun.split('\n').map(line => '    ' + line).join('\n')
+          : '    pass');
+
+      try {
+        const traceRes = await tracePythonAlgorithm({
+          dsCategory: 'array',
+          pythonCode: wrappedCode,
+          funcName: '__playground_main__',
+          dsData: [],
+          nodeLabels: {},
+          rawKwargs: {},
+          simMode: 'auto',
+          userChoices: [],
+          userInputs: []
+        });
+
+        const steps = traceRes.steps || [];
+        const lastStep = steps.length > 0 ? steps[steps.length - 1] : null;
+        const stdoutText = lastStep?.stdout ?? traceRes.stdout ?? '';
+        const err = traceRes.error;
+
+        const escapedOut = (stdoutText || '(No stdout output)')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+
+        const errBanner = err
+          ? `<div class="state-step-banner is-error" style="margin-bottom: 0.65rem;"><span>${err.type}: ${err.message}</span></div>`
+          : `<div class="state-step-banner is-found" style="margin-bottom: 0.65rem;"><span>Playground execution finished (unvisualized)</span></div>`;
+
+        if (stateViewPane) {
+          stateViewPane.innerHTML = `
+            <div class="card-inner-pad">
+              ${errBanner}
+              <div style="font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted); margin-bottom: 0.3rem;">
+                Console Output (stdout)
+              </div>
+              <pre style="margin: 0; padding: 0.55rem 0.7rem; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 0.25rem; font-family: 'Noto Sans Mono', monospace; color: var(--text-bright); white-space: pre-wrap; word-break: break-word; max-height: 14rem; overflow-y: auto;">${escapedOut}</pre>
+            </div>
+          `;
+        }
+      } catch (e) {
+        if (stateViewPane) {
+          stateViewPane.innerHTML = `<div class="card-inner-pad"><span class="card-body-text" style="color: #ef4444;">Execution Error: ${e.message}</span></div>`;
+        }
+      }
+    }
+
+    if (btnRunPlayground) {
+      btnRunPlayground.addEventListener('click', runPlaygroundCode);
+    }
+
     async function updateCodeViewPane() {
       const currentTab = activeRightTopTab;
 
+      if (btnRunPlayground) {
+        btnRunPlayground.style.display = currentTab === 'playground' ? 'inline-flex' : 'none';
+      }
+
+      // 1. PLAYGROUND TAB (Writable & Runnable anytime, regular Python Intellisense active)
+      if (currentTab === 'playground') {
+        codeViewPane.innerHTML = '';
+        activeSimLineHandle = null;
+        codeEditorInstance = window.CodeMirror(codeViewPane, {
+          value: playgroundCode,
+          mode: 'python',
+          lineNumbers: true,
+          lineWrapping: true,
+          readOnly: false,
+          indentUnit: 4,
+          tabSize: 4,
+          indentGuide: true,
+          autoCloseBrackets: true,
+          matchBrackets: true,
+          extraKeys: {
+            'Ctrl-Space': (cm) => cm.showHint({ hint: jediPythonHint, completeSingle: false }),
+            'Ctrl-Enter': () => runPlaygroundCode(),
+            'Tab': (cm) => {
+              if (cm.somethingSelected()) cm.indentSelection('add');
+              else cm.replaceSelection(' '.repeat(cm.getOption('indentUnit')), 'end', '+input');
+            }
+          }
+        });
+        attachPythonIntellisense(codeEditorInstance);
+        codeEditorInstance._loadedCacheKey = '__playground__';
+        codeEditorInstance.on('change', () => {
+          playgroundCode = codeEditorInstance.getValue();
+        });
+        requestAnimationFrame(() => codeEditorInstance && codeEditorInstance.refresh());
+        updatePlaybackCompatibilityUI();
+        return;
+      }
+
+      // 2. TEMPLATE (PRACTICE) TAB
       if (currentTab === 'practice') {
         const activeObj = dsContainers.find(c => c.name === activeContainerName);
         const practiceCfg = activeObj?.dsModule?.practiceConfig;
@@ -3046,12 +2966,12 @@
           codeEditorInstance = null;
           activeSimLineHandle = null;
           codeViewPane.innerHTML = `
-        <div class="card-inner-pad">
-          <span class="card-body-text" style="color: var(--text-muted); text-align: center; display: block; margin-top: 1rem;">
-            Create or select a data structure to practice writing custom visualization code.
-          </span>
-        </div>
-      `;
+            <div class="card-inner-pad">
+              <span class="card-body-text" style="color: var(--text-muted); text-align: center; display: block; margin-top: 1rem;">
+                Create or select a data structure to practice writing custom visualization code.
+              </span>
+            </div>
+          `;
           updatePlaybackCompatibilityUI();
           return;
         }
@@ -3061,10 +2981,9 @@
           practiceCodeCache[practiceKey] = practiceCfg.template;
         }
 
-        const text = practiceCodeCache[practiceKey];
         codeViewPane.innerHTML = '';
         codeEditorInstance = window.CodeMirror(codeViewPane, {
-          value: text,
+          value: practiceCodeCache[practiceKey],
           mode: 'python',
           lineNumbers: true,
           lineWrapping: true,
@@ -3077,38 +2996,16 @@
           extraKeys: {
             'Ctrl-Space': (cm) => cm.showHint({ hint: jediPythonHint, completeSingle: false }),
             'Tab': (cm) => {
-              if (cm.somethingSelected()) {
-                cm.indentSelection('add');
-              } else {
-                cm.replaceSelection(' '.repeat(cm.getOption('indentUnit')), 'end', '+input');
-              }
+              if (cm.somethingSelected()) cm.indentSelection('add');
+              else cm.replaceSelection(' '.repeat(cm.getOption('indentUnit')), 'end', '+input');
             }
           }
         });
-
-        let hintDebounceTimer = null;
-        codeEditorInstance.on('inputRead', (cm, change) => {
-          if (change.origin !== '+input') return;
-          const typed = change.text[0];
-          if (/^[a-zA-Z0-9_.]$/.test(typed)) {
-            clearTimeout(hintDebounceTimer);
-            hintDebounceTimer = setTimeout(() => {
-              cm.showHint({
-                hint: jediPythonHint,
-                completeSingle: false
-              });
-            }, 90);
-          }
-        });
+        attachPythonIntellisense(codeEditorInstance);
         codeEditorInstance._loadedCacheKey = practiceKey;
-
         codeEditorInstance.on('change', () => {
-          const updatedCode = codeEditorInstance.getValue();
-          practiceCodeCache[practiceKey] = updatedCode;
-
-          if (window.isSimulating && typeof resetSimulation === 'function') {
-            resetSimulation();
-          }
+          practiceCodeCache[practiceKey] = codeEditorInstance.getValue();
+          if (window.isSimulating && typeof resetSimulation === 'function') resetSimulation();
         });
 
         requestAnimationFrame(() => {
@@ -3121,66 +3018,76 @@
         return;
       }
 
-      // 2. STANDARD CODE / NOTES TABS
-      if (!selectedDsaName) {
+      // 3. UNIFIED NOTES TAB (Code or HTML Notes based on file extension)
+      if (!selectedFilePath) {
         codeEditorInstance = null;
         activeSimLineHandle = null;
         codeViewPane.innerHTML = `
-      <div class="card-inner-pad">
-        <span class="card-body-text" style="color: var(--text-muted); text-align: center; display: block; margin-top: 1rem;">
-          Pick an algorithm or data structure from the sidebar and explore how it works.
-        </span>
-      </div>
-    `;
+          <div class="card-inner-pad">
+            <span class="card-body-text" style="color: var(--text-muted); text-align: center; display: block; margin-top: 1rem;">
+              Pick a file, algorithm, or data structure from the Explorer to view its notes or code.
+            </span>
+          </div>
+        `;
         return;
       }
 
-      const currentTarget = selectedDsaName;
-      const ext = currentTab === 'notes' ? '.html' : currentLangExt;
-      const formattedTarget = toSnakeCase(currentTarget);
-      const folder = selectedDsaType === 'ds' ? 'data-structures' : 'algorithms';
-      const filePath = `${folder}/${formattedTarget}${ext}`;
-      const cacheKey = `${formattedTarget}${ext}`;
+      const targetPath = selectedFilePath;
+      const cmMode = getCodeMirrorModeFromExt(selectedFileExt);
 
       try {
-        let text;
-        if (currentTab === 'code' && editedCodeCache[cacheKey] !== undefined) {
-          text = editedCodeCache[cacheKey];
+        let text = '';
+
+        if (selectedIsUserFile) {
+          const entry = userVirtualFs.entries[targetPath];
+          if (!entry) throw new Error('Local file not found');
+          text = entry.content || '';
+        } else if (editedCodeCache[targetPath] !== undefined) {
+          text = editedCodeCache[targetPath];
         } else {
-          const response = await fetch(filePath);
+          const response = await fetch(encodeURI(targetPath));
           if (!response.ok) throw new Error('File not found');
           text = await response.text();
           if (text.includes('<title>Shard Spiral</title>')) {
             throw new Error('Fallback HTML returned');
           }
-          if (currentTab === 'code') {
-            if (/^\s*<!doctype html/i.test(text) || /^\s*<html/i.test(text)) {
-              throw new Error('Unexpected HTML for code file');
-            }
-            text = text.replace(/\r\n?/g, '\n');
-            editedCodeCache[cacheKey] = text;
-          }
+          text = text.replace(/\r\n?/g, '\n');
+          editedCodeCache[targetPath] = text;
         }
 
-        if (selectedDsaName !== currentTarget || activeRightTopTab !== currentTab) return;
+        if (selectedFilePath !== targetPath || activeRightTopTab !== 'notes') return;
 
-        if (currentTab === 'notes') {
-          codeEditorInstance = null;
-          activeSimLineHandle = null;
-          codeViewPane.innerHTML = `<div class="card-inner-pad notes-content">${text}</div>`;
-        } else {
+        if (cmMode) {
           codeViewPane.innerHTML = '';
           codeEditorInstance = window.CodeMirror(codeViewPane, {
             value: text,
-            mode: getCodeMirrorMode(currentPrismLang),
+            mode: cmMode,
             lineNumbers: true,
             lineWrapping: true,
-            readOnly: true, // Disallow editing standard code
+            readOnly: !selectedIsUserFile,
             indentUnit: 4,
             tabSize: 4,
-            indentGuide: true
+            indentGuide: true,
+            autoCloseBrackets: selectedIsUserFile,
+            matchBrackets: true,
+            extraKeys: selectedIsUserFile && cmMode === 'python' ? {
+              'Ctrl-Space': (cm) => cm.showHint({ hint: jediPythonHint, completeSingle: false }),
+              'Tab': (cm) => {
+                if (cm.somethingSelected()) cm.indentSelection('add');
+                else cm.replaceSelection(' '.repeat(cm.getOption('indentUnit')), 'end', '+input');
+              }
+            } : {}
           });
-          codeEditorInstance._loadedCacheKey = cacheKey;
+          if (selectedIsUserFile && cmMode === 'python') {
+            attachPythonIntellisense(codeEditorInstance);
+          }
+          codeEditorInstance._loadedCacheKey = selectedIsUserFile ? `user:${targetPath}` : targetPath;
+
+          if (selectedIsUserFile) {
+            codeEditorInstance.on('change', () => {
+              saveUserFileContent(targetPath, codeEditorInstance.getValue());
+            });
+          }
 
           requestAnimationFrame(() => {
             if (codeEditorInstance) {
@@ -3188,21 +3095,113 @@
               highlightActiveCodeLine();
             }
           });
+        } else {
+          codeEditorInstance = null;
+          activeSimLineHandle = null;
+          if (selectedIsUserFile) {
+            codeViewPane.innerHTML = `
+              <div class="card-inner-pad notes-content" contenteditable="true" id="editable-user-notes" style="outline: none; min-height: 100%;">${text || '<p>Start typing your notes...</p>'}</div>
+            `;
+            const editableEl = document.getElementById('editable-user-notes');
+            if (editableEl) {
+              editableEl.addEventListener('input', () => {
+                saveUserFileContent(targetPath, editableEl.innerHTML);
+              });
+            }
+          } else {
+            codeViewPane.innerHTML = `<div class="card-inner-pad notes-content">${text}</div>`;
+          }
         }
       } catch (err) {
-        if (selectedDsaName !== currentTarget || activeRightTopTab !== currentTab) return;
+        if (selectedFilePath !== targetPath || activeRightTopTab !== 'notes') return;
         codeEditorInstance = null;
         activeSimLineHandle = null;
         codeViewPane.innerHTML = `
-      <div class="card-inner-pad">
-        <span class="card-body-text">Algorithm/Data structure not implemented yet</span>
-      </div>
-    `;
+          <div class="card-inner-pad">
+            <span class="card-body-text">File or notes content not available yet.</span>
+          </div>
+        `;
+      }
+    }
+
+    function setActiveTab(tabType, tabText) {
+      if (window.isSimulating && typeof resetSimulation === 'function') {
+        resetSimulation();
+      }
+      activeRightTopTab = tabType;
+
+      desktopTabs.forEach(t => {
+        t.classList.toggle('active', t.getAttribute('data-tab-type') === tabType);
+      });
+
+      if (tabActiveLabel) tabActiveLabel.textContent = tabText;
+      tabOptions.forEach(opt => {
+        const isActive = opt.getAttribute('data-tab-type') === tabType;
+        opt.classList.toggle('active', isActive);
+        opt.setAttribute('aria-selected', String(isActive));
+      });
+
+      updateCodeViewPane();
+      updatePlaybackCompatibilityUI();
+    }
+
+    btnCopyCode.addEventListener('click', () => {
+      const content = codeEditorInstance
+        ? codeEditorInstance.getValue()
+        : (codeViewPane.querySelector('.notes-content')?.innerText || '');
+      if (!content) return;
+      navigator.clipboard.writeText(content).then(() => {
+        imgCopyCode.src = 'images/success.png';
+        setTimeout(() => { imgCopyCode.src = 'images/copy.png'; }, 2500);
+      });
+    });
+
+    btnDownloadCode.addEventListener('click', () => {
+      const content = codeEditorInstance
+        ? codeEditorInstance.getValue()
+        : (codeViewPane.querySelector('.notes-content')?.innerHTML || '');
+      if (!content) return;
+
+      let filename = 'playground.py';
+      if (activeRightTopTab === 'practice') {
+        const activeObj = dsContainers.find(c => c.name === activeContainerName);
+        filename = `${toSnakeCase(activeObj?.dsType || 'template')}_template.py`;
+      } else if (selectedFilePath) {
+        filename = selectedFilePath.split('/').pop();
+      }
+
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    function highlightActiveCodeLine() {
+      if (!codeEditorInstance) return;
+
+      if (activeSimLineHandle !== null) {
+        codeEditorInstance.removeLineClass(activeSimLineHandle, 'background', 'cm-active-sim-line');
+        activeSimLineHandle = null;
+      }
+
+      const lineStr = getActiveSimulationLine();
+      const lineNum = parseInt(lineStr, 10);
+      if (!Number.isNaN(lineNum) && lineNum >= 1 && lineNum <= codeEditorInstance.lineCount()) {
+        activeSimLineHandle = codeEditorInstance.addLineClass(
+          lineNum - 1,
+          'background',
+          'cm-active-sim-line'
+        );
+        codeEditorInstance.scrollIntoView({ line: lineNum - 1, ch: 0 }, 60);
       }
     }
 
     function updateStateViewPane() {
-      /* Renders high-contrast boxed State Variables or Execution Explanation inside #stateViewPane */
       if (!stateViewPane) return;
       const currentStep = (simCurrentStepIdx >= 0 && simCurrentStepIdx < simSteps.length)
         ? simSteps[simCurrentStepIdx]
@@ -3332,37 +3331,7 @@
       }
     }
 
-    function setActiveTab(tabType, tabText) {
-      if (window.isSimulating && typeof resetSimulation === 'function') {
-        resetSimulation();
-      }
-      activeRightTopTab = tabType;
-
-      desktopTabs.forEach(t => {
-        t.classList.toggle('active', t.getAttribute('data-tab-type') === tabType);
-      });
-
-      if (tabActiveLabel) tabActiveLabel.textContent = tabText;
-      tabOptions.forEach(opt => {
-        const isActive = opt.getAttribute('data-tab-type') === tabType;
-        opt.classList.toggle('active', isActive);
-        opt.setAttribute('aria-selected', String(isActive));
-      });
-
-      // Hide language selector on Practice tab (Practice runs in Python via Pyodide)
-      if (langWrapper) {
-        langWrapper.style.display = tabType === 'practice' ? 'none' : '';
-      }
-
-      updateCodeViewPane();
-      if (tabType !== 'practice' && selectedDsaName) {
-        updateAlgorithmSettings(selectedDsaName, null, selectedDsaType);
-      }
-      updatePlaybackCompatibilityUI();
-    }
-
     function setActiveStateTab(tabType, tabText) {
-      /* setActiveStateTab synchronizes the active state between desktop State/Explanation tabs (#tab-state-variables, #tab-explanation) and the mobile dropdown (#state-tab-trigger-btn) */
       activeStateBottomTab = tabType;
 
       stateDesktopTabs.forEach(t => {
@@ -3379,9 +3348,8 @@
       updateStateViewPane();
     }
 
-    /* ResizeObserver for Prism Code Layout & Event Listeners for Code/Notes Tabs, Language Selector, Copy/Download Buttons, and State/Explanation Tabs */
     const codePaneResizeObserver = new ResizeObserver(() => {
-      if (activeRightTopTab !== 'code' || !codeEditorInstance) return;
+      if (!codeEditorInstance) return;
       if (resizeRafId) cancelAnimationFrame(resizeRafId);
       resizeRafId = requestAnimationFrame(() => {
         codeEditorInstance.refresh();
@@ -3415,78 +3383,6 @@
       });
     });
 
-    langTriggerBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = langMenu.classList.toggle('open');
-      langTriggerBtn.setAttribute('aria-expanded', String(isOpen));
-    });
-
-    langOptions.forEach(option => {
-      option.addEventListener('click', () => {
-        const selectedLang = option.getAttribute('data-lang');
-        const selectedColor = option.getAttribute('data-color');
-        currentLangExt = option.getAttribute('data-ext') || '.py';
-        currentPrismLang = option.getAttribute('data-prism') || 'python';
-
-        langActiveLabel.textContent = selectedLang;
-        langActiveDot.style.backgroundColor = selectedColor;
-
-        langOptions.forEach(opt => {
-          const active = opt === option;
-          opt.classList.toggle('active', active);
-          opt.setAttribute('aria-selected', String(active));
-        });
-
-        langMenu.classList.remove('open');
-        langTriggerBtn.setAttribute('aria-expanded', 'false');
-
-        try {
-          localStorage.setItem(LAYOUT_CONFIG.LANG_STORAGE_KEY, selectedLang);
-        } catch (e) { }
-
-        if (activeRightTopTab === 'code' && selectedDsaName) {
-          updateCodeViewPane();
-        }
-        updatePlaybackCompatibilityUI();
-      });
-    });
-
-    try {
-      const savedLang = localStorage.getItem(LAYOUT_CONFIG.LANG_STORAGE_KEY);
-      if (savedLang) {
-        const savedLangOpt = Array.from(langOptions).find(opt => opt.getAttribute('data-lang') === savedLang);
-        if (savedLangOpt) savedLangOpt.click();
-      }
-    } catch (e) { }
-
-    btnCopyCode.addEventListener('click', () => {
-      if (!codeEditorInstance) return;
-      navigator.clipboard.writeText(codeEditorInstance.getValue()).then(() => {
-        imgCopyCode.src = 'images/success.png';
-        setTimeout(() => {
-          imgCopyCode.src = 'images/copy.png';
-        }, 5000);
-      });
-    });
-
-    btnDownloadCode.addEventListener('click', () => {
-      if (!codeEditorInstance) return;
-      const activeOption = document.querySelector('#lang-dropdown-menu .lang-option-item.active');
-      const ext = activeOption ? activeOption.getAttribute('data-ext') : '.txt';
-      const codeText = codeEditorInstance.getValue();
-      const baseName = toSnakeCase(selectedDsaName || 'algorithm');
-
-      const blob = new Blob([codeText], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${baseName}${ext}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-
     stateDesktopTabs.forEach(tab => {
       tab.addEventListener('click', () => {
         const tabType = tab.getAttribute('data-tab-type');
@@ -3514,10 +3410,6 @@
     });
 
     window.addEventListener('click', (e) => {
-      if (!langWrapper.contains(e.target)) {
-        langMenu.classList.remove('open');
-        langTriggerBtn.setAttribute('aria-expanded', 'false');
-      }
       if (tabWrapper && !tabWrapper.contains(e.target)) {
         tabMenu.classList.remove('open');
         if (tabTriggerBtn) tabTriggerBtn.setAttribute('aria-expanded', 'false');
@@ -3527,13 +3419,11 @@
         if (stateTabTriggerBtn) stateTabTriggerBtn.setAttribute('aria-expanded', 'false');
       }
     });
-    /* ========== End of Right Column: Code / Notes Card & Bottom State / Explanation Card ========== */
+    /* ========== End of Section 9 ========== */
 
 
-    /* ========== 10. Right Column: Algorithms Search, Filters, Favourites & Tree View ========== */
-    /* Favourites Persistence & Helpers */
+    /* ========== 10. Explorer: ./dsa Directory Tree, Local User FS, Tags (.txt) & Settings ========== */
     function loadFavourites() {
-      /* loadFavourites loads the user's starred algorithms and data structures from localStorage */
       try {
         const stored = localStorage.getItem(LAYOUT_CONFIG.FAVOURITES_STORAGE_KEY);
         if (stored) {
@@ -3543,14 +3433,12 @@
     }
 
     function saveFavourites() {
-      /* saveFavourites saves the current set of starred algorithms and data structures to localStorage */
       try {
         localStorage.setItem(LAYOUT_CONFIG.FAVOURITES_STORAGE_KEY, JSON.stringify([...favouritesSet]));
       } catch (e) { }
     }
 
     function toggleFavourite(itemName) {
-      /* toggleFavourite adds or removes an item from favouritesSet and re-renders the main tree */
       if (favouritesSet.has(itemName)) {
         favouritesSet.delete(itemName);
       } else {
@@ -3561,7 +3449,6 @@
     }
 
     function createFavStarButton(itemName) {
-      /* createFavStarButton builds the inline star toggle button (.fav-toggle-btn) for each Data Structure and Algorithm row */
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'fav-toggle-btn';
@@ -3581,55 +3468,592 @@
       return btn;
     }
 
-    function dsSubtreeHasFavourite(dsName, dsObj) {
-      if (favouritesSet.has(dsName)) return true;
-      const algos = dsDirectAlgorithmsMap[dsName] || [];
-      if (algos.some(a => favouritesSet.has(a.name))) return true;
-      const children = (dsObj && dsObj.children) || {};
-      for (const [childName, childObj] of Object.entries(children)) {
-        if (dsSubtreeHasFavourite(childName, childObj)) return true;
-      }
-      return false;
+    function createFsIcon(src, alt) {
+      const img = document.createElement('img');
+      img.src = src;
+      img.alt = alt;
+      img.className = 'fs-item-icon';
+      return img;
     }
 
-    function treeHasMatchWithFn(nodesObj, query, matchFn) {
-      for (const [dsName, dsObj] of Object.entries(nodesObj || {})) {
-        if (matchFn(query, dsName)) return true;
-        const algos = dsDirectAlgorithmsMap[dsName] || [];
-        for (const algo of algos) {
-          if (matchFn(query, algo.name)) return true;
-          if (algo.tags.some(tag => matchFn(query, tag))) return true;
+    /* ========== Local User Virtual File System (IndexedDB - 5 MB Max Quota) ========== */
+    const USER_FS_DB_NAME = 'shard-spiral-user-fs-db';
+    const USER_FS_STORE_NAME = 'virtual_fs';
+
+    function openUserFsDb() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(USER_FS_DB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(USER_FS_STORE_NAME)) {
+            db.createObjectStore(USER_FS_STORE_NAME);
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function loadUserVirtualFs() {
+      try {
+        const db = await openUserFsDb();
+        return new Promise((resolve) => {
+          const tx = db.transaction(USER_FS_STORE_NAME, 'readonly');
+          const store = tx.objectStore(USER_FS_STORE_NAME);
+          const getReq = store.get('root');
+          getReq.onsuccess = () => {
+            if (getReq.result && typeof getReq.result === 'object') {
+              userVirtualFs = getReq.result;
+            }
+            recalculateUserFsBytes();
+            resolve();
+          };
+          getReq.onerror = () => resolve();
+        });
+      } catch (e) { }
+    }
+
+    async function persistUserVirtualFs() {
+      try {
+        recalculateUserFsBytes();
+        const db = await openUserFsDb();
+        const tx = db.transaction(USER_FS_STORE_NAME, 'readwrite');
+        tx.objectStore(USER_FS_STORE_NAME).put(userVirtualFs, 'root');
+      } catch (e) { }
+    }
+
+    function getByteLength(str = '') {
+      return new Blob([String(str)]).size;
+    }
+
+    function recalculateUserFsBytes() {
+      let total = 0;
+      for (const entry of Object.values(userVirtualFs.entries || {})) {
+        if (entry.type === 'file') {
+          total += entry.size || getByteLength(entry.content || '');
         }
-        if (treeHasMatchWithFn(dsObj.children || {}, query, matchFn)) {
-          return true;
+      }
+      userVirtualFs.bytesUsed = total;
+      return total;
+    }
+
+    function formatQuotaMB(bytes) {
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    function showQuotaExceededModal(attemptedBytes) {
+      setFloatingWindowTitle(sharedFloatingWindow, '5 MB Storage Limit Reached');
+      sharedFloatingWindow.setContent(`
+        <p style="margin: 0; line-height: 1.5;">
+          This action requires <strong>${formatQuotaMB(attemptedBytes)}</strong>, which would exceed your <strong>5.00 MB</strong> maximum local storage allowance (currently using <strong>${formatQuotaMB(userVirtualFs.bytesUsed)}</strong>).
+        </p>
+      `);
+      sharedFloatingWindow.open();
+    }
+
+    function saveUserFileContent(virtualPath, newContent) {
+      const entry = userVirtualFs.entries[virtualPath];
+      if (!entry || entry.type !== 'file') return false;
+      const oldSize = entry.size || 0;
+      const newSize = getByteLength(newContent);
+      const projectedTotal = (userVirtualFs.bytesUsed - oldSize) + newSize;
+
+      if (projectedTotal > MAX_USER_STORAGE_BYTES) {
+        showQuotaExceededModal(newSize - oldSize);
+        return false;
+      }
+
+      entry.content = newContent;
+      entry.size = newSize;
+      persistUserVirtualFs();
+      return true;
+    }
+
+    function isPathInsideUserFolder(pathArr) {
+      return pathArr.some((seg, idx) =>
+        (idx === 0 && seg === 'My Files') || /^My .+ Files$/i.test(seg)
+      );
+    }
+
+    /* ========== ./dsa Directory Tree Structure & Dynamic Discovery ========== */
+    async function parseApacheOrJsonDirectory(urlPath) {
+      try {
+        const res = await fetch(encodeURI(urlPath));
+        if (!res.ok) return null;
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          return await res.json();
+        }
+        const html = await res.text();
+        if (html.includes('<title>Shard Spiral</title>')) return null;
+
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const links = Array.from(doc.querySelectorAll('a'))
+          .map(a => decodeURIComponent(a.getAttribute('href') || '').trim())
+          .filter(href =>
+            href &&
+            !href.startsWith('?') &&
+            !href.startsWith('#') &&
+            !href.startsWith('http') &&
+            href !== '../' &&
+            href !== './' &&
+            href !== '/'
+          );
+
+        if (links.length === 0) return null;
+
+        const children = [];
+        for (const href of links) {
+          const cleanName = href.replace(/\/+$/, '').split('/').pop();
+          if (!cleanName || cleanName.startsWith('.')) continue;
+          if (href.endsWith('/')) {
+            const subUrl = `${urlPath.replace(/\/+$/, '')}/${cleanName}/`;
+            const subTree = await parseApacheOrJsonDirectory(subUrl);
+            children.push({
+              name: cleanName,
+              type: 'directory',
+              children: subTree?.children || []
+            });
+          } else {
+            children.push({ name: cleanName, type: 'file' });
+          }
+        }
+        return { name: urlPath.split('/').filter(Boolean).pop() || 'dsa', type: 'directory', children };
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function buildStaticDsaDirectoryTree() {
+      // Exact mirror of ./dsa directory structure when static server disables auto-indexing
+      const dsNode = (name, subDirs = [], algos = [], customPy = null) => {
+        const pyFile = customPy || `${toSnakeCase(name)}.py`;
+        const children = [
+          ...subDirs,
+          ...(algos.length > 0 ? [{
+            name: 'Algorithms',
+            type: 'directory',
+            children: algos.map(a => ({ name: a, type: 'file' }))
+          }] : []),
+          { name: pyFile, type: 'file' },
+          { name: 'Notes', type: 'file' }
+        ];
+        return { name, type: 'directory', children };
+      };
+
+      return {
+        name: 'dsa',
+        type: 'directory',
+        children: [
+          dsNode('Array', [
+            dsNode('Dynamic Array'),
+            dsNode('Static Array')
+          ], ['linear_search.py']),
+          dsNode('Bit-Based Structures', [
+            dsNode('Bit Vector'),
+            dsNode('Bitset')
+          ]),
+          dsNode('Cache Structures', [
+            dsNode('FIFO Cache'),
+            dsNode('LFU Cache'),
+            dsNode('LRU Cache'),
+            dsNode('MRU Cache')
+          ]),
+          dsNode('Disjoint Set Union'),
+          dsNode('Graph', [], [
+            'breadth_first_search_bfs.py',
+            'depth_first_search_dfs_iterative.py',
+            'depth_first_search_dfs_recursive.py',
+            'dijkstras_algorithm.py'
+          ]),
+          dsNode('Hash-Based Structures', [
+            dsNode('Hash Table', [
+              dsNode('Hash Map'),
+              dsNode('Hash Set')
+            ])
+          ]),
+          dsNode('Linked List', [
+            dsNode('Circular Linked List', [
+              dsNode('Circular Doubly Linked List'),
+              dsNode('Circular Singly Linked List')
+            ]),
+            dsNode('Doubly Linked List'),
+            dsNode('Singly Linked List')
+          ]),
+          dsNode('Matrix', [
+            dsNode('Dense Matrix'),
+            dsNode('Sparse Matrix')
+          ]),
+          dsNode('Probabilistic Structures', [
+            dsNode('Bloom Filter', [
+              dsNode('Counting Bloom Filter')
+            ]),
+            dsNode('Count-Min Sketch'),
+            dsNode('HyperLogLog', [], [], 'hyper_log_log.py')
+          ]),
+          dsNode('Queue', [
+            dsNode('Circular Queue'),
+            dsNode('Deque'),
+            dsNode('Priority Queue')
+          ]),
+          dsNode('Skip List'),
+          dsNode('Sparse Table'),
+          dsNode('Stack'),
+          dsNode('String', [
+            dsNode('Immutable String'),
+            dsNode('Mutable String'),
+            dsNode('Suffix Array'),
+            dsNode('Suffix Automaton')
+          ]),
+          dsNode('Tree', [
+            dsNode('2-3 Tree'),
+            dsNode('2-3-4 Tree'),
+            dsNode('B-Tree', [
+              dsNode('B+ Tree')
+            ]),
+            dsNode('Binary Tree', [
+              dsNode('Binary Search Tree', [
+                dsNode('AVL Tree'),
+                dsNode('Order Statistic Tree'),
+                dsNode('Red-Black Tree'),
+                dsNode('Splay Tree'),
+                dsNode('Treap', [
+                  dsNode('Implicit Treap')
+                ])
+              ])
+            ]),
+            dsNode('Dominator Tree'),
+            dsNode('Eertree'),
+            dsNode('Euler Tour Tree'),
+            dsNode('Fenwick Tree'),
+            dsNode('Gomory-Hu Tree'),
+            dsNode('Heap', [
+              dsNode('Binary Heap', [
+                dsNode('Max-Heap'),
+                dsNode('Min-Heap')
+              ]),
+              dsNode('Binomial Heap'),
+              dsNode('Fibonacci Heap')
+            ]),
+            dsNode('Link-Cut Tree'),
+            dsNode('Segment Tree', [
+              dsNode('Dynamic Segment Tree'),
+              dsNode('Li Chao Tree'),
+              dsNode('Merge Sort Tree'),
+              dsNode('Persistent Segment Tree')
+            ]),
+            dsNode('Suffix Tree'),
+            dsNode('Top Tree'),
+            dsNode('Trie', [
+              dsNode('Compressed Trie', [
+                dsNode('Patricia Trie'),
+                dsNode('Radix Trie')
+              ]),
+              dsNode('Suffix Trie'),
+              dsNode('XOR Trie')
+            ]),
+            dsNode('Wavelet Tree')
+          ])
+        ]
+      };
+    }
+
+    function ensureGuaranteedFoldersAndConfig(dirNode, isRoot = false, parentIsUserFolder = false) {
+      if (!dirNode || dirNode.type !== 'directory') return;
+      dirNode.children = dirNode.children || [];
+
+      const isCurrentUserFolder =
+        parentIsUserFolder ||
+        dirNode.name === 'My Files' ||
+        /^My .+ Files$/i.test(dirNode.name);
+
+      if (isCurrentUserFolder) {
+        dirNode.isUserFolder = true;
+        return;
+      }
+
+      if (isRoot) {
+        if (!dirNode.children.some(c => c.type === 'directory' && c.name === 'My Files')) {
+          dirNode.children.unshift({ name: 'My Files', type: 'directory', isUserFolder: true, children: [] });
+        }
+      } else if (dirNode.name !== 'Algorithms') {
+        // Every Data Structure folder gets "Configure & Generate" and "My <DS> Files"
+        if (!dirNode.children.some(c => c.type === 'file' && c.name === 'Configure & Generate')) {
+          dirNode.children.unshift({ name: 'Configure & Generate', type: 'file', virtualConfig: true });
+        }
+        const expectedUserFolder = `My ${dirNode.name} Files`;
+        if (!dirNode.children.some(c => c.type === 'directory' && c.name === expectedUserFolder)) {
+          dirNode.children.push({ name: expectedUserFolder, type: 'directory', isUserFolder: true, children: [] });
         }
       }
-      return false;
-    }
 
-    function getDsNodeByPath(pathArr) {
-      let currMap = dataStructuresJson;
-      let currNode = null;
-      for (const segment of pathArr) {
-        if (!currMap || !currMap[segment]) return null;
-        currNode = currMap[segment];
-        currMap = currNode.children || {};
-      }
-      return currNode;
-    }
-
-    function navigateToDsFolder(dsName) {
-      const lineage = getDsLineage(dsName);
-      if (lineage) {
-        currentFsPath = [...lineage];
-        if (algoSearchInput) {
-          algoSearchInput.value = '';
-          if (algoSearchClearBtn) algoSearchClearBtn.style.display = 'none';
+      dirNode.children.forEach(child => {
+        if (child.type === 'directory') {
+          ensureGuaranteedFoldersAndConfig(child, false, isCurrentUserFolder);
         }
-        renderMainAlgoTree();
+      });
+    }
+
+    function getDirectoryNodeAtPath(pathArr) {
+      let curr = dsaDirectoryTree;
+      for (const seg of pathArr) {
+        if (!curr || !Array.isArray(curr.children)) return null;
+        const next = curr.children.find(c => c.type === 'directory' && c.name === seg);
+        if (!next) {
+          const virtualPrefix = ['dsa', ...pathArr].join('/');
+          if (userVirtualFs.entries[virtualPrefix]?.type === 'directory') {
+            return { name: seg, type: 'directory', isUserFolder: true, children: [] };
+          }
+          return null;
+        }
+        curr = next;
+      }
+      return curr;
+    }
+
+    function getMergedFolderChildren(pathArr) {
+      const staticNode = getDirectoryNodeAtPath(pathArr);
+      const itemsMap = new Map();
+      const inAlgoFolder = pathArr[pathArr.length - 1] === 'Algorithms';
+
+      if (staticNode && Array.isArray(staticNode.children)) {
+        staticNode.children.forEach(child => {
+          // Hide companion *_tags.txt files inside Algorithms/ folders from the Explorer UI
+          if (inAlgoFolder && child.type === 'file' && child.name.toLowerCase().endsWith('_tags.txt')) {
+            return;
+          }
+          itemsMap.set(child.name, { ...child });
+        });
+      }
+
+      const dirPrefix = ['dsa', ...pathArr].join('/');
+      const prefixWithSlash = dirPrefix + '/';
+
+      for (const [fullPath, entry] of Object.entries(userVirtualFs.entries || {})) {
+        if (!fullPath.startsWith(prefixWithSlash)) continue;
+        const remainder = fullPath.slice(prefixWithSlash.length);
+        if (!remainder || remainder.includes('/')) continue;
+
+        itemsMap.set(remainder, {
+          name: remainder,
+          type: entry.type,
+          isUserItem: true,
+          fullVirtualPath: fullPath,
+          size: entry.size || 0
+        });
+      }
+
+      return Array.from(itemsMap.values());
+    }
+
+    /* ========== Fetching DS description.json & Algorithm *_tags.txt ========== */
+    async function fetchDsDescription(dsName) {
+      if (!dsName) return {};
+      if (dsDescriptionCache[dsName]) return dsDescriptionCache[dsName];
+
+      const snake = toSnakeCase(dsName);
+      const url = `dsa-implementation/data-structures/${snake}/description.json`;
+
+      try {
+        const res = await fetch(encodeURI(url));
+        if (res.ok) {
+          const text = await res.text();
+          if (!text.includes('<title>Shard Spiral</title>')) {
+            const parsed = JSON.parse(text);
+            dsDescriptionCache[dsName] = parsed;
+            return parsed;
+          }
+        }
+      } catch (e) { }
+
+      dsDescriptionCache[dsName] = {};
+      return {};
+    }
+
+    async function fetchAlgoTagsAndConstraints(dsFolderPathArr, algoBaseName) {
+      const fileBase = toSnakeCase(algoBaseName);
+      const txtPath = ['dsa', ...dsFolderPathArr, 'Algorithms', `${fileBase}_tags.txt`].join('/');
+      if (algoTxtTagsCache[txtPath]) return algoTxtTagsCache[txtPath];
+
+      const result = { tags: [], constraints: {} };
+      try {
+        const res = await fetch(encodeURI(txtPath));
+        if (res.ok) {
+          const rawText = await res.text();
+          if (!rawText.includes('<title>Shard Spiral</title>')) {
+            // Normalize line endings and read only until the first blank line (\n\n)
+            const normalized = rawText.replace(/\r\n?/g, '\n');
+            const headerBlock = normalized.split('\n\n')[0] || '';
+            const lines = headerBlock.split('\n').map(s => s.trim()).filter(Boolean);
+
+            for (const token of lines) {
+              if (token.includes(':')) {
+                const [k, v] = token.split(':').map(s => s.trim());
+                if (k) result.constraints[k] = v === 'true' ? true : (v === 'false' ? false : v);
+              } else {
+                result.tags.push(token);
+              }
+            }
+          }
+        }
+      } catch (e) { }
+
+      algoTxtTagsCache[txtPath] = result;
+      return result;
+    }
+
+    async function preloadAllAlgoTagFiles(dirNode = dsaDirectoryTree, currentPath = []) {
+      if (!dirNode || !Array.isArray(dirNode.children)) return;
+      for (const child of dirNode.children) {
+        if (child.type === 'directory') {
+          if (child.name === 'Algorithms') {
+            for (const algoFile of (child.children || [])) {
+              if (algoFile.type === 'file' && !algoFile.name.toLowerCase().endsWith('_tags.txt')) {
+                const base = stripFileExtension(algoFile.name);
+                await fetchAlgoTagsAndConstraints(currentPath, base);
+              }
+            }
+          } else if (!child.isUserFolder) {
+            await preloadAllAlgoTagFiles(child, [...currentPath, child.name]);
+          }
+        }
       }
     }
 
+    /* ========== Context Menu & Local Upload / Creation Handlers ========== */
+
+    function promptUserFsName(titleText, placeholderText, onConfirm) {
+      setFloatingWindowTitle(sharedFloatingWindow, titleText);
+      sharedFloatingWindow.setContent(`
+        <div style="display: flex; flex-direction: column; gap: 0.65rem;">
+          <input type="text" id="fw-fs-name-input" class="param-input-field" placeholder="${placeholderText}" />
+          <div style="display: flex; justify-content: flex-end; gap: 0.4rem;">
+            <button type="button" id="fw-fs-create-btn" class="vscode-btn-secondary">Create</button>
+          </div>
+        </div>
+      `);
+      sharedFloatingWindow.open();
+      const inp = sharedFloatingWindow.body.querySelector('#fw-fs-name-input');
+      const btn = sharedFloatingWindow.body.querySelector('#fw-fs-create-btn');
+      if (inp) setTimeout(() => inp.focus(), 20);
+
+      const submit = () => {
+        const val = (inp?.value || '').trim().replace(/[\\/]/g, '');
+        if (!val) return;
+        sharedFloatingWindow.close();
+        onConfirm(val);
+      };
+      if (btn) btn.onclick = submit;
+      if (inp) {
+        inp.onkeydown = (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); submit(); }
+        };
+      }
+    }
+
+    async function handleLocalFilesUpload(fileList, targetPathArr) {
+      if (!fileList || fileList.length === 0) return;
+      let batchBytes = 0;
+      const filesArray = Array.from(fileList);
+
+      for (const f of filesArray) {
+        batchBytes += f.size || 0;
+      }
+
+      if (userVirtualFs.bytesUsed + batchBytes > MAX_USER_STORAGE_BYTES) {
+        showQuotaExceededModal(batchBytes);
+        return;
+      }
+
+      const basePrefix = ['dsa', ...targetPathArr].join('/');
+
+      for (const file of filesArray) {
+        const relPath = (file.webkitRelativePath || file.name).replace(/^\/+/, '');
+        const parts = relPath.split('/').filter(Boolean);
+
+        let runningPrefix = basePrefix;
+        for (let i = 0; i < parts.length - 1; i++) {
+          runningPrefix += '/' + parts[i];
+          if (!userVirtualFs.entries[runningPrefix]) {
+            userVirtualFs.entries[runningPrefix] = { type: 'directory', createdAt: Date.now() };
+          }
+        }
+
+        const finalFilePath = `${basePrefix}/${parts.join('/')}`;
+        const textContent = await file.text();
+        userVirtualFs.entries[finalFilePath] = {
+          type: 'file',
+          content: textContent,
+          size: getByteLength(textContent),
+          createdAt: Date.now()
+        };
+      }
+
+      await persistUserVirtualFs();
+      renderMainAlgoTree();
+    }
+
+    function openUserFsContextMenu(e, targetPathArr) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const basePrefix = ['dsa', ...targetPathArr].join('/');
+      const folderTitle = targetPathArr[targetPathArr.length - 1] || 'My Files';
+      const usedStr = `${formatQuotaMB(userVirtualFs.bytesUsed)} / 5.00 MB used`;
+
+      setFloatingWindowTitle(sharedFloatingWindow, `${folderTitle} - Options`);
+      sharedFloatingWindow.setContent(`
+        <div style="margin-bottom: 0.25rem; font-family: 'Noto Sans Mono', monospace; color: var(--text-muted); text-align: center;">
+          ${usedStr}
+        </div>
+        <button type="button" id="fw-fs-new-file" class="vscode-btn-secondary" style="width: 100%; margin-bottom: 0.4rem;">New File</button>
+        <button type="button" id="fw-fs-new-folder" class="vscode-btn-secondary" style="width: 100%; margin-bottom: 0.4rem;">New Folder</button>
+        <button type="button" id="fw-fs-upload-files" class="vscode-btn-secondary" style="width: 100%; margin-bottom: 0.4rem;">Upload Files</button>
+        <button type="button" id="fw-fs-upload-folder" class="vscode-btn-secondary" style="width: 100%;">Upload Folder</button>
+      `);
+      sharedFloatingWindow.open();
+
+      sharedFloatingWindow.body.querySelector('#fw-fs-new-file').onclick = () => {
+        sharedFloatingWindow.close();
+        promptUserFsName('Create New File', 'e.g. notes.html or custom_algo.py', async (fileName) => {
+          const fullPath = `${basePrefix}/${fileName}`;
+          userVirtualFs.entries[fullPath] = { type: 'file', content: '', size: 0, createdAt: Date.now() };
+          await persistUserVirtualFs();
+          currentFsPath = [...targetPathArr];
+          renderMainAlgoTree();
+          openDsaFileItem({ name: fileName, isUserItem: true, fullVirtualPath: fullPath }, currentFsPath);
+        });
+      };
+
+      sharedFloatingWindow.body.querySelector('#fw-fs-new-folder').onclick = () => {
+        sharedFloatingWindow.close();
+        promptUserFsName('Create New Folder', 'Folder name', async (folderName) => {
+          const fullPath = `${basePrefix}/${folderName}`;
+          userVirtualFs.entries[fullPath] = { type: 'directory', createdAt: Date.now() };
+          await persistUserVirtualFs();
+          currentFsPath = [...targetPathArr];
+          renderMainAlgoTree();
+        });
+      };
+
+      sharedFloatingWindow.body.querySelector('#fw-fs-upload-files').onclick = () => {
+        sharedFloatingWindow.close();
+        if (!userFsFileInput) return;
+        userFsFileInput.value = '';
+        userFsFileInput.onchange = () => handleLocalFilesUpload(userFsFileInput.files, targetPathArr);
+        userFsFileInput.click();
+      };
+
+      sharedFloatingWindow.body.querySelector('#fw-fs-upload-folder').onclick = () => {
+        sharedFloatingWindow.close();
+        if (!userFsFolderInput) return;
+        userFsFolderInput.value = '';
+        userFsFolderInput.onchange = () => handleLocalFilesUpload(userFsFolderInput.files, targetPathArr);
+        userFsFolderInput.click();
+      };
+    }
+
+    /* ========== Explorer Rendering & File Selection ========== */
     function renderFsBreadcrumbs(isSearching) {
       if (!dsaBreadcrumbEl) return;
       dsaBreadcrumbEl.innerHTML = '';
@@ -3637,7 +4061,7 @@
       if (isSearching) {
         const span = document.createElement('span');
         span.className = 'dsa-crumb-btn active';
-        span.textContent = 'Search Results (Full Paths)';
+        span.textContent = 'Search Results';
         dsaBreadcrumbEl.appendChild(span);
         return;
       }
@@ -3670,78 +4094,149 @@
       });
     }
 
-    function createFsIcon(src, alt) {
-      const img = document.createElement('img');
-      img.src = src;
-      img.alt = alt;
-      img.className = 'fs-item-icon';
-      return img;
+    function resolveContextDsFromPath(pathArr) {
+      for (let i = pathArr.length - 1; i >= 0; i--) {
+        const seg = pathArr[i];
+        if (seg !== 'Algorithms' && seg !== 'My Files' && !/^My .+ Files$/i.test(seg)) {
+          return seg;
+        }
+      }
+      return null;
     }
 
-    function createAlgorithmEntryElement(algo, contextDsName, fullPathText = null) {
+    function resetSettingsToPlaceholder() {
+      const configHeading = document.getElementById('algo-config-heading');
+      const configContainer = document.getElementById('algo-config-container');
+      const randomSection = document.getElementById('algo-random-config-section');
+      const metaSection = document.getElementById('algo-settings-meta-section');
+      const algoIncompatibleMsg = document.getElementById('algo-settings-incompatible-msg');
+
+      if (configHeading) configHeading.style.display = 'none';
+      if (configContainer) {
+        configContainer.style.color = 'var(--text-muted)';
+        configContainer.textContent = 'Select a data structure or algorithm to configure.';
+      }
+      if (algoSettingsSubmitBtn) algoSettingsSubmitBtn.style.display = 'none';
+      if (randomSection) randomSection.style.display = 'none';
+      if (algoSettingsRandomBtn) algoSettingsRandomBtn.style.display = 'none';
+      if (metaSection) metaSection.style.display = 'none';
+      if (algoIncompatibleMsg) algoIncompatibleMsg.style.display = 'none';
+    }
+
+    function openDsaFileItem(fileItem, folderPathArr) {
+      const ext = getFileExtension(fileItem.name);
+      const baseTitle = stripFileExtension(fileItem.name);
+      const contextDs = resolveContextDsFromPath(folderPathArr);
+      const isAlgoFolder = folderPathArr[folderPathArr.length - 1] === 'Algorithms';
+
+      selectedIsUserFile = Boolean(fileItem.isUserItem);
+
+      if (fileItem.virtualConfig) {
+        // "Configure & Generate": load the folder's Notes file AND open Creation Settings in Settings card
+        selectedFilePath = ['dsa', ...folderPathArr, 'Notes'].join('/');
+        selectedFileExt = '';
+        selectedDsaName = contextDs;
+        selectedDsaType = 'ds';
+        selectedAlgoParentDs = null;
+        selectedAlgoDirPath = [];
+
+        if (activeRightTopTab !== 'notes') {
+          setActiveTab('notes', 'Notes');
+        } else {
+          updateCodeViewPane();
+        }
+        updateAlgorithmSettings(contextDs, null, 'ds');
+      } else if (fileItem.isUserItem) {
+        selectedFilePath = fileItem.fullVirtualPath;
+        selectedFileExt = ext;
+        selectedDsaName = baseTitle;
+        selectedDsaType = 'file';
+        selectedAlgoParentDs = null;
+        selectedAlgoDirPath = [];
+
+        if (activeRightTopTab !== 'notes') {
+          setActiveTab('notes', 'Notes');
+        } else {
+          updateCodeViewPane();
+        }
+        resetSettingsToPlaceholder();
+      } else if (isAlgoFolder) {
+        // Algorithm file inside dsa/<DS>/Algorithms/<algo>.py -> strictly confined to <DS>
+        selectedFilePath = ['dsa', ...folderPathArr, fileItem.name].join('/');
+        selectedFileExt = ext;
+        selectedDsaName = baseTitle;
+        selectedDsaType = 'algo';
+        selectedAlgoParentDs = contextDs;
+        selectedAlgoDirPath = folderPathArr.slice(0, -1);
+
+        if (activeRightTopTab !== 'notes') {
+          setActiveTab('notes', 'Notes');
+        } else {
+          updateCodeViewPane();
+        }
+        updateAlgorithmSettings(baseTitle, contextDs, 'algo');
+      } else {
+        // Regular file inside a DS folder (such as `Notes` or `array.py`): load into Notes tab only
+        selectedFilePath = ['dsa', ...folderPathArr, fileItem.name].join('/');
+        selectedFileExt = ext;
+        selectedDsaName = baseTitle;
+        selectedDsaType = 'file';
+        selectedAlgoParentDs = null;
+        selectedAlgoDirPath = [];
+
+        if (activeRightTopTab !== 'notes') {
+          setActiveTab('notes', 'Notes');
+        } else {
+          updateCodeViewPane();
+        }
+      }
+
+      updatePlaybackCompatibilityUI();
+      renderMainAlgoTree();
+    }
+
+    function createDirectoryFileRow(item, folderPathArr, fullPathHint = null) {
       const wrapper = document.createElement('div');
       wrapper.className = 'algo-item-wrapper';
 
-      const row = document.createElement('div');
-      row.className = `tree-row${selectedDsaType === 'algo' && selectedDsaName === algo.name ? ' selected' : ''}`;
-      row.setAttribute('data-dsa-name', algo.name);
+      const contextDs = resolveContextDsFromPath(folderPathArr);
+      const itemVirtualPath = item.fullVirtualPath ||
+        (item.virtualConfig ? `__config__:${contextDs}` : ['dsa', ...folderPathArr, item.name].join('/'));
 
-      row.appendChild(createFsIcon('images/file.png', 'Algorithm File'));
+      const isSelected = item.virtualConfig
+        ? (selectedDsaType === 'ds' && selectedDsaName === contextDs)
+        : (selectedDsaType !== 'ds' && selectedFilePath === itemVirtualPath);
+
+      const row = document.createElement('div');
+      row.className = `tree-row${isSelected ? ' selected' : ''}`;
+      row.appendChild(createFsIcon('images/file.png', 'File'));
 
       const label = document.createElement('span');
-      label.className = 'tree-label algo-label';
-      label.textContent = algo.name;
+      label.className = `tree-label${folderPathArr[folderPathArr.length - 1] === 'Algorithms' ? ' algo-label' : ''}`;
+      label.textContent = item.name;
       row.appendChild(label);
 
-      row.appendChild(createFavStarButton(algo.name));
+      const favKey = item.virtualConfig ? contextDs : stripFileExtension(item.name);
+      if (favKey) {
+        row.appendChild(createFavStarButton(favKey));
+      }
 
       row.addEventListener('click', (e) => {
         e.stopPropagation();
-        selectDsaItem(algo.name, contextDsName, 'algo');
+        openDsaFileItem(item, folderPathArr);
       });
+
+      if (isPathInsideUserFolder(folderPathArr)) {
+        row.addEventListener('contextmenu', (e) => openUserFsContextMenu(e, folderPathArr));
+      }
 
       wrapper.appendChild(row);
 
-      // Show full path when searching
-      if (fullPathText) {
-        const pathHint = document.createElement('div');
-        pathHint.className = 'search-path-hint';
-        pathHint.textContent = fullPathText;
-        wrapper.appendChild(pathHint);
-      }
-
-      // Compatible DS pills underneath each algorithm
-      const algoObj = algorithmsJson[algo.name];
-      const compatibleDsNames = Object.keys((algoObj && algoObj.inputs) || {});
-      if (compatibleDsNames.length > 0) {
-        const pillsRow = document.createElement('div');
-        pillsRow.className = 'algo-compat-pills-row';
-
-        compatibleDsNames.forEach(compatDs => {
-          const pill = document.createElement('button');
-          pill.type = 'button';
-          pill.className = 'algo-ds-pill';
-          pill.title = `Open ${compatDs} folder`;
-
-          const pillImg = document.createElement('img');
-          pillImg.src = 'images/compatible.png';
-          pillImg.alt = compatDs;
-
-          const pillText = document.createElement('span');
-          pillText.textContent = compatDs;
-
-          pill.appendChild(pillImg);
-          pill.appendChild(pillText);
-
-          pill.addEventListener('click', (e) => {
-            e.stopPropagation();
-            navigateToDsFolder(compatDs);
-          });
-
-          pillsRow.appendChild(pill);
-        });
-
-        wrapper.appendChild(pillsRow);
+      if (fullPathHint) {
+        const hint = document.createElement('div');
+        hint.className = 'search-path-hint';
+        hint.textContent = fullPathHint;
+        wrapper.appendChild(hint);
       }
 
       return wrapper;
@@ -3755,158 +4250,200 @@
       renderFsBreadcrumbs(isSearching);
       algoTreeContainer.innerHTML = '';
 
-      const currentDsType = getActiveContainerDsType();
-      const activeDsLineage = currentDsType ? (getDsLineage(currentDsType) || [currentDsType]) : [];
+      algoTreeContainer.oncontextmenu = (e) => {
+        if (isPathInsideUserFolder(currentFsPath)) {
+          openUserFsContextMenu(e, currentFsPath);
+        }
+      };
+
+      const activeDsType = getActiveContainerDsType();
 
       const syllabusDsSet = isSyllabusFilterActive
-        ? new Set(syllabusJson['data-structures'] || [])
+        ? new Set((syllabusJson['data-structures'] || []).map(toSnakeCase))
         : null;
       const syllabusAlgoSet = isSyllabusFilterActive
-        ? new Set(syllabusJson['algorithms'] || [])
+        ? new Set((syllabusJson['algorithms'] || []).map(toSnakeCase))
         : null;
 
-      function dsSubtreeMatchesSyllabus(dsName, dsObj) {
-        if (!isSyllabusFilterActive) return true;
-        if (syllabusDsSet.has(dsName) || favouritesSet.has(dsName)) return true;
-        const directAlgos = dsDirectAlgorithmsMap[dsName] || [];
-        if (directAlgos.some(algo => syllabusAlgoSet.has(algo.name) || favouritesSet.has(algo.name))) return true;
-        const children = Object.entries((dsObj && dsObj.children) || {});
-        return children.some(([childName, childObj]) => dsSubtreeMatchesSyllabus(childName, childObj));
+      function isCustomFolderName(name) {
+        return name === 'My Files' || /^My .+ Files$/i.test(name);
       }
 
-      function isDsVisibleUnderFilters(dsName, dsObj) {
-        if (isFavFilterActive && !dsSubtreeHasFavourite(dsName, dsObj)) return false;
-        if (isSyllabusFilterActive && !dsSubtreeMatchesSyllabus(dsName, dsObj)) return false;
+      function isItemFavourited(name) {
+        if (!name) return false;
+        const base = stripFileExtension(name);
+        const snake = toSnakeCase(base);
+        for (const fav of favouritesSet) {
+          if (fav === name || fav === base || toSnakeCase(fav) === snake) {
+            return true;
+          }
+        }
+        return false;
+      }
+
+      // Checks whether a specific Data Structure itself (not its children) matches active filters
+      function dsSelfMatchesFilters(dsName) {
+        if (!dsName) return false;
+        const dsSnake = toSnakeCase(dsName);
+
         if (isCompatibleFilterActive) {
-          if (!currentDsType || !activeDsLineage.includes(dsName)) return false;
+          if (!activeDsType || toSnakeCase(activeDsType) !== dsSnake) return false;
+        }
+        if (isFavFilterActive && !isItemFavourited(dsName)) {
+          return false;
+        }
+        if (isSyllabusFilterActive && syllabusDsSet && !syllabusDsSet.has(dsSnake) && !isItemFavourited(dsName)) {
+          return false;
         }
         return true;
       }
 
-      function getFilteredAlgorithmsForDs(dsName) {
-        let algos = dsDirectAlgorithmsMap[dsName] || [];
-        if (isFavFilterActive && !favouritesSet.has(dsName)) {
-          algos = algos.filter(a => favouritesSet.has(a.name));
+      // Checks whether an algorithm file inside Algorithms/ matches active filters
+      function algoFileMatchesFilters(fileName, parentDsName) {
+        const base = stripFileExtension(fileName);
+        const algoSnake = toSnakeCase(base);
+
+        if (isCompatibleFilterActive) {
+          if (!activeDsType || !parentDsName || toSnakeCase(activeDsType) !== toSnakeCase(parentDsName)) {
+            return false;
+          }
         }
-        if (isSyllabusFilterActive && !favouritesSet.has(dsName)) {
-          algos = algos.filter(a => syllabusAlgoSet.has(a.name) || favouritesSet.has(a.name));
+        if (isFavFilterActive && !isItemFavourited(base) && !isItemFavourited(parentDsName)) {
+          return false;
         }
-        return algos;
+        if (
+          isSyllabusFilterActive &&
+          syllabusAlgoSet &&
+          !syllabusAlgoSet.has(algoSnake) &&
+          !isItemFavourited(base)
+        ) {
+          return false;
+        }
+        return true;
       }
 
-      /* 1. SEARCH MODE: Prioritize current folder, then show other folders in full paths */
-      if (isSearching) {
-        const hasExactOrAcronym = treeHasMatchWithFn(dataStructuresJson, rawQuery, isExactOrAcronymMatch);
-        const matchFn = hasExactOrAcronym ? isExactOrAcronymMatch : isSubsequenceMatch;
+      // Checks whether a file inside a folder should be shown under current filters
+      function filePassesFilters(item, folderPathArr) {
+        if (item.isUserItem || isPathInsideUserFolder(folderPathArr)) return true;
 
-        // Determine the active folder DS scope (if currently inside a DS folder or its Algorithms subfolder)
-        const activeFolderDsPath = currentFsPath[currentFsPath.length - 1] === 'Algorithms'
-          ? currentFsPath.slice(0, -1)
-          : currentFsPath;
+        const inAlgoFolder = folderPathArr[folderPathArr.length - 1] === 'Algorithms';
+        const contextDs = resolveContextDsFromPath(folderPathArr);
 
-        const isInsideCurrentFolder = (candidateDsPath) => {
-          if (activeFolderDsPath.length === 0) return false;
-          if (candidateDsPath.length < activeFolderDsPath.length) return false;
-          return activeFolderDsPath.every((seg, i) => candidateDsPath[i] === seg);
-        };
-
-        const currentFolderMatches = [];
-        const otherFolderMatches = [];
-
-        function buildDsSearchElement(dsName, pathString) {
-          const dsWrap = document.createElement('div');
-          dsWrap.className = 'algo-item-wrapper';
-
-          const dsRow = document.createElement('div');
-          dsRow.className = `tree-row${selectedDsaType === 'ds' && selectedDsaName === dsName ? ' selected' : ''}`;
-          dsRow.setAttribute('data-dsa-name', dsName);
-          dsRow.appendChild(createFsIcon('images/folder.png', 'Folder'));
-
-          const lbl = document.createElement('span');
-          lbl.className = 'tree-label ds-label';
-          lbl.textContent = dsName;
-          dsRow.appendChild(lbl);
-          dsRow.appendChild(createFavStarButton(dsName));
-
-          dsRow.addEventListener('click', () => {
-            navigateToDsFolder(dsName);
-          });
-
-          const hint = document.createElement('div');
-          hint.className = 'search-path-hint';
-          hint.textContent = pathString;
-
-          dsWrap.appendChild(dsRow);
-          dsWrap.appendChild(hint);
-          return dsWrap;
+        if (inAlgoFolder) {
+          return algoFileMatchesFilters(item.name, contextDs);
         }
 
-        function searchWalk(nodesObj, pathPrefix = []) {
-          for (const [dsName, dsObj] of Object.entries(nodesObj || {})) {
-            if (!isDsVisibleUnderFilters(dsName, dsObj)) continue;
-            const currentPath = [...pathPrefix, dsName];
-            const pathString = currentPath.join(' / ');
-            const inCurrentScope = isInsideCurrentFolder(currentPath);
-            const targetBucket = inCurrentScope ? currentFolderMatches : otherFolderMatches;
+        // Implementation details ("Configure & Generate", "Notes", "<ds>.py") belong to contextDs
+        return dsSelfMatchesFilters(contextDs);
+      }
 
-            // Matching Data Structure Folder
-            if (matchFn(rawQuery, dsName)) {
-              targetBucket.push(buildDsSearchElement(dsName, pathString));
-            }
+      // Recursively checks whether a directory has any visible content under the active filters
+      function directoryHasPassingContent(dirPathArr, dirName) {
+        if (isCustomFolderName(dirName)) {
+          // Hide "My <DS> Files" if Compatible/Fav/Syllabus filters exclude this DS and user has no matching items inside
+          if (!isFavFilterActive && !isSyllabusFilterActive && !isCompatibleFilterActive) return true;
+          const userChildren = getMergedFolderChildren(dirPathArr);
+          if (isFavFilterActive) {
+            return userChildren.some(c =>
+              c.type === 'directory'
+                ? directoryHasPassingContent([...dirPathArr, c.name], c.name)
+                : isItemFavourited(c.name)
+            );
+          }
+          if (isCompatibleFilterActive) {
+            const ownerDs = resolveContextDsFromPath(dirPathArr.slice(0, -1));
+            if (!ownerDs) return false; // Hide root "My Files" when Compatible Only filter is on
+            return Boolean(activeDsType && toSnakeCase(activeDsType) === toSnakeCase(ownerDs));
+          }
+          return true;
+        }
 
-            // Matching Algorithms inside this Data Structure
-            const algos = getFilteredAlgorithmsForDs(dsName);
-            for (const algo of algos) {
-              if (matchFn(rawQuery, algo.name) || algo.tags.some(t => matchFn(rawQuery, t))) {
-                const fullAlgoPath = `${pathString} / Algorithms / ${algo.name}`;
-                targetBucket.push(createAlgorithmEntryElement(algo, dsName, fullAlgoPath));
+        const children = getMergedFolderChildren(dirPathArr);
+
+        if (dirName === 'Algorithms') {
+          const parentDs = resolveContextDsFromPath(dirPathArr.slice(0, -1));
+          return children.some(c => c.type === 'file' && algoFileMatchesFilters(c.name, parentDs));
+        }
+
+        // It is a Data Structure folder: visible if the DS itself matches OR any nested child/algorithm matches
+        if (dsSelfMatchesFilters(dirName)) return true;
+
+        for (const c of children) {
+          if (c.type === 'directory' && !isCustomFolderName(c.name)) {
+            if (directoryHasPassingContent([...dirPathArr, c.name], c.name)) return true;
+          }
+        }
+        return false;
+      }
+
+      // 1. SEARCH MODE across ./dsa (including *_tags.txt) and user files
+      if (isSearching) {
+        const results = [];
+        function walkSearch(pathArr) {
+          const children = getMergedFolderChildren(pathArr);
+          const inAlgoDir = pathArr[pathArr.length - 1] === 'Algorithms';
+
+          for (const item of children) {
+            if (item.virtualConfig) continue;
+            const itemPath = [...pathArr, item.name];
+            const pathStr = ['Root', ...itemPath].join(' / ');
+
+            let matches = isExactOrAcronymMatch(rawQuery, item.name) || isSubsequenceMatch(rawQuery, item.name);
+
+            if (!matches && inAlgoDir && item.type === 'file') {
+              const base = stripFileExtension(item.name);
+              const txtPath = ['dsa', ...pathArr, `${toSnakeCase(base)}_tags.txt`].join('/');
+              const tagData = algoTxtTagsCache[txtPath];
+              if (tagData && Array.isArray(tagData.tags)) {
+                matches = tagData.tags.some(t => isExactOrAcronymMatch(rawQuery, t) || isSubsequenceMatch(rawQuery, t));
               }
             }
 
-            searchWalk(dsObj.children || {}, currentPath);
+            if (matches) {
+              if (item.type === 'directory') {
+                if (directoryHasPassingContent(itemPath, item.name)) {
+                  const wrap = document.createElement('div');
+                  wrap.className = 'algo-item-wrapper';
+                  const row = document.createElement('div');
+                  row.className = 'tree-row';
+                  row.appendChild(createFsIcon('images/folder.png', 'Folder'));
+                  const lbl = document.createElement('span');
+                  lbl.className = 'tree-label ds-label';
+                  lbl.textContent = item.name;
+                  row.appendChild(lbl);
+                  row.addEventListener('click', () => {
+                    currentFsPath = itemPath;
+                    if (algoSearchInput) algoSearchInput.value = '';
+                    if (algoSearchClearBtn) algoSearchClearBtn.style.display = 'none';
+                    renderMainAlgoTree();
+                  });
+                  const hint = document.createElement('div');
+                  hint.className = 'search-path-hint';
+                  hint.textContent = pathStr;
+                  wrap.appendChild(row);
+                  wrap.appendChild(hint);
+                  results.push(wrap);
+                }
+              } else if (filePassesFilters(item, pathArr)) {
+                results.push(createDirectoryFileRow(item, pathArr, pathStr));
+              }
+            }
+            if (item.type === 'directory') {
+              walkSearch(itemPath);
+            }
           }
         }
+        walkSearch([]);
 
-        searchWalk(dataStructuresJson, []);
-
-        if (currentFolderMatches.length === 0 && otherFolderMatches.length === 0) {
-          const emptyEl = document.createElement('div');
-          emptyEl.className = 'algo-empty-msg';
-          emptyEl.textContent = 'No matching data structures or algorithms.';
-          algoTreeContainer.appendChild(emptyEl);
+        if (results.length === 0) {
+          algoTreeContainer.innerHTML = `<div class="algo-empty-msg">No matching files, folders, or tags.</div>`;
           return;
         }
-
-        // Render Current Folder matches first, followed by Other Folders
-        if (activeFolderDsPath.length > 0 && currentFolderMatches.length > 0) {
-          const curHeader = document.createElement('div');
-          curHeader.className = 'search-path-hint';
-          curHeader.style.padding = '0.2rem 0.35rem';
-          curHeader.style.fontWeight = '600';
-          curHeader.style.color = 'var(--text-bright)';
-          curHeader.textContent = `In ${activeFolderDsPath.join(' / ')}`;
-          algoTreeContainer.appendChild(curHeader);
-
-          currentFolderMatches.forEach(el => algoTreeContainer.appendChild(el));
-
-          if (otherFolderMatches.length > 0) {
-            const otherHeader = document.createElement('div');
-            otherHeader.className = 'search-path-hint';
-            otherHeader.style.padding = '0.45rem 0.35rem 0.2rem 0.35rem';
-            otherHeader.style.fontWeight = '600';
-            otherHeader.style.color = 'var(--text-bright)';
-            otherHeader.textContent = 'Other Folders';
-            algoTreeContainer.appendChild(otherHeader);
-          }
-        } else {
-          currentFolderMatches.forEach(el => algoTreeContainer.appendChild(el));
-        }
-
-        otherFolderMatches.forEach(el => algoTreeContainer.appendChild(el));
+        results.forEach(el => algoTreeContainer.appendChild(el));
         return;
       }
 
-      /* 2. FILE-SYSTEM MODE: Add ".." Up Row when inside a subfolder */
+      // 2. DIRECTORY MODE
       if (currentFsPath.length > 0) {
         const backRow = document.createElement('div');
         backRow.className = 'tree-row';
@@ -3922,174 +4459,200 @@
         algoTreeContainer.appendChild(backRow);
       }
 
-      /* Case A: At Root -> Show top-level Data Structure folders */
+      const insideUserFolder = isPathInsideUserFolder(currentFsPath);
+      const inAlgorithmsFolder = currentFsPath[currentFsPath.length - 1] === 'Algorithms';
+      const isInsideDsFolder = currentFsPath.length > 0 && !insideUserFolder && !inAlgorithmsFolder;
+
+      const children = getMergedFolderChildren(currentFsPath);
+
+      const createFolderRowElement = (item) => {
+        const folderPath = [...currentFsPath, item.name];
+        const isMyFilesDir = isCustomFolderName(item.name) || insideUserFolder;
+
+        const row = document.createElement('div');
+        row.className = 'tree-row';
+        row.appendChild(createFsIcon('images/folder.png', 'Folder'));
+
+        const label = document.createElement('span');
+        label.className = 'tree-label ds-label';
+        label.textContent = item.name;
+        row.appendChild(label);
+
+        if (!isMyFilesDir && item.name !== 'Algorithms') {
+          row.appendChild(createFavStarButton(item.name));
+        }
+
+        row.addEventListener('click', () => {
+          currentFsPath.push(item.name);
+          renderMainAlgoTree();
+        });
+
+        if (isMyFilesDir) {
+          row.addEventListener('contextmenu', (e) => openUserFsContextMenu(e, folderPath));
+        }
+        return row;
+      };
+
+      const appendSubtitleSection = (subtitleText, hasLeadingSpacer) => {
+        if (hasLeadingSpacer) {
+          const spacer = document.createElement('div');
+          spacer.className = 'dsa-section-spacer';
+          algoTreeContainer.appendChild(spacer);
+        }
+        const sub = document.createElement('div');
+        sub.className = 'dsa-section-subtitle';
+        sub.textContent = subtitleText;
+        algoTreeContainer.appendChild(sub);
+      };
+
+      // 2A. Structured layout inside a Data Structure folder
+      if (isInsideDsFolder) {
+        const currentDsName = currentFsPath[currentFsPath.length - 1];
+        const showThisDsImplementation = dsSelfMatchesFilters(currentDsName);
+
+        const configItem = showThisDsImplementation ? children.find(c => c.virtualConfig) : null;
+        const implFiles = showThisDsImplementation
+          ? children
+              .filter(c => c.type === 'file' && !c.virtualConfig)
+              .sort((a, b) => a.name.localeCompare(b.name))
+          : [];
+
+        const algoFolderItem = children.find(
+          c => c.type === 'directory' && c.name === 'Algorithms' && directoryHasPassingContent([...currentFsPath, 'Algorithms'], 'Algorithms')
+        );
+
+        const childStructureItems = children
+          .filter(c =>
+            c.type === 'directory' &&
+            c.name !== 'Algorithms' &&
+            !isCustomFolderName(c.name) &&
+            directoryHasPassingContent([...currentFsPath, c.name], c.name)
+          )
+          .sort((a, b) => a.name.localeCompare(b.name));
+
+        const customFolderItems = children
+          .filter(c =>
+            c.type === 'directory' &&
+            isCustomFolderName(c.name) &&
+            directoryHasPassingContent([...currentFsPath, c.name], c.name)
+          );
+
+        let hasRenderedAnySection = false;
+
+        // 1. Configure & Generate
+        if (configItem) {
+          algoTreeContainer.appendChild(createDirectoryFileRow(configItem, currentFsPath));
+          hasRenderedAnySection = true;
+        }
+
+        // 2. Implementation details
+        if (implFiles.length > 0) {
+          appendSubtitleSection('Implementation details', hasRenderedAnySection);
+          implFiles.forEach(fileItem => {
+            algoTreeContainer.appendChild(createDirectoryFileRow(fileItem, currentFsPath));
+          });
+          hasRenderedAnySection = true;
+        }
+
+        // 3. Algorithms
+        if (algoFolderItem) {
+          appendSubtitleSection('Algorithms', hasRenderedAnySection);
+          algoTreeContainer.appendChild(createFolderRowElement(algoFolderItem));
+          hasRenderedAnySection = true;
+        }
+
+        // 4. Child structures
+        if (childStructureItems.length > 0) {
+          appendSubtitleSection('Child structures', hasRenderedAnySection);
+          childStructureItems.forEach(folderItem => {
+            algoTreeContainer.appendChild(createFolderRowElement(folderItem));
+          });
+          hasRenderedAnySection = true;
+        }
+
+        // 5. Custom ("My <ds> Files")
+        if (customFolderItems.length > 0) {
+          appendSubtitleSection('Custom', hasRenderedAnySection);
+          customFolderItems.forEach(folderItem => {
+            algoTreeContainer.appendChild(createFolderRowElement(folderItem));
+          });
+          hasRenderedAnySection = true;
+        }
+
+        if (!hasRenderedAnySection) {
+          algoTreeContainer.innerHTML += `<div class="algo-empty-msg">No matching items in this folder for the active filters.</div>`;
+        }
+        return;
+      }
+
+      // 2B. Root folder: Show Data Structure folders, then "Custom" subtitle for "My Files"
       if (currentFsPath.length === 0) {
-        let count = 0;
-        for (const [dsName, dsObj] of Object.entries(dataStructuresJson)) {
-          if (!isDsVisibleUnderFilters(dsName, dsObj)) continue;
-          count++;
-          const row = document.createElement('div');
-          row.className = 'tree-row';
-          row.appendChild(createFsIcon('images/folder.png', 'Folder'));
+        const dsFolders = children
+          .filter(c => c.type === 'directory' && !isCustomFolderName(c.name) && directoryHasPassingContent([c.name], c.name))
+          .sort((a, b) => a.name.localeCompare(b.name));
 
-          const label = document.createElement('span');
-          label.className = 'tree-label ds-label';
-          label.textContent = dsName;
-          row.appendChild(label);
-          row.appendChild(createFavStarButton(dsName));
+        const customRootFolders = children
+          .filter(c => c.type === 'directory' && isCustomFolderName(c.name) && directoryHasPassingContent([c.name], c.name));
 
-          row.addEventListener('click', () => {
-            currentFsPath = [dsName];
-            renderMainAlgoTree();
-          });
-          algoTreeContainer.appendChild(row);
-        }
-        if (count === 0) {
-          algoTreeContainer.innerHTML += `<div class="algo-empty-msg">No matching data structures or algorithms.</div>`;
-        }
-        return;
-      }
+        let renderedCount = 0;
 
-      /* Case B: Inside "... / <DS> / Algorithms" folder -> Show algorithm files + compatible DS pills */
-      if (currentFsPath[currentFsPath.length - 1] === 'Algorithms') {
-        const parentDsName = currentFsPath[currentFsPath.length - 2];
-        const algos = getFilteredAlgorithmsForDs(parentDsName);
-
-        if (algos.length === 0) {
-          const emptyEl = document.createElement('div');
-          emptyEl.className = 'algo-empty-msg';
-          emptyEl.textContent = 'No algorithms matching active filters in this folder.';
-          algoTreeContainer.appendChild(emptyEl);
-          return;
-        }
-
-        algos.forEach(algo => {
-          algoTreeContainer.appendChild(createAlgorithmEntryElement(algo, parentDsName));
+        dsFolders.forEach(folderItem => {
+          renderedCount++;
+          algoTreeContainer.appendChild(createFolderRowElement(folderItem));
         });
+
+        if (customRootFolders.length > 0) {
+          appendSubtitleSection('Custom', renderedCount > 0);
+          customRootFolders.forEach(folderItem => {
+            renderedCount++;
+            algoTreeContainer.appendChild(createFolderRowElement(folderItem));
+          });
+        }
+
+        if (renderedCount === 0) {
+          algoTreeContainer.innerHTML += `<div class="algo-empty-msg">No matching data structures or algorithms for the active filters.</div>`;
+        }
         return;
       }
 
-      /* Case C: Inside a Data Structure folder -> Show "Introduction" file, "Algorithms" folder, and child DS folders */
-      const currentDsName = currentFsPath[currentFsPath.length - 1];
-      const currentDsNode = getDsNodeByPath(currentFsPath);
-      if (!currentDsNode) {
-        currentFsPath = [];
-        renderMainAlgoTree();
-        return;
-      }
-
-      // 1. "Introduction" file (populates notes/code and DS creation settings)
-      const introRow = document.createElement('div');
-      introRow.className = `tree-row${selectedDsaType === 'ds' && selectedDsaName === currentDsName ? ' selected' : ''}`;
-      introRow.setAttribute('data-dsa-name', currentDsName);
-      introRow.appendChild(createFsIcon('images/file.png', 'Introduction'));
-
-      const introLabel = document.createElement('span');
-      introLabel.className = 'tree-label';
-      introLabel.textContent = 'Configure & Generate';
-      introRow.appendChild(introLabel);
-      introRow.appendChild(createFavStarButton(currentDsName));
-
-      introRow.addEventListener('click', () => {
-        selectDsaItem(currentDsName, null, 'ds');
+      // 2C. Inside Algorithms/ or inside "My Files" / "My <ds> Files"
+      children.sort((a, b) => {
+        if (a.type !== b.type) return a.type === 'directory' ? -1 : 1;
+        return a.name.localeCompare(b.name);
       });
-      algoTreeContainer.appendChild(introRow);
 
-      // 2. "Algorithms" folder (if this DS has algorithms)
-      const visibleAlgos = getFilteredAlgorithmsForDs(currentDsName);
-      if (visibleAlgos.length > 0) {
-        const algoFolderRow = document.createElement('div');
-        algoFolderRow.className = 'tree-row';
-        algoFolderRow.appendChild(createFsIcon('images/folder.png', 'Algorithms Folder'));
-
-        const algoFolderLabel = document.createElement('span');
-        algoFolderLabel.className = 'tree-label ds-label';
-        algoFolderLabel.textContent = 'Algorithms';
-        algoFolderRow.appendChild(algoFolderLabel);
-
-        algoFolderRow.addEventListener('click', () => {
-          currentFsPath.push('Algorithms');
-          renderMainAlgoTree();
-        });
-        algoTreeContainer.appendChild(algoFolderRow);
-      }
-
-      // 3. Child Data Structure folders
-      const childEntries = Object.entries(currentDsNode.children || {});
-      for (const [childName, childObj] of childEntries) {
-        if (!isDsVisibleUnderFilters(childName, childObj)) continue;
-
-        const childRow = document.createElement('div');
-        childRow.className = 'tree-row';
-        childRow.appendChild(createFsIcon('images/folder.png', 'Folder'));
-
-        const childLabel = document.createElement('span');
-        childLabel.className = 'tree-label ds-label';
-        childLabel.textContent = childName;
-        childRow.appendChild(childLabel);
-        childRow.appendChild(createFavStarButton(childName));
-
-        childRow.addEventListener('click', () => {
-          currentFsPath.push(childName);
-          renderMainAlgoTree();
-        });
-        algoTreeContainer.appendChild(childRow);
-      }
-    }
-
-    /* Lineage, Compatibility, Search & Filter Scope Helpers */
-    function buildDirectAlgorithmsMap() {
-      /* buildDirectAlgorithmsMap maps each Data Structure key to its directly associated algorithms, constraints, and tags */
-      dsDirectAlgorithmsMap = {};
-      for (const [algoName, algoData] of Object.entries(algorithmsJson)) {
-        const inputs = (algoData && algoData.inputs) || {};
-        const tags = Array.isArray(algoData && algoData.tags) ? algoData.tags : [];
-        for (const [dsName, dsConstraints] of Object.entries(inputs)) {
-          if (!dsDirectAlgorithmsMap[dsName]) {
-            dsDirectAlgorithmsMap[dsName] = [];
-          }
-          dsDirectAlgorithmsMap[dsName].push({
-            name: algoName,
-            constraints: dsConstraints || {},
-            tags
-          });
+      let renderedCount = 0;
+      for (const item of children) {
+        if (item.type === 'directory') {
+          const folderPath = [...currentFsPath, item.name];
+          if (!insideUserFolder && !directoryHasPassingContent(folderPath, item.name)) continue;
+          if (insideUserFolder && isFavFilterActive && !directoryHasPassingContent(folderPath, item.name)) continue;
+          renderedCount++;
+          algoTreeContainer.appendChild(createFolderRowElement(item));
+        } else {
+          if (!insideUserFolder && !filePassesFilters(item, currentFsPath)) continue;
+          if (insideUserFolder && isFavFilterActive && !isItemFavourited(item.name)) continue;
+          renderedCount++;
+          algoTreeContainer.appendChild(createDirectoryFileRow(item, currentFsPath));
         }
       }
-    }
 
-    function getDsLineage(targetDs, currentNodes = dataStructuresJson, path = []) {
-      /* Recursively finds the lineage path from the root to the target Data Structure (e.g., ["Graph", "Tree", "Binary Tree"]) */
-      for (const [name, obj] of Object.entries(currentNodes)) {
-        const newPath = [...path, name];
-        if (name === targetDs) return newPath;
-        const childResult = getDsLineage(targetDs, obj.children || {}, newPath);
-        if (childResult) return childResult;
+      if (renderedCount === 0) {
+        const msg = insideUserFolder
+          ? 'Folder is empty. Right-click here to create a new file/folder or upload files/folders (5 MB max).'
+          : 'No matching items in this folder.';
+        algoTreeContainer.innerHTML += `<div class="algo-empty-msg">${msg}</div>`;
       }
-      return null;
     }
 
-    function isAlgoCompatibleWithDs(algoName, activeDsType) {
-      /* Checks if the algorithm is compatible with the active DS or any of its parent/ancestor structures */
-      if (!algoName || !activeDsType) return false;
-      const algoData = algorithmsJson[algoName];
-      if (!algoData || !algoData.inputs) return false;
-
-      const lineage = getDsLineage(activeDsType) || [activeDsType];
-
-      // If the algorithm explicitly lists any DS from the lineage path as an input, it is compatible
-      return lineage.some(ds => Object.prototype.hasOwnProperty.call(algoData.inputs, ds));
-    }
-
+   /* ========== Strict Folder Compatibility & Settings Card ========== */
     function checkDataStructureRequirements(activeObj, requirements = {}) {
       if (!requirements || Object.keys(requirements).length === 0) return null;
 
-      // Use the standardized getData function
       if (activeObj.dsModule && typeof activeObj.dsModule.getData === 'function') {
         const data = activeObj.dsModule.getData(activeObj.element) || [];
 
-        // Example check: Is the structure sorted?
         if (requirements.sorted && data.length > 1) {
-          // Assumes data objects have a 'numericValue' or 'value' property
           const values = data.map(d => d.numericValue !== undefined ? d.numericValue : d.value);
           const isAsc = values.every((v, i) => i === 0 || values[i - 1] <= v);
           const isDesc = values.every((v, i) => i === 0 || values[i - 1] >= v);
@@ -4104,9 +4667,20 @@
 
     function updatePlaybackCompatibilityUI() {
       const activeObj = dsContainers.find((c) => c.name === activeContainerName);
-      const isPracticeMode = activeRightTopTab === 'practice';
 
-      if (isPracticeMode) {
+      if (activeRightTopTab === 'playground') {
+        document.querySelectorAll('.playback-bar').forEach((bar) => {
+          const controls = bar.querySelector('.playback-ui-controls');
+          const message = bar.querySelector('.playback-ui-message');
+          if (!controls || !message) return;
+          controls.style.display = 'none';
+          message.style.display = 'block';
+          message.textContent = 'Playground code runs directly without visualization';
+        });
+        return;
+      }
+
+      if (activeRightTopTab === 'practice') {
         const canPractice = Boolean(activeObj && activeObj.dsModule?.practiceConfig);
         document.querySelectorAll('.playback-bar').forEach((bar) => {
           const controls = bar.querySelector('.playback-ui-controls');
@@ -4123,10 +4697,10 @@
         });
         return;
       }
-      const isAlgoSelected = selectedDsaType === 'algo' && selectedDsaName;
-      const currentLang = langActiveLabel ? langActiveLabel.textContent.trim() : 'Python';
 
-      // Keep the linked DS badge in the signature editor updated
+      const isAlgoSelected = selectedDsaType === 'algo' && Boolean(selectedDsaName);
+      const isPythonFile = selectedFileExt === '.py';
+
       const dsBadge = document.getElementById('sig-active-ds-badge');
       if (dsBadge) {
         dsBadge.textContent = activeObj ? `${activeObj.name} (${activeObj.dsType})` : 'No active DS';
@@ -4135,37 +4709,19 @@
       let isCompatible = false;
       let requirementError = null;
 
-      if (isAlgoSelected && activeObj && typeof algorithmsJson !== 'undefined' && Object.keys(algorithmsJson).length > 0) {
-        const normalize = (str) =>
-          str
-            .trim()
-            .replace(/['’]/g, '')
-            .replace(/\+/g, 'plus')
-            .replace(/[^a-zA-Z0-9]+/g, '_')
-            .replace(/^_+|_+$/g, '')
-            .toLowerCase();
-
-        const algoKey = Object.keys(algorithmsJson).find(
-          (k) => normalize(k) === normalize(selectedDsaName)
-        );
-        const algoConfig = algoKey ? algorithmsJson[algoKey] : null;
-
-        if (algoConfig && algoConfig.inputs) {
-          const matchingDsKey = Object.keys(algoConfig.inputs).find(
-            (dsKey) => dsKey.toLowerCase() === activeObj.dsType.toLowerCase()
-          );
-
-          if (matchingDsKey) {
-            isCompatible = true;
-            const dsRequirements = algoConfig.inputs[matchingDsKey];
-            requirementError = checkDataStructureRequirements(activeObj, dsRequirements);
+      // Strict folder-only check: algorithm inside dsa/<DS>/Algorithms/ is only compatible with <DS>
+      if (isAlgoSelected && activeObj && selectedAlgoParentDs) {
+        if (activeObj.dsType.toLowerCase() === selectedAlgoParentDs.toLowerCase()) {
+          isCompatible = true;
+          const txtKey = ['dsa', ...selectedAlgoDirPath, 'Algorithms', `${toSnakeCase(selectedDsaName)}_tags.txt`].join('/');
+          const tagMeta = algoTxtTagsCache[txtKey];
+          if (tagMeta && tagMeta.constraints) {
+            requirementError = checkDataStructureRequirements(activeObj, tagMeta.constraints);
           }
         }
       }
 
-      // 1. Update both playback bars
-      const playbackBars = document.querySelectorAll('.playback-bar');
-      playbackBars.forEach((bar) => {
+      document.querySelectorAll('.playback-bar').forEach((bar) => {
         const controls = bar.querySelector('.playback-ui-controls');
         const message = bar.querySelector('.playback-ui-message');
         if (!controls || !message) return;
@@ -4178,17 +4734,16 @@
           controls.style.display = 'none';
           message.style.display = 'block';
           message.textContent = requirementError;
-        } else if (currentLang !== 'Python') {
+        } else if (!isPythonFile) {
           controls.style.display = 'none';
           message.style.display = 'block';
-          message.textContent = 'Visualizations for other languages are still in development';
+          message.textContent = 'Visualizations are only supported for Python (.py) files';
         } else {
           controls.style.display = 'flex';
           message.style.display = 'none';
         }
       });
 
-      // 2. Update the Settings Card "Run" button and Warning Message
       const algoSubmitBtn = document.getElementById('algo-settings-submit-btn');
       const algoIncompatibleMsg = document.getElementById('algo-settings-incompatible-msg');
 
@@ -4196,15 +4751,15 @@
         if (!activeObj || !isCompatible) {
           algoSubmitBtn.style.display = 'none';
           algoIncompatibleMsg.style.display = 'block';
-          algoIncompatibleMsg.textContent = 'Choose or create a compatible data structure to visualize this algorithm';
+          algoIncompatibleMsg.textContent = `Choose or create a ${selectedAlgoParentDs || 'compatible'} data structure to visualize this algorithm`;
         } else if (requirementError) {
           algoSubmitBtn.style.display = 'none';
           algoIncompatibleMsg.style.display = 'block';
           algoIncompatibleMsg.textContent = requirementError;
-        } else if (currentLang !== 'Python') {
+        } else if (!isPythonFile) {
           algoSubmitBtn.style.display = 'none';
           algoIncompatibleMsg.style.display = 'block';
-          algoIncompatibleMsg.textContent = 'Visualizations for other languages are still in development';
+          algoIncompatibleMsg.textContent = 'Visualizations are only supported for Python (.py) files';
         } else {
           algoSubmitBtn.style.display = 'inline-flex';
           algoIncompatibleMsg.style.display = 'none';
@@ -4213,26 +4768,21 @@
         algoIncompatibleMsg.style.display = 'none';
       }
 
-      if ((!isCompatible || requirementError || currentLang !== 'Python') && window.isSimulating) {
+      if ((!isCompatible || requirementError || !isPythonFile) && window.isSimulating) {
         if (typeof resetSimulation === 'function') resetSimulation();
       }
     }
 
     function isExactOrAcronymMatch(query, target) {
-      /* isExactOrAcronymMatch checks if the search query matches a contiguous substring or hyphen/underscore acronym of the target name */
       const q = query.toLowerCase().trim();
       const t = String(target).toLowerCase();
-
       if (t.includes(q)) return true;
-
       const initials = t.split(/[-_\s]+/).map(w => w[0] || '').join('');
       if (initials.includes(q.replace(/\s+/g, ''))) return true;
-
       return false;
     }
 
     function isSubsequenceMatch(query, target) {
-      /* isSubsequenceMatch performs fuzzy character-order matching when no exact or acronym match exists */
       const cleanQuery = query.replace(/\s+/g, '').toLowerCase();
       if (!cleanQuery) return true;
       const cleanTarget = String(target).toLowerCase();
@@ -4243,19 +4793,6 @@
         }
       }
       return qIdx === cleanQuery.length;
-    }
-
-
-    function createChevronSvg(isExpanded, isEmpty) {
-      /* createChevronSvg creates the rotating SVG folder chevron icon for expandable Data Structure rows */
-      const span = document.createElement('span');
-      span.className = `tree-chevron${isExpanded ? ' expanded' : ''}${isEmpty ? ' empty' : ''}`;
-      span.innerHTML = `
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-        <polyline points="9 6 15 12 9 18"></polyline>
-      </svg>
-    `;
-      return span;
     }
 
     function parsePythonSignature(pyCode, targetFuncName = null) {
@@ -4355,9 +4892,7 @@
       if (algoSettingsSubmitBtn) {
         algoSettingsSubmitBtn.textContent = 'Run';
       }
-      if (typeof updatePlaybackCompatibilityUI === 'function') {
-        updatePlaybackCompatibilityUI();
-      }
+      updatePlaybackCompatibilityUI();
 
       configContainer.querySelectorAll('.sig-inline-input').forEach(inp => {
         inp.addEventListener('input', () => {
@@ -4370,17 +4905,13 @@
 
     let activeRandomModule = null;
     async function resolveRandomDsModule(dsName) {
-      const lineage = (getDsLineage(dsName) || [dsName]).slice().reverse();
-      for (const candidateName of lineage) {
-        try {
-          return await import(`./data-structures/random/${candidateName}.js`);
-        } catch (e1) {
-          try {
-            return await import(`./data-structures/random/${toSnakeCase(candidateName)}.js`);
-          } catch (e2) { }
-        }
+      if (!dsName) return null;
+      const snake = toSnakeCase(dsName);
+      try {
+        return await import(`./dsa-implementation/data-structures/${snake}/random.js`);
+      } catch (e) {
+        return null;
       }
-      return null;
     }
 
     async function updateAlgorithmSettings(name, parentDsName = null, itemType = 'algo') {
@@ -4393,7 +4924,7 @@
       const metaHeading = metaSection ? metaSection.querySelector('h4') : null;
       if (!configContainer || !configHeading) return;
 
-      /* Case 1: A Data Structure was clicked -> Show "Properties", "Creation Settings", & "Random Input Parameters" */
+      /* Case 1: "Configure & Generate" was clicked inside a Data Structure folder */
       if (itemType === 'ds' && name) {
         if (algoSettingsSubmitBtn) {
           algoSettingsSubmitBtn.textContent = 'Create';
@@ -4402,44 +4933,16 @@
         const algoIncompatibleMsg = document.getElementById('algo-settings-incompatible-msg');
         if (algoIncompatibleMsg) algoIncompatibleMsg.style.display = 'none';
 
-        // Gather inherited + direct properties, placeholder, inputs, and random config along the DS lineage
-        const lineage = getDsLineage(name) || [name];
-        let collectedProperties = [];
-        let resolvedPlaceholder = 'content (e.g. 10, 20, 30)';
-        let collectedInputs = {};
-        let collectedRandom = {};
-        let currNode = dataStructuresJson;
+        const descData = await fetchDsDescription(name);
+        if (selectedDsaName !== name || selectedDsaType !== 'ds') return;
 
-        for (const nodeName of lineage) {
-          if (currNode && currNode[nodeName]) {
-            const nodeData = currNode[nodeName];
-            const props = nodeData.properties || nodeData.attributes;
-            if (Array.isArray(props)) {
-              collectedProperties.push(...props);
-            }
-            if (nodeData.placeholder) {
-              resolvedPlaceholder = nodeData.placeholder;
-            }
-            if (Array.isArray(nodeData.inputs)) {
-              for (const inputGroup of nodeData.inputs) {
-                if (inputGroup && typeof inputGroup === 'object') {
-                  Object.assign(collectedInputs, inputGroup);
-                }
-              }
-            } else if (nodeData.inputs && typeof nodeData.inputs === 'object') {
-              Object.assign(collectedInputs, nodeData.inputs);
-            }
-            if (nodeData.random && typeof nodeData.random === 'object') {
-              Object.assign(collectedRandom, nodeData.random);
-            }
-            currNode = nodeData.children || {};
-          } else {
-            break;
-          }
-        }
-        collectedProperties = [...new Set(collectedProperties)];
+        const collectedProperties = Array.isArray(descData.attributes || descData.properties)
+          ? [...new Set(descData.attributes || descData.properties)]
+          : [];
+        const resolvedPlaceholder = descData.placeholder || 'content (e.g. 10, 20, 30)';
+        const collectedInputs = (descData.inputs && typeof descData.inputs === 'object') ? descData.inputs : {};
+        const collectedRandom = (descData.random && typeof descData.random === 'object') ? descData.random : {};
 
-        // Render Properties badges
         if (metaSection && metaContainer) {
           metaContainer.innerHTML = '';
           if (collectedProperties.length > 0) {
@@ -4456,7 +4959,6 @@
               img.src = 'images/properties.png';
               img.alt = 'property';
               img.className = 'algo-meta-icon';
-              if (desc) img.setAttribute('title', desc);
 
               const text = document.createElement('span');
               text.textContent = propKey;
@@ -4470,24 +4972,23 @@
           }
         }
 
-        // 1. Primary + Optional Creation Inputs
         const extraInputsHtml = Object.entries(collectedInputs).map(([labelKey, inputType]) => {
           const safeKey = labelKey.replace(/"/g, '&quot;');
           const typeStr = String(inputType).toLowerCase().trim();
 
           if (typeStr === 'checkbox') {
             return `
-          <label style="display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; user-select: none; padding: 0.15rem 0; color: var(--text-primary);">
-            <input type="checkbox" class="filter-checkbox ds-extra-input" data-ds-input-key="${safeKey}" />
-            <span>${labelKey}</span>
-          </label>
-        `;
+              <label style="display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; user-select: none; padding: 0.15rem 0; color: var(--text-primary);">
+                <input type="checkbox" class="filter-checkbox ds-extra-input" data-ds-input-key="${safeKey}" />
+                <span>${labelKey}</span>
+              </label>
+            `;
           }
           return `
-        <label style="color: var(--text-primary); font-weight: 500;">${labelKey}<br>
-          <input type="${typeStr}" class="param-input-field ds-extra-input" style="margin-top: 0.2rem;" data-ds-input-key="${safeKey}" placeholder="${safeKey}" />
-        </label>
-      `;
+            <label style="color: var(--text-primary); font-weight: 500;">${labelKey}<br>
+              <input type="${typeStr}" class="param-input-field ds-extra-input" style="margin-top: 0.2rem;" data-ds-input-key="${safeKey}" placeholder="${safeKey}" />
+            </label>
+          `;
         }).join('');
 
         const safePlaceholder = resolvedPlaceholder.replace(/"/g, '&quot;');
@@ -4496,18 +4997,17 @@
         configHeading.textContent = 'Creation Settings';
         configContainer.style.color = 'inherit';
         configContainer.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-        <label style="color: var(--text-primary); font-weight: 500;">Name<br>
-          <input type="text" id="ds-input-name" class="param-input-field" style="margin-top: 0.2rem;" placeholder="name (default: ${name})" data-param-name="name" />
-        </label>
-        <label style="color: var(--text-primary); font-weight: 500;">Content<br>
-          <textarea id="ds-input-content" class="param-input-field" rows="3" style="margin-top: 0.2rem;" placeholder="${safePlaceholder}" data-param-name="content"></textarea>
-        </label>
-        ${extraInputsHtml ? `<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.15rem;">${extraInputsHtml}</div>` : ''}
-      </div>
-    `;
+          <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+            <label style="color: var(--text-primary); font-weight: 500;">Name<br>
+              <input type="text" id="ds-input-name" class="param-input-field" style="margin-top: 0.2rem;" placeholder="name (default: ${name})" data-param-name="name" />
+            </label>
+            <label style="color: var(--text-primary); font-weight: 500;">Content<br>
+              <textarea id="ds-input-content" class="param-input-field" rows="3" style="margin-top: 0.2rem;" placeholder="${safePlaceholder}" data-param-name="content"></textarea>
+            </label>
+            ${extraInputsHtml ? `<div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.15rem;">${extraInputsHtml}</div>` : ''}
+          </div>
+        `;
 
-        // 2. Random Adjustment Parameters + Generate Random Input Button (100% Generic)
         const randomWarningEl = document.getElementById('algo-random-warning-msg');
         if (randomWarningEl) {
           randomWarningEl.style.display = 'none';
@@ -4526,17 +5026,17 @@
               const step = cfg.step ?? 1;
               const defVal = cfg.default ?? min;
               return `
-            <div style="display: flex; flex-direction: column; gap: 0.2rem;">
-              <label style="color: var(--text-primary); font-weight: 500;">
-                <span style="display: flex; justify-content: space-between; align-items: center;">
-                  <span>${paramKey} <small class="ds-random-range-bounds" style="color: var(--text-muted); font-weight: 400;">(${min}-${max})</small></span>
-                  <span class="ds-random-range-val" style="font-family: 'Noto Sans Mono', monospace; color: var(--text-bright);">${defVal}</span>
-                </span>
-                <input type="range" class="vscode-slider ds-random-input" style="width: 100%; margin-top: 0.2rem;"
-                  data-random-key="${safeKey}" min="${min}" max="${max}" step="${step}" value="${defVal}" />
-              </label>
-            </div>
-          `;
+                <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                  <label style="color: var(--text-primary); font-weight: 500;">
+                    <span style="display: flex; justify-content: space-between; align-items: center;">
+                      <span>${paramKey} <small class="ds-random-range-bounds" style="color: var(--text-muted); font-weight: 400;">(${min}-${max})</small></span>
+                      <span class="ds-random-range-val" style="font-family: 'Noto Sans Mono', monospace; color: var(--text-bright);">${defVal}</span>
+                    </span>
+                    <input type="range" class="vscode-slider ds-random-input" style="width: 100%; margin-top: 0.2rem;"
+                      data-random-key="${safeKey}" min="${min}" max="${max}" step="${step}" value="${defVal}" />
+                  </label>
+                </div>
+              `;
             }
 
             if (type === 'number') {
@@ -4545,23 +5045,23 @@
               const stepAttr = cfg.step !== undefined ? `step="${cfg.step}"` : 'step="1"';
               const defVal = cfg.default !== undefined ? cfg.default : '';
               return `
-            <div style="display: flex; flex-direction: column; gap: 0.2rem;">
-              <label style="color: var(--text-primary); font-weight: 500;">${paramKey}<br>
-                <input type="number" class="param-input-field ds-random-input" style="width: 100%; margin-top: 0.2rem;"
-                  data-random-key="${safeKey}" ${minAttr} ${maxAttr} ${stepAttr} value="${defVal}" />
-              </label>
-            </div>
-          `;
+                <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                  <label style="color: var(--text-primary); font-weight: 500;">${paramKey}<br>
+                    <input type="number" class="param-input-field ds-random-input" style="width: 100%; margin-top: 0.2rem;"
+                      data-random-key="${safeKey}" ${minAttr} ${maxAttr} ${stepAttr} value="${defVal}" />
+                  </label>
+                </div>
+              `;
             }
 
             if (type === 'checkbox') {
               const checkedAttr = cfg.default ? 'checked' : '';
               return `
-            <label style="display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; user-select: none; padding: 0.15rem 0; color: var(--text-primary);">
-              <input type="checkbox" class="filter-checkbox ds-random-input" data-random-key="${safeKey}" ${checkedAttr} />
-              <span>${paramKey}</span>
-            </label>
-          `;
+                <label style="display: inline-flex; align-items: center; gap: 0.45rem; cursor: pointer; user-select: none; padding: 0.15rem 0; color: var(--text-primary);">
+                  <input type="checkbox" class="filter-checkbox ds-random-input" data-random-key="${safeKey}" ${checkedAttr} />
+                  <span>${paramKey}</span>
+                </label>
+              `;
             }
 
             return '';
@@ -4571,7 +5071,6 @@
           randomSection.style.display = 'block';
           if (algoSettingsRandomBtn) algoSettingsRandomBtn.style.display = 'inline-flex';
 
-          // Generic UI Controller API passed to any ./data-structures/random/<DS>.js module
           const uiController = {
             getValues() {
               const settings = {};
@@ -4652,7 +5151,6 @@
             }
           };
 
-          // Generic listeners for random inputs and creation extra inputs
           randomContainer.querySelectorAll('.ds-random-input').forEach(inp => {
             const key = inp.getAttribute('data-random-key');
             const handleEvent = () => {
@@ -4671,7 +5169,6 @@
             inp.addEventListener('change', () => triggerModuleSync(key, 'extra'));
           });
 
-          // Initial sync when the Data Structure settings pane opens
           triggerModuleSync(null, 'init');
         } else {
           activeRandomModule = null;
@@ -4681,7 +5178,7 @@
         return;
       }
 
-      /* Case 2: An Algorithm was clicked -> Hide Random DS Controls */
+      /* Case 2: An Algorithm file inside dsa/<DS>/Algorithms/<algo>.py was clicked */
       if (randomSection) randomSection.style.display = 'none';
       if (algoSettingsRandomBtn) algoSettingsRandomBtn.style.display = 'none';
 
@@ -4690,35 +5187,19 @@
         algoSettingsSubmitBtn.style.display = 'none';
       }
 
-      const algoData = algorithmsJson[name];
-      if (!name || !algoData) {
-        configHeading.style.display = 'none';
-        configContainer.style.color = 'var(--text-muted)';
-        configContainer.textContent = 'Select a data structure or algorithm to configure.';
-        if (metaSection && metaContainer) {
-          metaContainer.innerHTML = '';
-          metaSection.style.display = 'none';
-        }
+      if (!name || itemType !== 'algo') {
+        resetSettingsToPlaceholder();
         return;
       }
 
-      // Render Constraints & Tags
+      // Render Constraints & Tags from dsa/<ds-name>/Algorithms/<algorithm-name>.txt
+      const tagMeta = await fetchAlgoTagsAndConstraints(selectedAlgoDirPath, name);
+      if (selectedDsaName !== name) return;
+
       if (metaSection && metaContainer) {
         metaContainer.innerHTML = '';
-        const inputs = algoData.inputs || {};
-        let constraintEntries = [];
-
-        if (parentDsName && inputs[parentDsName]) {
-          constraintEntries = Object.entries(inputs[parentDsName]);
-        } else {
-          for (const dsObj of Object.values(inputs)) {
-            for (const [k, v] of Object.entries(dsObj || {})) {
-              constraintEntries.push([k, v]);
-            }
-          }
-        }
-
-        const tagList = Array.isArray(algoData.tags) ? algoData.tags : [];
+        const constraintEntries = Object.entries(tagMeta.constraints || {});
+        const tagList = Array.isArray(tagMeta.tags) ? tagMeta.tags : [];
 
         if (constraintEntries.length > 0 || tagList.length > 0) {
           metaSection.style.display = 'block';
@@ -4762,18 +5243,17 @@
         }
       }
 
-      // Fetch the Python file and build the interactive <pre><code> signature
+      // Fetch the Python file from ./dsa/<DS>/Algorithms/<algo>.py and build the interactive signature
       configHeading.style.display = 'none';
-      const formattedTarget = toSnakeCase(name);
+      const pyPath = selectedFilePath || ['dsa', ...selectedAlgoDirPath, 'Algorithms', `${toSnakeCase(name)}.py`].join('/');
 
       try {
-        const cacheKey = `${formattedTarget}.py`;
-        let pyCode = getCurrentRunnablePythonCode();
+        let pyCode = editedCodeCache[pyPath];
         if (!pyCode) {
-          const res = await fetch(`algorithms/${formattedTarget}.py`);
+          const res = await fetch(encodeURI(pyPath));
           if (!res.ok) throw new Error('Python file not found');
           pyCode = (await res.text()).replace(/\r\n?/g, '\n');
-          editedCodeCache[cacheKey] = pyCode;
+          editedCodeCache[pyPath] = pyCode;
         }
         if (selectedDsaName !== name) return;
         renderSignatureEditorFromCode(pyCode);
@@ -4787,43 +5267,36 @@
       }
     }
 
-    function selectDsaItem(name, parentDsName = null, itemType = 'algo') {
-      /* Highlights the clicked Data Structure or Algorithm row in #algo-tree-container and updates the Code/Notes pane and Settings card */
-      selectedDsaName = name;
-      selectedDsaType = itemType;
-      algoTreeContainer.querySelectorAll('.tree-row[data-dsa-name]').forEach(row => {
-        row.classList.toggle('selected', row.getAttribute('data-dsa-name') === name);
-      });
-      updateCodeViewPane();
-      updateAlgorithmSettings(name, parentDsName, itemType);
-      updatePlaybackCompatibilityUI();
-    }
-
     async function loadDsaMetadata() {
-      /* loadDsaMetadata fetches data-structures.json, algorithms.json, constraints-description.json, and attributes-description.json */
       try {
-        const [dsRes, algoRes, constRes, attrRes, syllRes] = await Promise.all([
-          fetch('data-structures.json'),
-          fetch('algorithms.json'),
-          fetch('constraints-description.json'),
-          fetch('attributes-description.json'),
-          fetch('syllabus.json')
+        await loadUserVirtualFs();
+
+        const [constRes, attrRes, syllRes] = await Promise.all([
+          fetch('constraints-description.json').catch(() => ({ ok: false })),
+          fetch('attributes-description.json').catch(() => ({ ok: false })),
+          fetch('syllabus.json').catch(() => ({ ok: false }))
         ]);
 
-        dataStructuresJson = dsRes.ok ? await dsRes.json() : {};
-        algorithmsJson = algoRes.ok ? await algoRes.json() : {};
         constraintsJson = constRes.ok ? await constRes.json() : {};
         attributesDescJson = attrRes.ok ? await attrRes.json() : {};
         syllabusJson = syllRes.ok ? await syllRes.json() : { "data-structures": [], "algorithms": [] };
 
-        buildDirectAlgorithmsMap();
+        let scannedTree = await parseApacheOrJsonDirectory('./dsa/');
+        if (!scannedTree) {
+          scannedTree = await parseApacheOrJsonDirectory('./dsa/index.json');
+        }
+        dsaDirectoryTree = scannedTree || buildStaticDsaDirectoryTree();
+        ensureGuaranteedFoldersAndConfig(dsaDirectoryTree, true, false);
+
+        // Preload algorithm .txt tag files in the background for search & constraints
+        preloadAllAlgoTagFiles(dsaDirectoryTree, []);
+
         renderMainAlgoTree();
       } catch (err) {
-        algoTreeContainer.innerHTML = `<div class="algo-empty-msg">Failed to load DSA JSON files.</div>`;
+        algoTreeContainer.innerHTML = `<div class="algo-empty-msg">Failed to load ./dsa directory structure.</div>`;
       }
     }
 
-    /* Initialize Favourites, Tree Event Listeners, and JSON Metadata Fetch */
     loadFavourites();
 
     algoSearchInput.addEventListener('input', () => {
@@ -4863,7 +5336,6 @@
     });
 
     function checkAndShowCollapsedPanelsWarning(onCloseCallback = null) {
-      /* Returns true if the warning modal was opened, or false if no warning was needed */
       try {
         if (localStorage.getItem(LAYOUT_CONFIG.COLLAPSED_SIM_WARNING_KEY) === '1') {
           return false;
@@ -4896,7 +5368,7 @@
       }
       if (isCodeCardCollapsed) {
         collapsedItems.push({
-          name: 'Code Card',
+          name: 'Notes / Code Card',
           desc: 'Highlights the exact line of Python code currently executing at each simulation step.'
         });
       }
@@ -4920,7 +5392,6 @@
         </div>
       `).join('');
 
-      // Pause any active playback while the warning window is open
       stopAutoPlay();
 
       setFloatingWindowTitle(sharedFloatingWindow, 'Collapsed Visualization Panels');
@@ -4949,7 +5420,6 @@
         scheduleNextStep();
       };
 
-      // If warning opens, stay paused on step 0 until the user closes the modal
       if (!checkAndShowCollapsedPanelsWarning(beginPlay)) {
         beginPlay();
       }
@@ -4962,7 +5432,6 @@
         const rawName = nameInputEl ? nameInputEl.value : '';
         const rawContent = contentInputEl ? contentInputEl.value : '';
 
-        // Collect all dynamic DS inputs (checkboxes / text fields)
         const extraInputs = {};
         document.querySelectorAll('#algo-config-container .ds-extra-input').forEach(inp => {
           const key = inp.getAttribute('data-ds-input-key');
@@ -5022,11 +5491,10 @@
     renderHistoryList();
     loadDsaMetadata();
     setDsaModalOpen(false);
-    /* ========== End of Right Column: Algorithms Search, Filters, Favourites & Tree View ========== */
+    /* ========== End of Section 10 ========== */
 
 
     /* ========== 11. Algorithm Simulation & Playback Engine ========== */
-
     speedSliders.forEach(slider => {
       slider.addEventListener('input', (e) => {
         const val = e.target.value;
@@ -5070,7 +5538,6 @@
       simCurrentStepIdx = Math.max(0, Math.min(index, simSteps.length - 1));
       const step = simSteps[simCurrentStepIdx];
 
-      // 1. Update visual state on the active container and reset cursor/hover state
       activeObj.element._simState = {
         activeIndex: step.activeIndex,
         foundIndex: step.foundIndex,
@@ -5083,10 +5550,8 @@
       }
       renderDsContainer(activeObj);
 
-      // 2. Highlight active line in Python
       highlightActiveCodeLine();
 
-      // 3. Update step counter ("x / y") and sync step-seek sliders
       stepCounterLabels.forEach(lbl => {
         lbl.textContent = `${simCurrentStepIdx + 1} / ${simSteps.length}`;
       });
@@ -5097,7 +5562,6 @@
         s.value = String(simCurrentStepIdx + 1);
       });
 
-      // 4. Update State Variables / Explanation cards
       updateStateViewPane();
     }
 
@@ -5120,7 +5584,6 @@
     function scheduleNextStep() {
       if (!isSimPlaying) return;
 
-      // Pause auto-play if the current step requires a manual user selection
       const currentStep = simSteps[simCurrentStepIdx];
       if (currentStep && currentStep.interaction) {
         stopAutoPlay();
@@ -5142,12 +5605,22 @@
       }, delayMs);
     }
 
+    async function importAlgorithmImplementationModule(dsName, algoFileBase) {
+      const dsSnake = toSnakeCase(dsName);
+      try {
+        return await import(`./dsa-implementation/algorithms/${dsSnake}/${algoFileBase}.js`);
+      } catch (e) {
+        console.error(`Failed to load algorithm module: ./dsa-implementation/algorithms/${dsSnake}/${algoFileBase}.js`, e);
+        return null;
+      }
+    }
+
     async function buildSimulationIfNeeded() {
       const activeObj = dsContainers.find((c) => c.name === activeContainerName);
       const isPracticeMode = activeRightTopTab === 'practice';
       if (!activeObj) return false;
 
-      // 1. PRACTICE MODE: Pass ONLY the active data structure (no extra args/kwargs or Settings menu)
+      // 1. TEMPLATE / PRACTICE MODE
       if (isPracticeMode) {
         const practiceCfg = activeObj.dsModule?.practiceConfig;
         if (!practiceCfg) return false;
@@ -5185,11 +5658,11 @@
           if (result.error && (!result.steps || result.steps.length === 0)) {
             if (stateViewPane) {
               stateViewPane.innerHTML = `
-            <div class="card-inner-pad">
-              <span class="card-body-text" style="color: #ef4444; font-weight: 500;">
-                ${result.error.type}: ${result.error.message}
-              </span>
-            </div>`;
+                <div class="card-inner-pad">
+                  <span class="card-body-text" style="color: #ef4444; font-weight: 500;">
+                    ${result.error.type}: ${result.error.message}
+                  </span>
+                </div>`;
             }
             return false;
           }
@@ -5204,12 +5677,10 @@
         }
       }
 
-      // 2. STANDARD ALGORITHM MODE: Collect parameters from Settings card
+      // 2. STANDARD ALGORITHM MODE
       if (selectedDsaType !== 'algo' || !selectedDsaName) return false;
 
-      const paramInputs = document.querySelectorAll(
-        '#algo-settings-body input[data-param-name]'
-      );
+      const paramInputs = document.querySelectorAll('#algo-settings-body input[data-param-name]');
       const rawKwargs = {};
       for (const inp of paramInputs) {
         const paramName = inp.getAttribute('data-param-name');
@@ -5222,11 +5693,11 @@
           if (!hasDefault) {
             if (stateViewPane) {
               stateViewPane.innerHTML = `
-            <div class="card-inner-pad">
-              <span class="card-body-text" style="color: #ef4444; font-weight: 500;">
-                Missing required argument: '${paramName}'
-              </span>
-            </div>`;
+                <div class="card-inner-pad">
+                  <span class="card-body-text" style="color: #ef4444; font-weight: 500;">
+                    Missing required argument: '${paramName}'
+                  </span>
+                </div>`;
             }
             return false;
           }
@@ -5240,61 +5711,25 @@
       }
 
       try {
-        // 2A. Practice Mode Execution (delegated to the active Data Structure's practiceConfig)
-        if (isPracticeMode) {
-          const practiceCfg = activeObj.dsModule?.practiceConfig;
-          if (!practiceCfg) return false;
-
-          const pythonCodeToRun = getCurrentRunnablePythonCode();
-          const traceRes = await tracePythonAlgorithm({
-            dsCategory: practiceCfg.dsCategory,
-            pythonCode: pythonCodeToRun,
-            funcName: practiceCfg.funcName,
-            dsData: practiceCfg.extractDsPayload(activeObj.element),
-            nodeLabels: practiceCfg.extractNodeLabels ? practiceCfg.extractNodeLabels(activeObj.element) : {},
-            rawKwargs,
-            simMode,
-            userChoices: simUserChoices.map(c => c.chosenId),
-            userInputs: simUserInputs.map(c => c.value),
-          });
-
-          const result = practiceCfg.buildSteps(traceRes.steps || [], traceRes.error);
-          // Guarantee stdout and interaction from Python frames are preserved on every step
-          if (result.steps && Array.isArray(traceRes.steps)) {
-            result.steps.forEach((st, i) => {
-              if (i < traceRes.steps.length) {
-                if (st.stdout === undefined) st.stdout = traceRes.steps[i].stdout || '';
-                if (st.interaction === undefined) st.interaction = traceRes.steps[i].interaction || null;
-              } else if (traceRes.stdout !== undefined && st.stdout === undefined) {
-                st.stdout = traceRes.stdout || '';
-              }
-            });
-          }
-
-          simSteps = result.steps || [];
-          simFullExplanation = result.fullExplanationLines || [];
-          window.isSimulating = simSteps.length > 0;
-          return window.isSimulating;
-        }
-
-        // 2B. Standard Algorithm Execution
         const fileBase = toSnakeCase(selectedDsaName);
         const fnName = toSnakeCase(selectedDsaName);
+        const dsFolder = selectedAlgoParentDs || activeObj.dsType;
 
-        const algoModule = await import(`./algorithms/${fileBase}.js`);
-        const algoFn = algoModule[fnName] || algoModule.default;
+        const algoModule = await importAlgorithmImplementationModule(dsFolder, fileBase);
+        const algoFn = algoModule ? (algoModule[fnName] || algoModule.default) : null;
 
         if (typeof algoFn !== 'function') {
-          console.error(`Function "${fnName}" not found in ./algorithms/${fileBase}.js`);
+          console.error(`Function "${fnName}" not found in ./dsa-implementation/algorithms/${toSnakeCase(dsFolder)}/${fileBase}.js`);
           return false;
         }
 
         let pythonCodeToRun = getCurrentRunnablePythonCode();
         if (!pythonCodeToRun) {
-          const pyRes = await fetch(`algorithms/${fileBase}.py`);
+          const pyPath = selectedFilePath || ['dsa', ...selectedAlgoDirPath, 'Algorithms', `${fileBase}.py`].join('/');
+          const pyRes = await fetch(encodeURI(pyPath));
           if (pyRes.ok) {
             pythonCodeToRun = (await pyRes.text()).replace(/\r\n?/g, '\n');
-            editedCodeCache[`${fileBase}.py`] = pythonCodeToRun;
+            editedCodeCache[pyPath] = pythonCodeToRun;
           }
         }
 
@@ -5307,11 +5742,11 @@
         if (result.error && (!result.steps || result.steps.length === 0)) {
           if (stateViewPane) {
             stateViewPane.innerHTML = `
-          <div class="card-inner-pad">
-            <span class="card-body-text" style="color: #ef4444; font-weight: 500;">
-              ${result.error.type}: ${result.error.message}
-            </span>
-          </div>`;
+              <div class="card-inner-pad">
+                <span class="card-body-text" style="color: #ef4444; font-weight: 500;">
+                  ${result.error.type}: ${result.error.message}
+                </span>
+              </div>`;
           }
           return false;
         }
@@ -5355,7 +5790,6 @@
       updateStateViewPane();
     }
 
-    // "Visualize" (Play/Pause) icon button in the playback bar
     document.querySelectorAll('.sync-run').forEach(btn => {
       btn.addEventListener('click', async () => {
         if (isSimPlaying) { stopAutoPlay(); return; }
@@ -5373,7 +5807,6 @@
       });
     });
 
-    // "Step Forward" icon button
     document.querySelectorAll('.sync-step-front').forEach(btn => {
       btn.addEventListener('click', async () => {
         stopAutoPlay();
@@ -5387,7 +5820,6 @@
       });
     });
 
-    // "Step Backward" icon button
     document.querySelectorAll('.sync-step-back').forEach(btn => {
       btn.addEventListener('click', async () => {
         stopAutoPlay();
@@ -5397,7 +5829,6 @@
       });
     });
 
-    // Sync Auto / Manual mode buttons
     document.querySelectorAll('.sync-sim-mode').forEach(btn => {
       btn.addEventListener('click', () => {
         simMode = simMode === 'auto' ? 'manual' : 'auto';
@@ -5415,13 +5846,11 @@
       });
     });
 
-    // Called when the user clicks a candidate node/edge on the canvas or in the State Variables box
     window.submitManualSimChoice = async function (chosenNodeId) {
       if (!window.isSimulating) return;
       stopAutoPlay();
 
       const decisionStepIdx = simCurrentStepIdx;
-      // Keep only choices strictly before this decision step, then append the new choice
       simUserChoices = simUserChoices.filter(c => c.stepIdx < decisionStepIdx);
       simUserChoices.push({
         stepIdx: decisionStepIdx,
@@ -5435,7 +5864,6 @@
       }
 
       if (await buildSimulationIfNeeded()) {
-        // Advance immediately to the step that processes the user's chosen neighbor and continue playing
         const nextIdx = Math.min(decisionStepIdx + 1, simSteps.length - 1);
         applySimulationStep(nextIdx);
         setPlayButtonIcons(true);
@@ -5465,7 +5893,6 @@
       }
     };
 
-    // "Reset" icon button -> Clears simulation and unlocks canvas editing
     document.querySelectorAll('.sync-reset').forEach(btn => {
       btn.addEventListener('click', resetSimulation);
     });
@@ -5474,7 +5901,6 @@
 
     /* ========== 12. Interactive Resizable Splitters (Mouse & Touch) ========== */
     function makeResizable({ splitter, getContainer, getTargetPane, getDirection, getMinUnits, getMaxReservedUnits }) {
-      /* makeResizable attaches mouse and touch drag handlers to standard horizontal and vertical splitters */
       let isDragging = false;
 
       const startDrag = (e) => {
@@ -5539,7 +5965,6 @@
       window.addEventListener('touchend', stopDrag);
     }
 
-    /* 1. Metadata <-> History Horizontal Splitter (#splitter-metadata-history-h) */
     makeResizable({
       splitter: splitterMetadataHistoryH,
       getContainer: () => historyColumn,
@@ -5553,7 +5978,6 @@
         : getRootCssVarUnits(LAYOUT_CONFIG.CARD_MIN_HEIGHT_DESKTOP_VAR, 2.75)
     });
 
-    /* 2. History Column <-> DS Stack Vertical Splitter (#splitter-history-ds-v) */
     (function setupHistorySplitter() {
       let isDragging = false;
 
@@ -5619,7 +6043,6 @@
       window.addEventListener('touchend', stopDrag);
     })();
 
-    /* 3. DS Horizontal Splitter (#splitter-left-h) */
     makeResizable({
       splitter: splitterLeftH,
       getContainer: () => phoneMedia.matches ? workspace : leftMainStack,
@@ -5643,12 +6066,9 @@
       }
     });
 
-    /* 4. Desktop Main Left <-> Right Column Vertical Splitter (#splitter-main-v) */
     (function setupMainVerticalSplitter() {
-      /* setupMainVerticalSplitter resizes #left-column while keeping #algo-column at a fixed pixel width so only #code-card grows or shrinks on the right */
       const mainSplitter = document.getElementById('splitter-main-v');
       let isDragging = false;
-      let lockedAlgoWidthPx = null;
       let lockedHistWidthPx = null;
 
       const startDrag = (e) => {
@@ -5656,16 +6076,6 @@
         mainSplitter.classList.add('dragging');
         document.body.style.cursor = 'col-resize';
 
-        /* Lock #algo-column to its current pixel width so dragging #splitter-main-v only resizes #code-card and #ds-card */
-        if (!isAlgoCollapsed) {
-          lockedAlgoWidthPx = algoColumn.getBoundingClientRect().width;
-          algoColumn.style.width = `${lockedAlgoWidthPx.toFixed(2)}px`;
-          savedAlgoWidth = algoColumn.style.width;
-        } else {
-          lockedAlgoWidthPx = null;
-        }
-
-        /* Lock #history-column to its current pixel width if open so it doesn't shift while dragging #splitter-main-v */
         if (!isHistoryCollapsed) {
           lockedHistWidthPx = historyColumn.getBoundingClientRect().width;
           historyColumn.style.width = `${lockedHistWidthPx.toFixed(2)}px`;
@@ -5681,7 +6091,6 @@
         if (!isDragging) return;
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
 
-        /* Measure inner columns exactly to bypass #workspace padding calculation errors */
         const leftRect = leftColumn.getBoundingClientRect();
         const rightRect = rightColumn.getBoundingClientRect();
         const splitterW = mainSplitter.getBoundingClientRect().width;
@@ -5700,13 +6109,9 @@
           : (lockedHistWidthPx !== null ? lockedHistWidthPx : historyColumn.getBoundingClientRect().width);
         const histSplitW = splitterHistoryDs.getBoundingClientRect().width;
 
-        const algoW = 0;
-        const algoSplitW = 0;
-
         const dsAvailableW = desiredLeftW - histW - histSplitW;
-        const codeAvailableW = desiredRightW - algoW - algoSplitW;
+        const codeAvailableW = desiredRightW;
 
-        /* Case 1: DS collapses from min-width -> snap leftColumn to collapsed width so Code occupies all remaining space; stop further left drag */
         if (dsAvailableW < collapseThresholdU) {
           if (!isDsCollapsed) setDsCollapsed(true);
           if (isCodeCollapsed) setCodeCollapsed(false, false);
@@ -5720,14 +6125,10 @@
           setDsCollapsed(false);
         }
 
-        /* Case 2: Code collapses from min-width -> keep Algorithms at lockedAlgoWidthPx, snap leftColumn (DS) to occupy remaining space, and stop further right drag */
         if (codeAvailableW < collapseThresholdU) {
           if (!isCodeCollapsed) setCodeCollapsed(true, false);
-          if (!isAlgoCollapsed && lockedAlgoWidthPx !== null) {
-            algoColumn.style.width = `${lockedAlgoWidthPx.toFixed(2)}px`;
-          }
 
-          const collapsedRightW = algoW + algoSplitW + collapsedStripW;
+          const collapsedRightW = collapsedStripW;
           const snappedLeftW = Math.max(
             histW + histSplitW + collapseThresholdU,
             containerW - collapsedRightW - splitterW
@@ -5738,14 +6139,10 @@
 
         if (isCodeCollapsed) {
           setCodeCollapsed(false, false);
-          if (!isAlgoCollapsed && lockedAlgoWidthPx !== null) {
-            algoColumn.style.width = `${lockedAlgoWidthPx.toFixed(2)}px`;
-          }
         }
 
-        /* Case 3: Both DS and Code are above min-width */
         const minLeftW = histW + histSplitW + collapseThresholdU;
-        const minRightW = algoW + algoSplitW + collapseThresholdU;
+        const minRightW = collapseThresholdU;
         const clampedLeftW = Math.max(minLeftW, Math.min(containerW - minRightW - splitterW, desiredLeftW));
         leftColumn.style.width = `${((clampedLeftW / containerW) * 100).toFixed(2)}%`;
       };
@@ -5753,7 +6150,6 @@
       const stopDrag = () => {
         if (!isDragging) return;
         isDragging = false;
-        lockedAlgoWidthPx = null;
         lockedHistWidthPx = null;
         mainSplitter.classList.remove('dragging');
         document.body.style.cursor = '';
@@ -5768,7 +6164,6 @@
       window.addEventListener('touchend', stopDrag);
     })();
 
-    /* 7. Right Top Row <-> Bottom Split Row Horizontal Splitter (#splitter-right-h) */
     makeResizable({
       splitter: splitterRightH,
       getContainer: () => rightColumn,
@@ -5781,7 +6176,6 @@
         ? getRootCssVarUnits(LAYOUT_CONFIG.CARD_MIN_HEIGHT_MOBILE_VAR, 1.6)
         : getRootCssVarUnits(LAYOUT_CONFIG.BOTTOM_ROW_MIN_HEIGHT_VAR, 2.75)
     });
-
     /* ========== End of Interactive Resizable Splitters (Mouse & Touch) ========== */
   </script>
 

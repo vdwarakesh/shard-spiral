@@ -1,0 +1,47 @@
+{
+    "attributes": [
+      "contiguous-memory",
+      "random-access"
+    ],
+    "inputs": {},
+    "placeholder": "content (e.g. 10, 20, 30)",
+    "random": {
+      "Array Length": {
+        "type": "range",
+        "min": 1,
+        "max": 26,
+        "step": 1,
+        "default": 8
+      },
+      "Min Value": {
+        "type": "number",
+        "min": -999,
+        "max": 999,
+        "step": 1,
+        "default": 1
+      },
+      "Max Value": {
+        "type": "number",
+        "min": -999,
+        "max": 999,
+        "step": 1,
+        "default": 50
+      },
+      "Sorted": {
+        "type": "checkbox",
+        "default": false
+      },
+      "Sorted (Desc)": {
+        "type": "checkbox",
+        "default": false
+      },
+      "Nearly Sorted": {
+        "type": "checkbox",
+        "default": false
+      },
+      "Duplicates": {
+        "type": "checkbox",
+        "default": true
+      }
+    }
+}

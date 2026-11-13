@@ -629,13 +629,24 @@ input::-webkit-inner-spin-button {
 }
 
 .modal-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 0.35rem;
     line-height: 1;
     color: var(--text-muted);
     cursor: pointer;
     user-select: none;
+    transition: background-color 0.12s ease, color 0.12s ease;
 }
 
 .modal-close:hover {
+    background-color: var(--bg-hover);
     color: var(--text-bright);
 }
 
@@ -1903,40 +1914,6 @@ input[type="range"].vscode-slider::-moz-range-thumb:hover {
     filter: var(--sidebar-icon-filter);
 }
 
-.algo-compat-pills-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-    padding: 0.15rem 0.35rem 0.25rem 1.85rem;
-}
-
-.algo-ds-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 0.1rem 0.45rem;
-    background-color: var(--bg-elevated);
-    border: 0.0625rem solid var(--border-color);
-    border-radius: 0.3rem;
-    font-size: 0.82em;
-    color: var(--text-primary);
-    cursor: pointer;
-    transition: background-color 0.12s ease, border-color 0.12s ease;
-}
-
-.algo-ds-pill:hover {
-    background-color: var(--bg-hover);
-    border-color: var(--accent-primary);
-    color: var(--text-bright);
-}
-
-.algo-ds-pill img {
-    width: 0.8rem;
-    height: 0.8rem;
-    object-fit: contain;
-    filter: var(--sidebar-icon-filter);
-}
-
 .search-path-hint {
     padding: 0 0.35rem 0.15rem 1.85rem;
     font-family: 'Noto Sans Mono', monospace;
@@ -1945,6 +1922,22 @@ input[type="range"].vscode-slider::-moz-range-thumb:hover {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* ========== DSA Folder Section Subtitles & Spacers ========== */
+.dsa-section-spacer {
+    height: 0.65rem;
+    flex-shrink: 0;
+}
+
+.dsa-section-subtitle {
+    padding: 0.1rem 0.35rem 0.2rem 0.35rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    user-select: none;
 }
 
 .dsa-modal-window {

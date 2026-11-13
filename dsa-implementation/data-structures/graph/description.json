@@ -1,0 +1,52 @@
+{
+    "attributes": [
+      "non-linear"
+    ],
+    "inputs": {
+      "Directed": "checkbox",
+      "Weighted": "checkbox"
+    },
+    "placeholder": "edges (e.g. (A,B,10), (B,C,5))",
+    "random": {
+      "Vertex Count": {
+        "type": "range",
+        "min": 2,
+        "max": 26,
+        "step": 1,
+        "default": 6
+      },
+      "Edge Count": {
+        "type": "range",
+        "min": 1,
+        "max": 325,
+        "step": 1,
+        "default": 7
+      },
+      "Min Weight": {
+        "type": "number",
+        "min": -999,
+        "max": 999,
+        "step": 1,
+        "default": 1
+      },
+      "Max Weight": {
+        "type": "number",
+        "min": -999,
+        "max": 999,
+        "step": 1,
+        "default": 20
+      },
+      "Fully Connected": {
+        "type": "checkbox",
+        "default": false
+      },
+      "Sparse": {
+        "type": "checkbox",
+        "default": false
+      },
+      "Bipartite": {
+        "type": "checkbox",
+        "default": false
+      }
+    }
+}
