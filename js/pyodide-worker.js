@@ -94,7 +94,7 @@ from collections import deque, OrderedDict
             if (dsCategory) {
                 try {
                     proxyHeader = (await getDsProxyScript(dsCategory)) + '\n';
-                } catch (_) {}
+                } catch (_) { }
             }
 
             const headerLineOffset = proxyHeader ? proxyHeader.split('\n').length - 1 : 0;
@@ -136,5 +136,42 @@ _get_jedi_completions(_jedi_source, _jedi_line, _jedi_col)
         return;
     }
 
-    // Keep your existing "if (type === 'run')" block intact below...
+    if (type === 'run') {
+        try {
+            const category = toSnakeCase(dsCategory || 'array');
+            const [py, tracerScript, dsProxyCode] = await Promise.all([
+                pyodideReadyPromise,
+                tracerScriptPromise,
+                getDsProxyScript(category),
+            ]);
+
+            py.globals.set('_user_code', pythonCode);
+            py.globals.set('_func_name', funcName);
+            py.globals.set('_ds_category', category);
+            py.globals.set('_ds_proxy_code', dsProxyCode);
+            py.globals.set('_ds_payload_json', JSON.stringify(dsData ?? []));
+            py.globals.set('_node_labels_json', JSON.stringify(nodeLabels || {}));
+            py.globals.set('_raw_kwargs_json', JSON.stringify(rawKwargs || {}));
+            py.globals.set('_sim_mode', simMode || 'auto');
+            py.globals.set('_user_choices_json', JSON.stringify(userChoices || []));
+            py.globals.set('_user_inputs_json', JSON.stringify(userInputs || []));
+            py.globals.set('_MAX_STEPS', maxSteps || 2500);
+
+            const rawJson = await py.runPythonAsync(tracerScript);
+
+            self.postMessage({ id, result: JSON.parse(rawJson) });
+        } catch (fatalErr) {
+            self.postMessage({
+                id,
+                result: {
+                    steps: [],
+                    error: {
+                        type: 'RuntimeError',
+                        message: fatalErr.message || String(fatalErr),
+                        line: null,
+                    },
+                },
+            });
+        }
+    }
 };
