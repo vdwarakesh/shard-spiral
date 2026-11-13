@@ -14,6 +14,11 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/hint/show-hint.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
 
   <!-- CodeMirror Indent Guide Addon -->
   <link rel="stylesheet"
@@ -1003,7 +1008,7 @@
 
   <script type="module">
     import { createQuickdraw } from './js/quickdraw/index.js';
-    import { warmUpPyodide, tracePythonAlgorithm } from './js/pyodide-runner.js';
+    import { warmUpPyodide, tracePythonAlgorithm, getPythonCompletions } from './js/pyodide-runner.js';
 
     /* ========== 1. Layout, Breakpoint & Storage Configuration ========== */
     const LAYOUT_CONFIG = {
@@ -2988,6 +2993,46 @@
       }
     }
 
+    async function jediPythonHint(editor) {
+      const cursor = editor.getCursor();
+      const token = editor.getTokenAt(cursor);
+      if (token.type === 'comment' || token.type === 'string') return null;
+
+      const activeObj = dsContainers.find(c => c.name === activeContainerName);
+      const dsCategory = activeObj?.dsModule?.practiceConfig?.dsCategory || activeObj?.dsType || 'array';
+
+      const items = await getPythonCompletions({
+        dsCategory,
+        pythonCode: editor.getValue(),
+        line: cursor.line + 1,
+        column: cursor.ch
+      });
+
+      if (!items || items.length === 0) return null;
+
+      const prefixLen = items[0].prefixLen ?? 0;
+      const from = CodeMirror.Pos(cursor.line, cursor.ch - prefixLen);
+      const to = CodeMirror.Pos(cursor.line, cursor.ch);
+
+      return {
+        list: items.map(item => ({
+          text: item.name,
+          displayText: item.name,
+          render: (el) => {
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = item.name;
+            const typeSpan = document.createElement('span');
+            typeSpan.className = 'cm-hint-type-badge';
+            typeSpan.textContent = item.type || '';
+            el.appendChild(nameSpan);
+            el.appendChild(typeSpan);
+          }
+        })),
+        from,
+        to
+      };
+    }
+
     async function updateCodeViewPane() {
       const currentTab = activeRightTopTab;
 
@@ -3024,7 +3069,34 @@
           readOnly: false,
           indentUnit: 4,
           tabSize: 4,
-          indentGuide: true
+          indentGuide: true,
+          autoCloseBrackets: true,
+          matchBrackets: true,
+          extraKeys: {
+            'Ctrl-Space': (cm) => cm.showHint({ hint: jediPythonHint, completeSingle: false }),
+            'Tab': (cm) => {
+              if (cm.somethingSelected()) {
+                cm.indentSelection('add');
+              } else {
+                cm.replaceSelection(' '.repeat(cm.getOption('indentUnit')), 'end', '+input');
+              }
+            }
+          }
+        });
+
+        let hintDebounceTimer = null;
+        codeEditorInstance.on('inputRead', (cm, change) => {
+          if (change.origin !== '+input') return;
+          const typed = change.text[0];
+          if (/^[a-zA-Z0-9_.]$/.test(typed)) {
+            clearTimeout(hintDebounceTimer);
+            hintDebounceTimer = setTimeout(() => {
+              cm.showHint({
+                hint: jediPythonHint,
+                completeSingle: false
+              });
+            }, 90);
+          }
         });
         codeEditorInstance._loadedCacheKey = practiceKey;
 

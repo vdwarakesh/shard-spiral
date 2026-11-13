@@ -62,3 +62,19 @@ export function tracePythonAlgorithm({
     });
   });
 }
+
+export function getPythonCompletions({ dsCategory, pythonCode, line, column }) {
+  return new Promise((resolve) => {
+    const id = messageIdCounter++;
+    pendingResolves.set(id, resolve);
+
+    worker.postMessage({
+      id,
+      type: 'complete',
+      dsCategory,
+      pythonCode,
+      line,
+      column,
+    });
+  });
+}

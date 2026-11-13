@@ -3,6 +3,16 @@
 importScripts('https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js');
 
 let pyodideReadyPromise = loadPyodide();
+let jediLoadedPromise = null;
+
+function ensureJediLoaded(py) {
+    if (!jediLoadedPromise) {
+        jediLoadedPromise = py.loadPackage('jedi').then(() =>
+            py.runPythonAsync(`import jedi`)
+        );
+    }
+    return jediLoadedPromise;
+}
 
 let tracerScriptPromise = fetch('../python/pyodide-worker.py', { cache: 'no-store' }).then(res => {
     if (!res.ok) {
@@ -50,11 +60,14 @@ self.onmessage = async (event) => {
         userChoices,
         userInputs,
         maxSteps,
+        line,
+        column,
     } = event.data;
 
     if (type === 'warmup') {
         try {
             const py = await pyodideReadyPromise;
+            await ensureJediLoaded(py);
             await py.runPythonAsync(`
 import sys
 import json
@@ -72,42 +85,56 @@ from collections import deque, OrderedDict
         return;
     }
 
-    if (type === 'run') {
+    if (type === 'complete') {
         try {
-            const category = toSnakeCase(dsCategory || 'array');
-            const [py, tracerScript, dsProxyCode] = await Promise.all([
-                pyodideReadyPromise,
-                tracerScriptPromise,
-                getDsProxyScript(category),
-            ]);
+            const py = await pyodideReadyPromise;
+            await ensureJediLoaded(py);
 
-            py.globals.set('_user_code', pythonCode);
-            py.globals.set('_func_name', funcName);
-            py.globals.set('_ds_category', category);
-            py.globals.set('_ds_proxy_code', dsProxyCode);
-            py.globals.set('_ds_payload_json', JSON.stringify(dsData ?? []));
-            py.globals.set('_node_labels_json', JSON.stringify(nodeLabels || {}));
-            py.globals.set('_raw_kwargs_json', JSON.stringify(rawKwargs || {}));
-            py.globals.set('_sim_mode', simMode || 'auto');
-            py.globals.set('_user_choices_json', JSON.stringify(userChoices || []));
-            py.globals.set('_user_inputs_json', JSON.stringify(userInputs || []));
-            py.globals.set('_MAX_STEPS', maxSteps || 2500);
+            let proxyHeader = '';
+            if (dsCategory) {
+                try {
+                    proxyHeader = (await getDsProxyScript(dsCategory)) + '\n';
+                } catch (_) {}
+            }
 
-            const rawJson = await py.runPythonAsync(tracerScript);
+            const headerLineOffset = proxyHeader ? proxyHeader.split('\n').length - 1 : 0;
+            const fullSource = proxyHeader + (pythonCode || '');
 
-            self.postMessage({ id, result: JSON.parse(rawJson) });
-        } catch (fatalErr) {
-            self.postMessage({
-                id,
-                result: {
-                    steps: [],
-                    error: {
-                        type: 'RuntimeError',
-                        message: fatalErr.message || String(fatalErr),
-                        line: null,
-                    },
-                },
-            });
+            py.globals.set('_jedi_source', fullSource);
+            py.globals.set('_jedi_line', (line || 1) + headerLineOffset);
+            py.globals.set('_jedi_col', column || 0);
+
+            const rawCompletions = await py.runPythonAsync(`
+import json
+import jedi
+
+def _get_jedi_completions(source, line, col):
+    try:
+        script = jedi.Script(code=source)
+        completions = script.complete(line=line, column=col)
+        results = []
+        for c in completions[:60]:
+            # Skip private/dunder attributes unless user explicitly typed '_'
+            if c.name.startswith('_') and not c.get_completion_prefix_length():
+                continue
+            results.append({
+                "name": c.name,
+                "type": c.type,
+                "prefixLen": c.get_completion_prefix_length()
+            })
+        return json.dumps(results)
+    except Exception:
+        return "[]"
+
+_get_jedi_completions(_jedi_source, _jedi_line, _jedi_col)
+            `);
+
+            self.postMessage({ id, result: JSON.parse(rawCompletions) });
+        } catch (err) {
+            self.postMessage({ id, result: [] });
         }
+        return;
     }
+
+    // Keep your existing "if (type === 'run')" block intact below...
 };

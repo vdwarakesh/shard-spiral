@@ -3030,6 +3030,49 @@ pre[class*=language-] {
     background: none !important;
 }
 
+/* ========== Intellisense ========== */
+.CodeMirror-hints {
+    position: absolute;
+    z-index: 9999 !important;
+    min-width: 12rem;
+    max-height: 15rem;
+    margin: 0;
+    padding: 0.25rem;
+    background-color: var(--bg-elevated) !important;
+    border: 0.0625rem solid var(--border-color) !important;
+    border-radius: 0.35rem;
+    box-shadow: 0 0.375rem 1rem rgba(0, 0, 0, 0.35) !important;
+    font-family: 'Noto Sans Mono', monospace !important;
+    /* font-size: 0.85rem !important; */
+    overflow-y: auto;
+}
+
+.CodeMirror-hint {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.22rem 0.5rem !important;
+    border-radius: 0.2rem !important;
+    color: var(--text-primary) !important;
+    cursor: pointer;
+}
+
+li.CodeMirror-hint-active {
+    background-color: var(--bg-active-item) !important;
+    color: var(--text-bright) !important;
+}
+
+.cm-hint-type-badge {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: lowercase;
+}
+
+li.CodeMirror-hint-active .cm-hint-type-badge {
+    color: var(--text-primary);
+}
+
 /* ========== End of CodeMirror Syntax Highlighter Overrides ========== */
 
 
