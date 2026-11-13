@@ -2,14 +2,10 @@ Add notes for all algorithms
 Add algorithm implementations in all languages
 Add visualization for all algorithms
 
-constraints and attributes description might be incomplete - verify
-
-update syllabus
-add other graph algorithms
-
-dfs recursive unable to select, repeatedly asking for click
-dijkstras algorithm:
-Calculating candidate distance to '2': 0 + 3 = 3 this step is neither highlighting node 2 nor the edge from 1 to 2
-
+Constraints and attributes description might be incomplete/wrong - verify
 
 Update syllabus (Double check)
+
+Separate parsing logic
+Add intellisense to codemirror editor
+
