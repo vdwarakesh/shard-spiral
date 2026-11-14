@@ -25,7 +25,7 @@ export async function breadth_first_search_bfs(containerEl, rawKwargs = {}, simO
     }
   });
 
-  
+  let pythonCode = simOptions.pythonCode;
   if (!pythonCode) {
     const pyUrl = new URL('../../../dsa/Graph/Algorithms/breadth_first_search_bfs.py', import.meta.url);
     const res = await fetch(pyUrl);
