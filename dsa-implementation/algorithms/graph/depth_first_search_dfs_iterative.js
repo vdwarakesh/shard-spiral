@@ -25,8 +25,15 @@ export async function depth_first_search_dfs_iterative(containerEl, rawKwargs = 
     }
   });
 
-  const res = await fetch('algorithms/depth_first_search_dfs_iterative.py');
-  const pythonCode = await res.text();
+  let pythonCode = options.pythonCode;
+  if (!pythonCode) {
+    const pyUrl = new URL('../../../dsa/Graph/Algorithms/depth_first_search_dfs_iterative.py', import.meta.url);
+    const res = await fetch(pyUrl);
+    if (!res.ok) {
+      throw new Error(`Failed to load Python file (${res.status})`);
+    }
+    pythonCode = await res.text();
+  }
 
   const { steps: pyFrames, error } = await tracePythonAlgorithm({
     dsCategory: 'graph',
