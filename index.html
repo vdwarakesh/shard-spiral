@@ -1204,14 +1204,24 @@
     // Code / Notes & State / Explanation Tab State
     let activeRightTopTab = 'notes';
     let activeStateBottomTab = 'state';
+
+    // Separate file states so Notes and Playground never overwrite or sync with each other
+    let selectedNotesFilePath = null;
+    let selectedNotesFileExt = '';
+    let selectedNotesIsUserFile = false;
+
+    let selectedPlaygroundFilePath = null;
+    let selectedPlaygroundFileExt = '';
+
+    // Legacy aliases used by algorithm visualization runner
     let selectedFileExt = '';
     let selectedFilePath = null;
     let selectedIsUserFile = false;
+
     let codeEditorInstance = null;
     let activeSimLineHandle = null;
     const editedCodeCache = {};
     const practiceCodeCache = {};
-    let playgroundCode = '# Write and run Python code anytime (not visualized)\nprint("Hello from Shard Spiral Playground!")\n';
     let resizeRafId = null;
 
     // Directory & User Local FS State (5 MB cumulative limit)
@@ -2873,15 +2883,55 @@
         .replace(/\u00A0/g, ' ');
     }
 
+    function isNotesOnlyExtension(ext) {
+      // No extension, .txt, .html, or .md belong exclusively to the Notes tab (rendered as HTML)
+      return !ext || ext === '.txt' || ext === '.html' || ext === '.md';
+    }
+
+    function getTargetUserFolderPathForPlayground() {
+      if (isPathInsideUserFolder(currentFsPath)) {
+        return [...currentFsPath];
+      }
+      const contextDs = resolveContextDsFromPath(currentFsPath) || getActiveContainerDsType();
+      if (contextDs) {
+        const lineage = findDsPathInTree(dsaDirectoryTree, contextDs);
+        if (lineage) return [...lineage, `My ${contextDs} Files`];
+      }
+      return ['My Files'];
+    }
+
+    function findDsPathInTree(dirNode, targetDsName, currentPath = []) {
+      if (!dirNode || !Array.isArray(dirNode.children)) return null;
+      for (const child of dirNode.children) {
+        if (child.type === 'directory' && child.name !== 'Algorithms' && !child.isUserFolder) {
+          const nextPath = [...currentPath, child.name];
+          if (child.name.toLowerCase() === targetDsName.toLowerCase()) return nextPath;
+          const found = findDsPathInTree(child, targetDsName, nextPath);
+          if (found) return found;
+        }
+      }
+      return null;
+    }
+
+    // Right-click inside Playground opens the Create / Upload File modal
+    if (codeViewPane) {
+      codeViewPane.addEventListener('contextmenu', (e) => {
+        if (activeRightTopTab === 'playground') {
+          const targetPathArr = getTargetUserFolderPathForPlayground();
+          openUserFsContextMenu(e, targetPathArr);
+        }
+      });
+    }
+
     function getCurrentRunnablePythonCode() {
       if (activeRightTopTab === 'playground') {
-        if (!selectedIsUserFile || !selectedFilePath) return null;
-        if (codeEditorInstance && codeEditorInstance._loadedCacheKey === `playground:${selectedFilePath}`) {
+        if (!selectedPlaygroundFilePath) return null;
+        if (codeEditorInstance && codeEditorInstance._loadedCacheKey === `playground:${selectedPlaygroundFilePath}`) {
           const live = normalizeSpaces(codeEditorInstance.getValue());
-          saveUserFileContent(selectedFilePath, live);
+          saveUserFileContent(selectedPlaygroundFilePath, live);
           return live;
         }
-        return normalizeSpaces(userVirtualFs.entries[selectedFilePath]?.content ?? '');
+        return normalizeSpaces(userVirtualFs.entries[selectedPlaygroundFilePath]?.content ?? '');
       }
 
       if (activeRightTopTab === 'practice') {
@@ -2896,22 +2946,15 @@
         return normalizeSpaces(practiceCodeCache[practiceKey] || activeObj.dsModule?.practiceConfig?.template || '');
       }
 
-      if (selectedIsUserFile && selectedFilePath && selectedFileExt === '.py') {
-        if (codeEditorInstance && codeEditorInstance._loadedCacheKey === `user:${selectedFilePath}`) {
-          return normalizeSpaces(codeEditorInstance.getValue());
-        }
-        return normalizeSpaces(userVirtualFs.entries[selectedFilePath]?.content ?? '');
-      }
-
-      if (selectedFilePath && editedCodeCache[selectedFilePath] !== undefined && selectedFileExt === '.py') {
-        return normalizeSpaces(editedCodeCache[selectedFilePath]);
+      if (selectedNotesFilePath && editedCodeCache[selectedNotesFilePath] !== undefined && selectedNotesFileExt === '.py') {
+        return normalizeSpaces(editedCodeCache[selectedNotesFilePath]);
       }
 
       return null;
     }
 
     async function runPlaygroundCode() {
-      if (!selectedIsUserFile || !selectedFilePath) return;
+      if (!selectedPlaygroundFilePath) return;
       const codeToRun = getCurrentRunnablePythonCode() || '';
       if (stateViewPane) {
         stateViewPane.innerHTML = `<div class="card-inner-pad"><span class="card-body-text">Running Playground (WASM)...</span></div>`;
@@ -2967,20 +3010,20 @@
       }
     }
 
-    if (btnRunPlayground) {
-      btnRunPlayground.addEventListener('click', runPlaygroundCode);
-    }
-
     async function updateCodeViewPane() {
       const currentTab = activeRightTopTab;
-      const canEditInPlayground = Boolean(selectedIsUserFile && selectedFilePath && selectedFileExt);
+      const canEditInPlayground = Boolean(
+        selectedPlaygroundFilePath &&
+        selectedPlaygroundFileExt &&
+        !isNotesOnlyExtension(selectedPlaygroundFileExt) &&
+        userVirtualFs.entries[selectedPlaygroundFilePath]
+      );
 
       if (btnRunPlayground) {
-        // Show Run button in Playground when a user file with an extension is active
         btnRunPlayground.style.display = (currentTab === 'playground' && canEditInPlayground) ? 'inline-flex' : 'none';
       }
 
-      // 1. PLAYGROUND TAB (Edits the active user file from "My Files" / "My <DS> Files"; disabled if none selected)
+      // 1. PLAYGROUND TAB (Completely separate from Notes tab; right-clickable to create/upload files)
       if (currentTab === 'playground') {
         if (!canEditInPlayground) {
           codeEditorInstance = null;
@@ -2988,7 +3031,7 @@
           codeViewPane.innerHTML = `
             <div class="card-inner-pad">
               <span class="card-body-text" style="color: var(--text-muted); text-align: center; display: block; margin-top: 1rem;">
-                Select a file with an extension from <strong>My Files</strong> (or right-click inside a Custom folder to create one) to edit and run it in the Playground.
+                Right-click here to create or upload a code file (e.g. <code>script.py</code>), or select an existing code file from <strong>Custom (My Files)</strong> to edit and run in the Playground.
               </span>
             </div>
           `;
@@ -2996,9 +3039,9 @@
           return;
         }
 
-        const entry = userVirtualFs.entries[selectedFilePath];
+        const entry = userVirtualFs.entries[selectedPlaygroundFilePath];
         const fileContent = normalizeSpaces(entry?.content || '');
-        const cmMode = getCodeMirrorModeFromExt(selectedFileExt) || 'python';
+        const cmMode = getCodeMirrorModeFromExt(selectedPlaygroundFileExt) || 'python';
 
         codeViewPane.innerHTML = '';
         activeSimLineHandle = null;
@@ -3019,9 +3062,9 @@
         if (cmMode === 'python') {
           attachPythonIntellisense(codeEditorInstance);
         }
-        codeEditorInstance._loadedCacheKey = `playground:${selectedFilePath}`;
+        codeEditorInstance._loadedCacheKey = `playground:${selectedPlaygroundFilePath}`;
         codeEditorInstance.on('change', () => {
-          saveUserFileContent(selectedFilePath, normalizeSpaces(codeEditorInstance.getValue()));
+          saveUserFileContent(selectedPlaygroundFilePath, normalizeSpaces(codeEditorInstance.getValue()));
         });
         requestAnimationFrame(() => codeEditorInstance && codeEditorInstance.refresh());
         updatePlaybackCompatibilityUI();
@@ -3084,8 +3127,8 @@
         return;
       }
 
-      // 3. UNIFIED NOTES TAB (Read-only for built-in files; editable in Playground)
-      if (!selectedFilePath) {
+      // 3. NOTES TAB (Displays built-in code/notes and user files without extensions / .txt / .html as HTML)
+      if (!selectedNotesFilePath) {
         codeEditorInstance = null;
         activeSimLineHandle = null;
         codeViewPane.innerHTML = `
@@ -3098,16 +3141,16 @@
         return;
       }
 
-      const targetPath = selectedFilePath;
-      const cmMode = getCodeMirrorModeFromExt(selectedFileExt);
+      const targetPath = selectedNotesFilePath;
+      const cmMode = selectedNotesIsUserFile ? null : getCodeMirrorModeFromExt(selectedNotesFileExt);
 
       try {
         let text = '';
 
-        if (selectedIsUserFile) {
+        if (selectedNotesIsUserFile) {
           const entry = userVirtualFs.entries[targetPath];
           if (!entry) throw new Error('Local file not found');
-          text = normalizeSpaces(entry.content || '');
+          text = entry.content || '';
         } else if (editedCodeCache[targetPath] !== undefined) {
           text = editedCodeCache[targetPath];
         } else {
@@ -3121,34 +3164,23 @@
           editedCodeCache[targetPath] = text;
         }
 
-        if (selectedFilePath !== targetPath || activeRightTopTab !== 'notes') return;
+        if (selectedNotesFilePath !== targetPath || activeRightTopTab !== 'notes') return;
 
         if (cmMode) {
+          // Built-in reference code file (.py, .cpp, .java) in Notes tab -> read-only CodeMirror
           codeViewPane.innerHTML = '';
           codeEditorInstance = window.CodeMirror(codeViewPane, {
             value: text,
             mode: cmMode,
             lineNumbers: true,
             lineWrapping: true,
-            readOnly: !selectedIsUserFile,
+            readOnly: true,
             indentUnit: 4,
             tabSize: 4,
             indentWithTabs: false,
-            indentGuide: true,
-            autoCloseBrackets: selectedIsUserFile,
-            matchBrackets: true,
-            extraKeys: selectedIsUserFile ? getSmartTabExtraKeys(false) : {}
+            indentGuide: true
           });
-          if (selectedIsUserFile && cmMode === 'python') {
-            attachPythonIntellisense(codeEditorInstance);
-          }
-          codeEditorInstance._loadedCacheKey = selectedIsUserFile ? `user:${targetPath}` : targetPath;
-
-          if (selectedIsUserFile) {
-            codeEditorInstance.on('change', () => {
-              saveUserFileContent(targetPath, normalizeSpaces(codeEditorInstance.getValue()));
-            });
-          }
+          codeEditorInstance._loadedCacheKey = targetPath;
 
           requestAnimationFrame(() => {
             if (codeEditorInstance) {
@@ -3157,9 +3189,10 @@
             }
           });
         } else {
+          // HTML Notes (built-in Notes or user-created extensionless/.txt/.html file)
           codeEditorInstance = null;
           activeSimLineHandle = null;
-          if (selectedIsUserFile) {
+          if (selectedNotesIsUserFile) {
             codeViewPane.innerHTML = `
               <div class="card-inner-pad notes-content" contenteditable="true" id="editable-user-notes" style="outline: none; min-height: 100%;">${text || '<p>Start typing your notes...</p>'}</div>
             `;
@@ -3174,7 +3207,7 @@
           }
         }
       } catch (err) {
-        if (selectedFilePath !== targetPath || activeRightTopTab !== 'notes') return;
+        if (selectedNotesFilePath !== targetPath || activeRightTopTab !== 'notes') return;
         codeEditorInstance = null;
         activeSimLineHandle = null;
         codeViewPane.innerHTML = `
@@ -4190,12 +4223,16 @@
       const contextDs = resolveContextDsFromPath(folderPathArr);
       const isAlgoFolder = folderPathArr[folderPathArr.length - 1] === 'Algorithms';
 
-      selectedIsUserFile = Boolean(fileItem.isUserItem);
-
       if (fileItem.virtualConfig) {
-        // "Configure & Generate": load the folder's Notes file AND open Creation Settings in Settings card
-        selectedFilePath = ['dsa', ...folderPathArr, 'Notes'].join('/');
+        // "Configure & Generate": load folder's Notes into Notes tab & open Creation Settings
+        selectedNotesFilePath = ['dsa', ...folderPathArr, 'Notes'].join('/');
+        selectedNotesFileExt = '';
+        selectedNotesIsUserFile = false;
+
+        selectedFilePath = selectedNotesFilePath;
         selectedFileExt = '';
+        selectedIsUserFile = false;
+
         selectedDsaName = contextDs;
         selectedDsaType = 'ds';
         selectedAlgoParentDs = null;
@@ -4208,23 +4245,44 @@
         }
         updateAlgorithmSettings(contextDs, null, 'ds');
       } else if (fileItem.isUserItem) {
-        selectedFilePath = fileItem.fullVirtualPath;
-        selectedFileExt = ext;
-        selectedDsaName = baseTitle;
-        selectedDsaType = 'file';
-        selectedAlgoParentDs = null;
-        selectedAlgoDirPath = [];
+        // User-created file inside "My Files" or "My <DS> Files"
+        if (isNotesOnlyExtension(ext)) {
+          // Extensionless or .txt/.html files open ONLY in Notes (rendered as HTML)
+          selectedNotesFilePath = fileItem.fullVirtualPath;
+          selectedNotesFileExt = ext;
+          selectedNotesIsUserFile = true;
 
-        if (activeRightTopTab !== 'notes') {
-          setActiveTab('notes', 'Notes');
+          selectedFilePath = selectedNotesFilePath;
+          selectedFileExt = ext;
+          selectedIsUserFile = true;
+
+          if (activeRightTopTab !== 'notes') {
+            setActiveTab('notes', 'Notes');
+          } else {
+            updateCodeViewPane();
+          }
         } else {
-          updateCodeViewPane();
+          // Code files with extensions (.py, .cpp, .java, etc.) open ONLY in Playground
+          selectedPlaygroundFilePath = fileItem.fullVirtualPath;
+          selectedPlaygroundFileExt = ext;
+
+          if (activeRightTopTab !== 'playground') {
+            setActiveTab('playground', 'Playground');
+          } else {
+            updateCodeViewPane();
+          }
         }
         resetSettingsToPlaceholder();
       } else if (isAlgoFolder) {
-        // Algorithm file inside dsa/<DS>/Algorithms/<algo>.py -> strictly confined to <DS>
-        selectedFilePath = ['dsa', ...folderPathArr, fileItem.name].join('/');
+        // Built-in Algorithm file inside dsa/<DS>/Algorithms/<algo>.py
+        selectedNotesFilePath = ['dsa', ...folderPathArr, fileItem.name].join('/');
+        selectedNotesFileExt = ext;
+        selectedNotesIsUserFile = false;
+
+        selectedFilePath = selectedNotesFilePath;
         selectedFileExt = ext;
+        selectedIsUserFile = false;
+
         selectedDsaName = baseTitle;
         selectedDsaType = 'algo';
         selectedAlgoParentDs = contextDs;
@@ -4237,9 +4295,15 @@
         }
         updateAlgorithmSettings(baseTitle, contextDs, 'algo');
       } else {
-        // Regular file inside a DS folder (such as `Notes` or `array.py`): load into Notes tab only
-        selectedFilePath = ['dsa', ...folderPathArr, fileItem.name].join('/');
+        // Built-in DS file (such as `Notes` or `array.py`)
+        selectedNotesFilePath = ['dsa', ...folderPathArr, fileItem.name].join('/');
+        selectedNotesFileExt = ext;
+        selectedNotesIsUserFile = false;
+
+        selectedFilePath = selectedNotesFilePath;
         selectedFileExt = ext;
+        selectedIsUserFile = false;
+
         selectedDsaName = baseTitle;
         selectedDsaType = 'file';
         selectedAlgoParentDs = null;
@@ -4266,7 +4330,10 @@
 
       const isSelected = item.virtualConfig
         ? (selectedDsaType === 'ds' && selectedDsaName === contextDs)
-        : (selectedDsaType !== 'ds' && selectedFilePath === itemVirtualPath);
+        : (selectedDsaType !== 'ds' && (
+            selectedNotesFilePath === itemVirtualPath ||
+            selectedPlaygroundFilePath === itemVirtualPath
+          ));
 
       const row = document.createElement('div');
       row.className = `tree-row${isSelected ? ' selected' : ''}`;
@@ -5748,9 +5815,9 @@
         if (!paramName) continue;
 
         const hasDefault = inp.getAttribute('data-has-default') === 'true';
-        // Normalize mobile keyboard smart quotes, unicode minus/dashes, and non-breaking spaces
-        const rawVal = inp.value
-          .replace(/[\u00A0\u2000-\u200B]/g, ' ')
+        // Strip zero-width spaces, directional marks, and normalize mobile punctuation
+        let rawVal = inp.value
+          .replace(/[\u200B-\u200F\uFEFF\u00A0]/g, '')
           .replace(/[“”]/g, '"')
           .replace(/[‘’]/g, "'")
           .replace(/[–—−]/g, '-')
@@ -5770,6 +5837,16 @@
           }
           continue;
         }
+
+        // Prevent Python "SyntaxError: invalid decimal literal" when mobile users enter  unquoted node labels / identifiers that start with a digit (e.g. 1A, 0x, 2_node) or plain strings
+        const isValidNumber = /^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?$/.test(rawVal);
+        const isQuotedString = (rawVal.startsWith('"') && rawVal.endsWith('"')) || (rawVal.startsWith("'") && rawVal.endsWith("'"));
+        const isPythonLiteral = /^(?:True|False|None|\[.*\]|\{.*\}|\(.*\))$/.test(rawVal);
+
+        if (!isValidNumber && !isQuotedString && !isPythonLiteral) {
+          rawVal = JSON.stringify(rawVal);
+        }
+
         rawKwargs[paramName] = rawVal;
       }
 
@@ -5779,23 +5856,22 @@
 
       try {
         const fileBase = toSnakeCase(selectedDsaName);
-        const fnName = toSnakeCase(selectedDsaName);
         const dsFolder = selectedAlgoParentDs || activeObj.dsType;
 
         const algoModule = await importAlgorithmImplementationModule(dsFolder, fileBase);
-        const algoFn = algoModule ? (algoModule[fnName] || algoModule.default) : null;
+        const algoFn = algoModule ? (algoModule[fileBase] || algoModule.default) : null;
 
         if (typeof algoFn !== 'function') {
-          console.error(`Function "${fnName}" not found in ./dsa-implementation/algorithms/${toSnakeCase(dsFolder)}/${fileBase}.js`);
+          console.error(`Function "${fileBase}" not found in ./dsa-implementation/algorithms/${toSnakeCase(dsFolder)}/${fileBase}.js`);
           return false;
         }
 
-        let pythonCodeToRun = getCurrentRunnablePythonCode();
+        const pyPath = selectedNotesFilePath || ['dsa', ...selectedAlgoDirPath, 'Algorithms', `${fileBase}.py`].join('/');
+        let pythonCodeToRun = editedCodeCache[pyPath];
         if (!pythonCodeToRun) {
-          const pyPath = selectedFilePath || ['dsa', ...selectedAlgoDirPath, 'Algorithms', `${fileBase}.py`].join('/');
           const pyRes = await fetch(encodeURI(pyPath));
           if (pyRes.ok) {
-            pythonCodeToRun = (await pyRes.text()).replace(/\r\n?/g, '\n');
+            pythonCodeToRun = normalizeSpaces(await pyRes.text());
             editedCodeCache[pyPath] = pythonCodeToRun;
           }
         }
