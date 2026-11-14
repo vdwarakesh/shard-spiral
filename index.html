@@ -2876,11 +2876,12 @@
     }
 
     function normalizeSpaces(text = '') {
-      // Convert any hard tabs or non-breaking spaces into standard spaces
       return String(text || '')
         .replace(/\r\n?/g, '\n')
         .replace(/\t/g, '    ')
-        .replace(/\u00A0/g, ' ');
+        .replace(/[\u00A0\u200B-\u200F\uFEFF]/g, ' ')
+        .replace(/[“”]/g, '"')
+        .replace(/[‘’]/g, "'");
     }
 
     function isNotesOnlyExtension(ext) {
@@ -4331,9 +4332,9 @@
       const isSelected = item.virtualConfig
         ? (selectedDsaType === 'ds' && selectedDsaName === contextDs)
         : (selectedDsaType !== 'ds' && (
-            selectedNotesFilePath === itemVirtualPath ||
-            selectedPlaygroundFilePath === itemVirtualPath
-          ));
+          selectedNotesFilePath === itemVirtualPath ||
+          selectedPlaygroundFilePath === itemVirtualPath
+        ));
 
       const row = document.createElement('div');
       row.className = `tree-row${isSelected ? ' selected' : ''}`;
@@ -4641,8 +4642,8 @@
         const configItem = showThisDsImplementation ? children.find(c => c.virtualConfig) : null;
         const implFiles = showThisDsImplementation
           ? children
-              .filter(c => c.type === 'file' && !c.virtualConfig)
-              .sort((a, b) => a.name.localeCompare(b.name))
+            .filter(c => c.type === 'file' && !c.virtualConfig)
+            .sort((a, b) => a.name.localeCompare(b.name))
           : [];
 
         const algoFolderItem = children.find(
@@ -4773,7 +4774,7 @@
       }
     }
 
-   /* ========== Strict Folder Compatibility & Settings Card ========== */
+    /* ========== Strict Folder Compatibility & Settings Card ========== */
     function checkDataStructureRequirements(activeObj, requirements = {}) {
       if (!requirements || Object.keys(requirements).length === 0) return null;
 
@@ -5871,8 +5872,11 @@
         if (!pythonCodeToRun) {
           const pyRes = await fetch(encodeURI(pyPath));
           if (pyRes.ok) {
-            pythonCodeToRun = normalizeSpaces(await pyRes.text());
-            editedCodeCache[pyPath] = pythonCodeToRun;
+            const rawText = await pyRes.text();
+            if (!rawText.includes('<title>Shard Spiral</title>') && !rawText.trim().startsWith('<!DOCTYPE')) {
+              pythonCodeToRun = normalizeSpaces(rawText);
+              editedCodeCache[pyPath] = pythonCodeToRun;
+            }
           }
         }
 
