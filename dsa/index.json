@@ -1,0 +1,1842 @@
+{
+  "name": "dsa",
+  "type": "directory",
+  "children": [
+    {
+      "name": "Array",
+      "type": "directory",
+      "children": [
+        {
+          "name": "Algorithms",
+          "type": "directory",
+          "children": [
+            {
+              "name": "linear_search.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Dynamic Array",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "dynamic_array.cpp",
+              "type": "file"
+            },
+            {
+              "name": "dynamic_array.java",
+              "type": "file"
+            },
+            {
+              "name": "dynamic_array.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "Static Array",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "static_array.cpp",
+              "type": "file"
+            },
+            {
+              "name": "static_array.java",
+              "type": "file"
+            },
+            {
+              "name": "static_array.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "array.cpp",
+          "type": "file"
+        },
+        {
+          "name": "array.java",
+          "type": "file"
+        },
+        {
+          "name": "array.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "Bit-Based Structures",
+      "type": "directory",
+      "children": [
+        {
+          "name": "Bit Vector",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "bit_vector.cpp",
+              "type": "file"
+            },
+            {
+              "name": "bit_vector.java",
+              "type": "file"
+            },
+            {
+              "name": "bit_vector.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Bitset",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "bitset.cpp",
+              "type": "file"
+            },
+            {
+              "name": "bitset.java",
+              "type": "file"
+            },
+            {
+              "name": "bitset.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "bit_based_structures.cpp",
+          "type": "file"
+        },
+        {
+          "name": "bit_based_structures.java",
+          "type": "file"
+        },
+        {
+          "name": "bit_based_structures.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "Cache Structures",
+      "type": "directory",
+      "children": [
+        {
+          "name": "FIFO Cache",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "fifo_cache.cpp",
+              "type": "file"
+            },
+            {
+              "name": "fifo_cache.java",
+              "type": "file"
+            },
+            {
+              "name": "fifo_cache.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "LFU Cache",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "lfu_cache.cpp",
+              "type": "file"
+            },
+            {
+              "name": "lfu_cache.java",
+              "type": "file"
+            },
+            {
+              "name": "lfu_cache.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "LRU Cache",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "lru_cache.cpp",
+              "type": "file"
+            },
+            {
+              "name": "lru_cache.java",
+              "type": "file"
+            },
+            {
+              "name": "lru_cache.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "MRU Cache",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "mru_cache.cpp",
+              "type": "file"
+            },
+            {
+              "name": "mru_cache.java",
+              "type": "file"
+            },
+            {
+              "name": "mru_cache.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "cache_structures.cpp",
+          "type": "file"
+        },
+        {
+          "name": "cache_structures.java",
+          "type": "file"
+        },
+        {
+          "name": "cache_structures.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "Disjoint Set Union",
+      "type": "directory",
+      "children": [
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "disjoint_set_union.cpp",
+          "type": "file"
+        },
+        {
+          "name": "disjoint_set_union.java",
+          "type": "file"
+        },
+        {
+          "name": "disjoint_set_union.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "Graph",
+      "type": "directory",
+      "children": [
+        {
+          "name": "Algorithms",
+          "type": "directory",
+          "children": [
+            {
+              "name": "breadth_first_search_bfs.py",
+              "type": "file"
+            },
+            {
+              "name": "depth_first_search_dfs_iterative.py",
+              "type": "file"
+            },
+            {
+              "name": "depth_first_search_dfs_recursive.py",
+              "type": "file"
+            },
+            {
+              "name": "dijkstras_algorithm.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "graph.cpp",
+          "type": "file"
+        },
+        {
+          "name": "graph.java",
+          "type": "file"
+        },
+        {
+          "name": "graph.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "Hash-Based Structures",
+      "type": "directory",
+      "children": [
+        {
+          "name": "Hash Table",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Hash Map",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "hash_map.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "hash_map.java",
+                  "type": "file"
+                },
+                {
+                  "name": "hash_map.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Hash Set",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "hash_set.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "hash_set.java",
+                  "type": "file"
+                },
+                {
+                  "name": "hash_set.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "hash_table.cpp",
+              "type": "file"
+            },
+            {
+              "name": "hash_table.java",
+              "type": "file"
+            },
+            {
+              "name": "hash_table.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "hash_based_structures.cpp",
+          "type": "file"
+        },
+        {
+          "name": "hash_based_structures.java",
+          "type": "file"
+        },
+        {
+          "name": "hash_based_structures.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "Linked List",
+      "type": "directory",
+      "children": [
+        {
+          "name": "Circular Linked List",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Circular Doubly Linked List",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "circular_doubly_linked_list.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "circular_doubly_linked_list.java",
+                  "type": "file"
+                },
+                {
+                  "name": "circular_doubly_linked_list.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Circular Singly Linked List",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "circular_singly_linked_list.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "circular_singly_linked_list.java",
+                  "type": "file"
+                },
+                {
+                  "name": "circular_singly_linked_list.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "circular_linked_list.cpp",
+              "type": "file"
+            },
+            {
+              "name": "circular_linked_list.java",
+              "type": "file"
+            },
+            {
+              "name": "circular_linked_list.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Doubly Linked List",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "doubly_linked_list.cpp",
+              "type": "file"
+            },
+            {
+              "name": "doubly_linked_list.java",
+              "type": "file"
+            },
+            {
+              "name": "doubly_linked_list.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "Singly Linked List",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "singly_linked_list.cpp",
+              "type": "file"
+            },
+            {
+              "name": "singly_linked_list.java",
+              "type": "file"
+            },
+            {
+              "name": "singly_linked_list.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "linked_list.cpp",
+          "type": "file"
+        },
+        {
+          "name": "linked_list.java",
+          "type": "file"
+        },
+        {
+          "name": "linked_list.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "Matrix",
+      "type": "directory",
+      "children": [
+        {
+          "name": "Dense Matrix",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "dense_matrix.cpp",
+              "type": "file"
+            },
+            {
+              "name": "dense_matrix.java",
+              "type": "file"
+            },
+            {
+              "name": "dense_matrix.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "Sparse Matrix",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "sparse_matrix.cpp",
+              "type": "file"
+            },
+            {
+              "name": "sparse_matrix.java",
+              "type": "file"
+            },
+            {
+              "name": "sparse_matrix.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "matrix.cpp",
+          "type": "file"
+        },
+        {
+          "name": "matrix.java",
+          "type": "file"
+        },
+        {
+          "name": "matrix.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "Probabilistic Structures",
+      "type": "directory",
+      "children": [
+        {
+          "name": "Bloom Filter",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Counting Bloom Filter",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "counting_bloom_filter.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "counting_bloom_filter.java",
+                  "type": "file"
+                },
+                {
+                  "name": "counting_bloom_filter.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "bloom_filter.cpp",
+              "type": "file"
+            },
+            {
+              "name": "bloom_filter.java",
+              "type": "file"
+            },
+            {
+              "name": "bloom_filter.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Count-Min Sketch",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "count_min_sketch.cpp",
+              "type": "file"
+            },
+            {
+              "name": "count_min_sketch.java",
+              "type": "file"
+            },
+            {
+              "name": "count_min_sketch.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "HyperLogLog",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "hyper_log_log.cpp",
+              "type": "file"
+            },
+            {
+              "name": "hyper_log_log.java",
+              "type": "file"
+            },
+            {
+              "name": "hyper_log_log.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "probabilistic_structures.cpp",
+          "type": "file"
+        },
+        {
+          "name": "probabilistic_structures.java",
+          "type": "file"
+        },
+        {
+          "name": "probabilistic_structures.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "Queue",
+      "type": "directory",
+      "children": [
+        {
+          "name": "Circular Queue",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "circular_queue.cpp",
+              "type": "file"
+            },
+            {
+              "name": "circular_queue.java",
+              "type": "file"
+            },
+            {
+              "name": "circular_queue.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Deque",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "deque.cpp",
+              "type": "file"
+            },
+            {
+              "name": "deque.java",
+              "type": "file"
+            },
+            {
+              "name": "deque.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "Priority Queue",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "priority_queue.cpp",
+              "type": "file"
+            },
+            {
+              "name": "priority_queue.java",
+              "type": "file"
+            },
+            {
+              "name": "priority_queue.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "queue.cpp",
+          "type": "file"
+        },
+        {
+          "name": "queue.java",
+          "type": "file"
+        },
+        {
+          "name": "queue.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "Skip List",
+      "type": "directory",
+      "children": [
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "skip_list.cpp",
+          "type": "file"
+        },
+        {
+          "name": "skip_list.java",
+          "type": "file"
+        },
+        {
+          "name": "skip_list.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "Sparse Table",
+      "type": "directory",
+      "children": [
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "sparse_table.cpp",
+          "type": "file"
+        },
+        {
+          "name": "sparse_table.java",
+          "type": "file"
+        },
+        {
+          "name": "sparse_table.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "Stack",
+      "type": "directory",
+      "children": [
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "stack.cpp",
+          "type": "file"
+        },
+        {
+          "name": "stack.java",
+          "type": "file"
+        },
+        {
+          "name": "stack.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "String",
+      "type": "directory",
+      "children": [
+        {
+          "name": "Immutable String",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "immutable_string.cpp",
+              "type": "file"
+            },
+            {
+              "name": "immutable_string.java",
+              "type": "file"
+            },
+            {
+              "name": "immutable_string.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Mutable String",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "mutable_string.cpp",
+              "type": "file"
+            },
+            {
+              "name": "mutable_string.java",
+              "type": "file"
+            },
+            {
+              "name": "mutable_string.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "Suffix Array",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "suffix_array.cpp",
+              "type": "file"
+            },
+            {
+              "name": "suffix_array.java",
+              "type": "file"
+            },
+            {
+              "name": "suffix_array.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Suffix Automaton",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "suffix_automaton.cpp",
+              "type": "file"
+            },
+            {
+              "name": "suffix_automaton.java",
+              "type": "file"
+            },
+            {
+              "name": "suffix_automaton.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "string.cpp",
+          "type": "file"
+        },
+        {
+          "name": "string.java",
+          "type": "file"
+        },
+        {
+          "name": "string.py",
+          "type": "file"
+        }
+      ]
+    },
+    {
+      "name": "Tree",
+      "type": "directory",
+      "children": [
+        {
+          "name": "2-3 Tree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "2_3_tree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "2_3_tree.java",
+              "type": "file"
+            },
+            {
+              "name": "2_3_tree.py",
+              "type": "file"
+            },
+            {
+              "name": "Notes",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "2-3-4 Tree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "2_3_4_tree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "2_3_4_tree.java",
+              "type": "file"
+            },
+            {
+              "name": "2_3_4_tree.py",
+              "type": "file"
+            },
+            {
+              "name": "Notes",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "B-Tree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "B+ Tree",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "b_plus_tree.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "b_plus_tree.java",
+                  "type": "file"
+                },
+                {
+                  "name": "b_plus_tree.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "b_tree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "b_tree.java",
+              "type": "file"
+            },
+            {
+              "name": "b_tree.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Binary Tree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Binary Search Tree",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "AVL Tree",
+                  "type": "directory",
+                  "children": [
+                    {
+                      "name": "Notes",
+                      "type": "file"
+                    },
+                    {
+                      "name": "avl_tree.cpp",
+                      "type": "file"
+                    },
+                    {
+                      "name": "avl_tree.java",
+                      "type": "file"
+                    },
+                    {
+                      "name": "avl_tree.py",
+                      "type": "file"
+                    }
+                  ]
+                },
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "Order Statistic Tree",
+                  "type": "directory",
+                  "children": [
+                    {
+                      "name": "Notes",
+                      "type": "file"
+                    },
+                    {
+                      "name": "order_statistic_tree.cpp",
+                      "type": "file"
+                    },
+                    {
+                      "name": "order_statistic_tree.java",
+                      "type": "file"
+                    },
+                    {
+                      "name": "order_statistic_tree.py",
+                      "type": "file"
+                    }
+                  ]
+                },
+                {
+                  "name": "Red-Black Tree",
+                  "type": "directory",
+                  "children": [
+                    {
+                      "name": "Notes",
+                      "type": "file"
+                    },
+                    {
+                      "name": "red_black_tree.cpp",
+                      "type": "file"
+                    },
+                    {
+                      "name": "red_black_tree.java",
+                      "type": "file"
+                    },
+                    {
+                      "name": "red_black_tree.py",
+                      "type": "file"
+                    }
+                  ]
+                },
+                {
+                  "name": "Splay Tree",
+                  "type": "directory",
+                  "children": [
+                    {
+                      "name": "Notes",
+                      "type": "file"
+                    },
+                    {
+                      "name": "splay_tree.cpp",
+                      "type": "file"
+                    },
+                    {
+                      "name": "splay_tree.java",
+                      "type": "file"
+                    },
+                    {
+                      "name": "splay_tree.py",
+                      "type": "file"
+                    }
+                  ]
+                },
+                {
+                  "name": "Treap",
+                  "type": "directory",
+                  "children": [
+                    {
+                      "name": "Implicit Treap",
+                      "type": "directory",
+                      "children": [
+                        {
+                          "name": "Notes",
+                          "type": "file"
+                        },
+                        {
+                          "name": "implicit_treap.cpp",
+                          "type": "file"
+                        },
+                        {
+                          "name": "implicit_treap.java",
+                          "type": "file"
+                        },
+                        {
+                          "name": "implicit_treap.py",
+                          "type": "file"
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Notes",
+                      "type": "file"
+                    },
+                    {
+                      "name": "treap.cpp",
+                      "type": "file"
+                    },
+                    {
+                      "name": "treap.java",
+                      "type": "file"
+                    },
+                    {
+                      "name": "treap.py",
+                      "type": "file"
+                    }
+                  ]
+                },
+                {
+                  "name": "binary_search_tree.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "binary_search_tree.java",
+                  "type": "file"
+                },
+                {
+                  "name": "binary_search_tree.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "binary_tree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "binary_tree.java",
+              "type": "file"
+            },
+            {
+              "name": "binary_tree.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Dominator Tree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "dominator_tree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "dominator_tree.java",
+              "type": "file"
+            },
+            {
+              "name": "dominator_tree.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Eertree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "eertree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "eertree.java",
+              "type": "file"
+            },
+            {
+              "name": "eertree.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Euler Tour Tree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "euler_tour_tree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "euler_tour_tree.java",
+              "type": "file"
+            },
+            {
+              "name": "euler_tour_tree.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Fenwick Tree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "fenwick_tree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "fenwick_tree.java",
+              "type": "file"
+            },
+            {
+              "name": "fenwick_tree.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Gomory-Hu Tree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "gomory_hu_tree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "gomory_hu_tree.java",
+              "type": "file"
+            },
+            {
+              "name": "gomory_hu_tree.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Heap",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Binary Heap",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Max-Heap",
+                  "type": "directory",
+                  "children": [
+                    {
+                      "name": "Notes",
+                      "type": "file"
+                    },
+                    {
+                      "name": "max_heap.cpp",
+                      "type": "file"
+                    },
+                    {
+                      "name": "max_heap.java",
+                      "type": "file"
+                    },
+                    {
+                      "name": "max_heap.py",
+                      "type": "file"
+                    }
+                  ]
+                },
+                {
+                  "name": "Min-Heap",
+                  "type": "directory",
+                  "children": [
+                    {
+                      "name": "Notes",
+                      "type": "file"
+                    },
+                    {
+                      "name": "min_heap.cpp",
+                      "type": "file"
+                    },
+                    {
+                      "name": "min_heap.java",
+                      "type": "file"
+                    },
+                    {
+                      "name": "min_heap.py",
+                      "type": "file"
+                    }
+                  ]
+                },
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "binary_heap.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "binary_heap.java",
+                  "type": "file"
+                },
+                {
+                  "name": "binary_heap.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Binomial Heap",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "binomial_heap.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "binomial_heap.java",
+                  "type": "file"
+                },
+                {
+                  "name": "binomial_heap.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Fibonacci Heap",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "fibonacci_heap.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "fibonacci_heap.java",
+                  "type": "file"
+                },
+                {
+                  "name": "fibonacci_heap.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "heap.cpp",
+              "type": "file"
+            },
+            {
+              "name": "heap.java",
+              "type": "file"
+            },
+            {
+              "name": "heap.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Link-Cut Tree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "link_cut_tree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "link_cut_tree.java",
+              "type": "file"
+            },
+            {
+              "name": "link_cut_tree.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Notes",
+          "type": "file"
+        },
+        {
+          "name": "Segment Tree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Dynamic Segment Tree",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "dynamic_segment_tree.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "dynamic_segment_tree.java",
+                  "type": "file"
+                },
+                {
+                  "name": "dynamic_segment_tree.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Li Chao Tree",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "li_chao_tree.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "li_chao_tree.java",
+                  "type": "file"
+                },
+                {
+                  "name": "li_chao_tree.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Merge Sort Tree",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "merge_sort_tree.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "merge_sort_tree.java",
+                  "type": "file"
+                },
+                {
+                  "name": "merge_sort_tree.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "Persistent Segment Tree",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "persistent_segment_tree.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "persistent_segment_tree.java",
+                  "type": "file"
+                },
+                {
+                  "name": "persistent_segment_tree.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "segment_tree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "segment_tree.java",
+              "type": "file"
+            },
+            {
+              "name": "segment_tree.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Suffix Tree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "suffix_tree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "suffix_tree.java",
+              "type": "file"
+            },
+            {
+              "name": "suffix_tree.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Top Tree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "top_tree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "top_tree.java",
+              "type": "file"
+            },
+            {
+              "name": "top_tree.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Trie",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Compressed Trie",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "Patricia Trie",
+                  "type": "directory",
+                  "children": [
+                    {
+                      "name": "Notes",
+                      "type": "file"
+                    },
+                    {
+                      "name": "patricia_trie.cpp",
+                      "type": "file"
+                    },
+                    {
+                      "name": "patricia_trie.java",
+                      "type": "file"
+                    },
+                    {
+                      "name": "patricia_trie.py",
+                      "type": "file"
+                    }
+                  ]
+                },
+                {
+                  "name": "Radix Trie",
+                  "type": "directory",
+                  "children": [
+                    {
+                      "name": "Notes",
+                      "type": "file"
+                    },
+                    {
+                      "name": "radix_trie.cpp",
+                      "type": "file"
+                    },
+                    {
+                      "name": "radix_trie.java",
+                      "type": "file"
+                    },
+                    {
+                      "name": "radix_trie.py",
+                      "type": "file"
+                    }
+                  ]
+                },
+                {
+                  "name": "compressed_trie.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "compressed_trie.java",
+                  "type": "file"
+                },
+                {
+                  "name": "compressed_trie.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "Suffix Trie",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "suffix_trie.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "suffix_trie.java",
+                  "type": "file"
+                },
+                {
+                  "name": "suffix_trie.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "XOR Trie",
+              "type": "directory",
+              "children": [
+                {
+                  "name": "Notes",
+                  "type": "file"
+                },
+                {
+                  "name": "xor_trie.cpp",
+                  "type": "file"
+                },
+                {
+                  "name": "xor_trie.java",
+                  "type": "file"
+                },
+                {
+                  "name": "xor_trie.py",
+                  "type": "file"
+                }
+              ]
+            },
+            {
+              "name": "trie.cpp",
+              "type": "file"
+            },
+            {
+              "name": "trie.java",
+              "type": "file"
+            },
+            {
+              "name": "trie.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "Wavelet Tree",
+          "type": "directory",
+          "children": [
+            {
+              "name": "Notes",
+              "type": "file"
+            },
+            {
+              "name": "wavelet_tree.cpp",
+              "type": "file"
+            },
+            {
+              "name": "wavelet_tree.java",
+              "type": "file"
+            },
+            {
+              "name": "wavelet_tree.py",
+              "type": "file"
+            }
+          ]
+        },
+        {
+          "name": "tree.cpp",
+          "type": "file"
+        },
+        {
+          "name": "tree.java",
+          "type": "file"
+        },
+        {
+          "name": "tree.py",
+          "type": "file"
+        }
+      ]
+    }
+  ]
+}

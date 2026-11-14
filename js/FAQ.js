@@ -68,7 +68,7 @@ const FAQ_ITEMS = [
         category: 'Metadata & History',
         question: 'Where can I view Metadata for my active data structure?',
         title: 'Metadata',
-        answer: 'Displays key structural properties about the active data structure—such as length, whether elements are sorted or unique, and min/max values. On desktop, expand the left sidebar strip; on mobile, tap the History button in the top bar.'
+        answer: 'Displays key structural properties about the active data structure-such as length, whether elements are sorted or unique, and min/max values. On desktop, expand the left sidebar strip; on mobile, tap the History button in the top bar.'
     },
     {
         id: 'history',

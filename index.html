@@ -742,7 +742,7 @@
                   style="display: none;">&times;</button>
               </div>
               <button type="button" id="algo-lang-filter-btn" class="algo-filter-btn has-active-filter"
-                title="Implementation Language: Python (.py) — Click to cycle" aria-pressed="true">
+                title="Implementation Language: Python (.py) - Click to cycle" aria-pressed="true">
                 <img id="algo-lang-filter-img" src="images/python.png" alt="Python" class="algo-filter-icon" />
               </button>
               <button type="button" id="algo-notes-filter-btn" class="algo-filter-btn" title="Hide Notes / HTML Files"
@@ -3737,151 +3737,6 @@
       }
     }
 
-    function buildStaticDsaDirectoryTree() {
-      const dsNode = (name, subDirs = [], algos = [], customPy = null) => {
-        const baseSnake = toSnakeCase(name);
-        const pyFile = customPy || `${baseSnake}.py`;
-        const algoFiles = [];
-        algos.forEach(a => {
-          const base = a.replace(/\.[^.]+$/, '');
-          algoFiles.push({ name: `${base}.py`, type: 'file' });
-          algoFiles.push({ name: `${base}.cpp`, type: 'file' });
-          algoFiles.push({ name: `${base}.java`, type: 'file' });
-          algoFiles.push({ name: `${base}.html`, type: 'file' });
-        });
-
-        const children = [
-          ...subDirs,
-          ...(algoFiles.length > 0 ? [{
-            name: 'Algorithms',
-            type: 'directory',
-            children: algoFiles
-          }] : []),
-          { name: pyFile, type: 'file' },
-          { name: `${baseSnake}.cpp`, type: 'file' },
-          { name: `${baseSnake}.java`, type: 'file' },
-          { name: 'Notes', type: 'file' }
-        ];
-        return { name, type: 'directory', children };
-      };
-
-      return {
-        name: 'dsa',
-        type: 'directory',
-        children: [
-          dsNode('Array', [
-            dsNode('Dynamic Array'),
-            dsNode('Static Array')
-          ], ['linear_search.py']),
-          dsNode('Bit-Based Structures', [
-            dsNode('Bit Vector'),
-            dsNode('Bitset')
-          ]),
-          dsNode('Cache Structures', [
-            dsNode('FIFO Cache'),
-            dsNode('LFU Cache'),
-            dsNode('LRU Cache'),
-            dsNode('MRU Cache')
-          ]),
-          dsNode('Disjoint Set Union'),
-          dsNode('Graph', [], [
-            'breadth_first_search_bfs.py',
-            'depth_first_search_dfs_iterative.py',
-            'depth_first_search_dfs_recursive.py',
-            'dijkstras_algorithm.py'
-          ]),
-          dsNode('Hash-Based Structures', [
-            dsNode('Hash Table', [
-              dsNode('Hash Map'),
-              dsNode('Hash Set')
-            ])
-          ]),
-          dsNode('Linked List', [
-            dsNode('Circular Linked List', [
-              dsNode('Circular Doubly Linked List'),
-              dsNode('Circular Singly Linked List')
-            ]),
-            dsNode('Doubly Linked List'),
-            dsNode('Singly Linked List')
-          ]),
-          dsNode('Matrix', [
-            dsNode('Dense Matrix'),
-            dsNode('Sparse Matrix')
-          ]),
-          dsNode('Probabilistic Structures', [
-            dsNode('Bloom Filter', [
-              dsNode('Counting Bloom Filter')
-            ]),
-            dsNode('Count-Min Sketch'),
-            dsNode('HyperLogLog', [], [], 'hyper_log_log.py')
-          ]),
-          dsNode('Queue', [
-            dsNode('Circular Queue'),
-            dsNode('Deque'),
-            dsNode('Priority Queue')
-          ]),
-          dsNode('Skip List'),
-          dsNode('Sparse Table'),
-          dsNode('Stack'),
-          dsNode('String', [
-            dsNode('Immutable String'),
-            dsNode('Mutable String'),
-            dsNode('Suffix Array'),
-            dsNode('Suffix Automaton')
-          ]),
-          dsNode('Tree', [
-            dsNode('2-3 Tree'),
-            dsNode('2-3-4 Tree'),
-            dsNode('B-Tree', [
-              dsNode('B+ Tree')
-            ]),
-            dsNode('Binary Tree', [
-              dsNode('Binary Search Tree', [
-                dsNode('AVL Tree'),
-                dsNode('Order Statistic Tree'),
-                dsNode('Red-Black Tree'),
-                dsNode('Splay Tree'),
-                dsNode('Treap', [
-                  dsNode('Implicit Treap')
-                ])
-              ])
-            ]),
-            dsNode('Dominator Tree'),
-            dsNode('Eertree'),
-            dsNode('Euler Tour Tree'),
-            dsNode('Fenwick Tree'),
-            dsNode('Gomory-Hu Tree'),
-            dsNode('Heap', [
-              dsNode('Binary Heap', [
-                dsNode('Max-Heap'),
-                dsNode('Min-Heap')
-              ]),
-              dsNode('Binomial Heap'),
-              dsNode('Fibonacci Heap')
-            ]),
-            dsNode('Link-Cut Tree'),
-            dsNode('Segment Tree', [
-              dsNode('Dynamic Segment Tree'),
-              dsNode('Li Chao Tree'),
-              dsNode('Merge Sort Tree'),
-              dsNode('Persistent Segment Tree')
-            ]),
-            dsNode('Suffix Tree'),
-            dsNode('Top Tree'),
-            dsNode('Trie', [
-              dsNode('Compressed Trie', [
-                dsNode('Patricia Trie'),
-                dsNode('Radix Trie')
-              ]),
-              dsNode('Suffix Trie'),
-              dsNode('XOR Trie')
-            ]),
-            dsNode('Wavelet Tree')
-          ])
-        ]
-      };
-    }
-
     function ensureGuaranteedFoldersAndConfig(dirNode, isRoot = false, parentIsUserFolder = false) {
       if (!dirNode || dirNode.type !== 'directory') return;
       dirNode.children = dirNode.children || [];
@@ -5487,19 +5342,32 @@
         attributesDescJson = attrRes.ok ? await attrRes.json() : {};
         syllabusJson = syllRes.ok ? await syllRes.json() : { "data-structures": [], "algorithms": [] };
 
+        // 1. Try live directory auto-indexing
         let scannedTree = await parseApacheOrJsonDirectory('./dsa/');
+
+        // 2. Try the generated JSON manifest
         if (!scannedTree) {
           scannedTree = await parseApacheOrJsonDirectory('./dsa/index.json');
         }
-        dsaDirectoryTree = scannedTree || buildStaticDsaDirectoryTree();
+
+        // 3. Throw an error if neither exists (fallback is removed)
+        if (!scannedTree) {
+          throw new Error("Could not find ./dsa/ live directory or ./dsa/index.json. Please run generate_tree.py.");
+        }
+
+        dsaDirectoryTree = scannedTree;
         ensureGuaranteedFoldersAndConfig(dsaDirectoryTree, true, false);
 
-        // Preload algorithm .txt tag files in the background for search & constraints
+        // Preload algorithm .html tag files in the background for search & constraints
         preloadAllAlgoTagFiles(dsaDirectoryTree, []);
 
         renderMainAlgoTree();
       } catch (err) {
-        algoTreeContainer.innerHTML = `<div class="algo-empty-msg">Failed to load ./dsa directory structure.</div>`;
+        algoTreeContainer.innerHTML = `
+          <div class="algo-empty-msg" style="color: #ef4444; line-height: 1.5;">
+            ${err.message || 'Failed to load ./dsa directory structure.'}
+          </div>
+        `;
       }
     }
 
@@ -5549,7 +5417,7 @@
         algoLangFilterImg.src = mode.icon;
         algoLangFilterImg.alt = mode.label;
       }
-      algoLangFilterBtn.title = `Implementation Language: ${mode.label} — Click to cycle`;
+      algoLangFilterBtn.title = `Implementation Language: ${mode.label} - Click to cycle`;
       renderMainAlgoTree();
     });
 
@@ -5918,7 +5786,7 @@
           .replace(/[\u200B-\u200F\uFEFF\u00A0]/g, '')
           .replace(/[“”]/g, '"')
           .replace(/[‘’]/g, "'")
-          .replace(/[–—−]/g, '-')
+          .replace(/[–-−]/g, '-')
           .trim();
 
         if (rawVal === '') {
