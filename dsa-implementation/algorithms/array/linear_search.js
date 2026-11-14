@@ -1,19 +1,12 @@
 import { getContainerArrayData } from '../../data-structures/array/array.js';
 import { tracePythonAlgorithm } from '../../../js/pyodide-runner.js';
 
-export async function linear_search(containerEl, rawKwargs = {}, options = {}) {
+export async function linear_search(containerEl, rawKwargs = {}) {
   const data = getContainerArrayData(containerEl);
   const arrValues = data.map((d) => d.value);
 
-  let pythonCode = options.pythonCode;
-  if (!pythonCode) {
-    const pyUrl = new URL('../../../dsa/Array/Algorithms/linear_search.py', import.meta.url);
-    const res = await fetch(pyUrl);
-    if (!res.ok) {
-      throw new Error(`Failed to load Python file (${res.status})`);
-    }
-    pythonCode = await res.text();
-  }
+  const res = await fetch('../../../dsa/Array/Algorithms/linear_search.py');
+  const pythonCode = await res.text();
 
   const { steps: pyFrames, error } = await tracePythonAlgorithm({
     dsCategory: 'array',

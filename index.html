@@ -5839,7 +5839,7 @@
           continue;
         }
 
-        // Prevent Python "SyntaxError: invalid decimal literal" when mobile users enter  unquoted node labels / identifiers that start with a digit (e.g. 1A, 0x, 2_node) or plain strings
+        // Prevent Python "SyntaxError: invalid decimal literal" when mobile users enter unquoted node labels / identifiers that start with a digit (e.g. 1A, 0x, 2_node) or plain strings
         const isValidNumber = /^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?$/.test(rawVal);
         const isQuotedString = (rawVal.startsWith('"') && rawVal.endsWith('"')) || (rawVal.startsWith("'") && rawVal.endsWith("'"));
         const isPythonLiteral = /^(?:True|False|None|\[.*\]|\{.*\}|\(.*\))$/.test(rawVal);
@@ -5872,11 +5872,8 @@
         if (!pythonCodeToRun) {
           const pyRes = await fetch(encodeURI(pyPath));
           if (pyRes.ok) {
-            const rawText = await pyRes.text();
-            if (!rawText.includes('<title>Shard Spiral</title>') && !rawText.trim().startsWith('<!DOCTYPE')) {
-              pythonCodeToRun = normalizeSpaces(rawText);
-              editedCodeCache[pyPath] = pythonCodeToRun;
-            }
+            pythonCodeToRun = normalizeSpaces(await pyRes.text());
+            editedCodeCache[pyPath] = pythonCodeToRun;
           }
         }
 
