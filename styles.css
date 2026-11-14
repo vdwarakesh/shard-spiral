@@ -1717,6 +1717,12 @@ input[type="range"].vscode-slider::-moz-range-thumb:hover {
     background-color: var(--bg-hover);
 }
 
+.tree-row.selected {
+    background-color: var(--bg-active-item);
+    font-weight: 600;
+    color: var(--text-bright);
+}
+
 .tree-row.selected .algo-dot {
     /* .tree-row.selected .algo-dot fills the bullet dot of a selected algorithm row with bright text color */
     background-color: var(--text-bright);

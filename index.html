@@ -741,6 +741,14 @@
                 <button type="button" id="algo-search-clear-btn" class="algo-search-clear-btn" aria-label="Clear search"
                   style="display: none;">&times;</button>
               </div>
+              <button type="button" id="algo-lang-filter-btn" class="algo-filter-btn has-active-filter"
+                title="Implementation Language: Python (.py) — Click to cycle" aria-pressed="true">
+                <img id="algo-lang-filter-img" src="images/python.png" alt="Python" class="algo-filter-icon" />
+              </button>
+              <button type="button" id="algo-notes-filter-btn" class="algo-filter-btn" title="Hide Notes / HTML Files"
+                aria-pressed="false">
+                <img src="images/notes.png" alt="Hide Notes" class="algo-filter-icon" />
+              </button>
               <button type="button" id="algo-fav-filter-btn" class="algo-filter-btn" title="Show Favourites Only"
                 aria-pressed="false">
                 <img src="images/favourite-selection.png" alt="Favourites" class="algo-filter-icon" />
@@ -1131,6 +1139,9 @@
     const algoSyllabusFilterBtn = document.getElementById('algo-syllabus-filter-btn');
     const algoCompatibleFilterBtn = document.getElementById('algo-compatible-filter-btn');
     const algoTreeContainer = document.getElementById('algo-tree-container');
+    const algoLangFilterBtn = document.getElementById('algo-lang-filter-btn');
+    const algoLangFilterImg = document.getElementById('algo-lang-filter-img');
+    const algoNotesFilterBtn = document.getElementById('algo-notes-filter-btn');
 
     /* Code / Notes Card & State / Explanation Card DOM Elements */
     const codeViewPane = document.getElementById('codeViewPane');
@@ -1199,6 +1210,13 @@
     let isFavFilterActive = false;
     let isSyllabusFilterActive = true;
     let isCompatibleFilterActive = false;
+    let isHideNotesFilterActive = false;
+    const LANG_FILTER_MODES = [
+      { ext: '.py', label: 'Python (.py)', icon: 'images/python.png' },
+      { ext: '.cpp', label: 'C++ (.cpp)', icon: 'images/cpp.png' },
+      { ext: '.java', label: 'Java (.java)', icon: 'images/java.png' }
+    ];
+    let currentLangFilterIdx = 0; // Default: Python (.py)
     let favouritesSet = new Set();
 
     // Code / Notes & State / Explanation Tab State
@@ -3204,10 +3222,7 @@
               });
             }
           } else {
-            const renderedHtml = selectedNotesFileExt === '.txt'
-              ? `<pre style="margin: 0; font-family: 'Noto Sans Mono', monospace; white-space: pre-wrap;">${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>`
-              : text;
-            codeViewPane.innerHTML = `<div class="card-inner-pad notes-content">${renderedHtml}</div>`;
+            codeViewPane.innerHTML = `<div class="card-inner-pad notes-content">${text}</div>`;
           }
         }
       } catch (err) {
@@ -3724,12 +3739,15 @@
 
     function buildStaticDsaDirectoryTree() {
       const dsNode = (name, subDirs = [], algos = [], customPy = null) => {
-        const pyFile = customPy || `${toSnakeCase(name)}.py`;
+        const baseSnake = toSnakeCase(name);
+        const pyFile = customPy || `${baseSnake}.py`;
         const algoFiles = [];
         algos.forEach(a => {
-          algoFiles.push({ name: a, type: 'file' });
           const base = a.replace(/\.[^.]+$/, '');
-          algoFiles.push({ name: `${base}_tags.txt`, type: 'file' });
+          algoFiles.push({ name: `${base}.py`, type: 'file' });
+          algoFiles.push({ name: `${base}.cpp`, type: 'file' });
+          algoFiles.push({ name: `${base}.java`, type: 'file' });
+          algoFiles.push({ name: `${base}.html`, type: 'file' });
         });
 
         const children = [
@@ -3740,6 +3758,8 @@
             children: algoFiles
           }] : []),
           { name: pyFile, type: 'file' },
+          { name: `${baseSnake}.cpp`, type: 'file' },
+          { name: `${baseSnake}.java`, type: 'file' },
           { name: 'Notes', type: 'file' }
         ];
         return { name, type: 'directory', children };
@@ -3971,19 +3991,27 @@
 
     async function fetchAlgoTagsAndConstraints(dsFolderPathArr, algoBaseName) {
       const fileBase = toSnakeCase(algoBaseName);
-      const txtPath = ['dsa', ...dsFolderPathArr, 'Algorithms', `${fileBase}_tags.txt`].join('/');
-      if (algoTxtTagsCache[txtPath]) return algoTxtTagsCache[txtPath];
+      const htmlPath = ['dsa', ...dsFolderPathArr, 'Algorithms', `${fileBase}.html`].join('/');
+      if (algoTxtTagsCache[htmlPath]) return algoTxtTagsCache[htmlPath];
 
       const result = { tags: [], constraints: {} };
       try {
-        const res = await fetch(encodeURI(txtPath));
+        const res = await fetch(encodeURI(htmlPath));
         if (res.ok) {
           const rawText = await res.text();
           if (!rawText.includes('<title>Shard Spiral</title>')) {
-            // Normalize line endings and read only until the first blank line (\n\n)
             const normalized = rawText.replace(/\r\n?/g, '\n');
-            const headerBlock = normalized.split('\n\n')[0] || '';
-            const lines = headerBlock.split('\n').map(s => s.trim()).filter(Boolean);
+            // Read only until \n\n (or before <html> / <!doctype html> if present earlier)
+            let headerBlock = normalized.split('\n\n')[0] || '';
+            const htmlTagIdx = headerBlock.search(/<\s*(!doctype|html)\b/i);
+            if (htmlTagIdx !== -1) {
+              headerBlock = headerBlock.slice(0, htmlTagIdx);
+            }
+
+            const lines = headerBlock
+              .split('\n')
+              .map(s => s.trim())
+              .filter(line => line && !line.startsWith('<'));
 
             for (const token of lines) {
               if (token.includes(':')) {
@@ -3997,7 +4025,7 @@
         }
       } catch (e) { }
 
-      algoTxtTagsCache[txtPath] = result;
+      algoTxtTagsCache[htmlPath] = result;
       return result;
     }
 
@@ -4473,9 +4501,36 @@
         return true;
       }
 
+      function isStandardNotesOrHtmlFile(item) {
+        if (item.isUserItem || item.virtualConfig) return false;
+        const ext = getFileExtension(item.name);
+        return item.name === 'Notes' || ext === '.html' || ext === '';
+      }
+
+      function isStandardCodeFileAllowedByLangFilter(item) {
+        if (item.isUserItem || item.virtualConfig) return true;
+        const ext = getFileExtension(item.name);
+        if (ext === '.py' || ext === '.cpp' || ext === '.c' || ext === '.java') {
+          const activeLangExt = LANG_FILTER_MODES[currentLangFilterIdx].ext;
+          return ext === activeLangExt;
+        }
+        return true;
+      }
+
       // Checks whether a file inside a folder should be shown under current filters
       function filePassesFilters(item, folderPathArr) {
+        // User-defined files in "My Files" / "My <DS> Files" are never hidden by Notes or Language filters
         if (item.isUserItem || isPathInsideUserFolder(folderPathArr)) return true;
+
+        // 1. Hide standard HTML / Notes files when Hide Notes filter is active
+        if (isHideNotesFilterActive && isStandardNotesOrHtmlFile(item)) {
+          return false;
+        }
+
+        // 2. Hide standard code files (.py, .cpp, .java) that don't match the selected language filter
+        if (!isStandardCodeFileAllowedByLangFilter(item)) {
+          return false;
+        }
 
         const inAlgoFolder = folderPathArr[folderPathArr.length - 1] === 'Algorithms';
         const contextDs = resolveContextDsFromPath(folderPathArr);
@@ -4484,7 +4539,7 @@
           return algoFileMatchesFilters(item.name, contextDs);
         }
 
-        // Implementation details ("Configure & Generate", "Notes", "<ds>.py") belong to contextDs
+        // Implementation details ("Configure & Generate", "Notes", "<ds>.py/.cpp/.java") belong to contextDs
         return dsSelfMatchesFilters(contextDs);
       }
 
@@ -4543,8 +4598,8 @@
 
             if (!matches && inAlgoDir && item.type === 'file') {
               const base = stripFileExtension(item.name);
-              const txtPath = ['dsa', ...pathArr, `${toSnakeCase(base)}_tags.txt`].join('/');
-              const tagData = algoTxtTagsCache[txtPath];
+              const htmlPath = ['dsa', ...pathArr, `${toSnakeCase(base)}.html`].join('/');
+              const tagData = algoTxtTagsCache[htmlPath];
               if (tagData && Array.isArray(tagData.tags)) {
                 matches = tagData.tags.some(t => isExactOrAcronymMatch(rawQuery, t) || isSubsequenceMatch(rawQuery, t));
               }
@@ -4664,7 +4719,7 @@
         const configItem = showThisDsImplementation ? children.find(c => c.virtualConfig) : null;
         const implFiles = showThisDsImplementation
           ? children
-            .filter(c => c.type === 'file' && !c.virtualConfig)
+            .filter(c => c.type === 'file' && !c.virtualConfig && filePassesFilters(c, currentFsPath))
             .sort((a, b) => a.name.localeCompare(b.name))
           : [];
 
@@ -4864,8 +4919,8 @@
       if (isAlgoSelected && activeObj && selectedAlgoParentDs) {
         if (activeObj.dsType.toLowerCase() === selectedAlgoParentDs.toLowerCase()) {
           isCompatible = true;
-          const txtKey = ['dsa', ...selectedAlgoDirPath, 'Algorithms', `${toSnakeCase(selectedDsaName)}_tags.txt`].join('/');
-          const tagMeta = algoTxtTagsCache[txtKey];
+          const htmlKey = ['dsa', ...selectedAlgoDirPath, 'Algorithms', `${toSnakeCase(selectedDsaName)}.html`].join('/');
+          const tagMeta = algoTxtTagsCache[htmlKey];
           if (tagMeta && tagMeta.constraints) {
             requirementError = checkDataStructureRequirements(activeObj, tagMeta.constraints);
           }
@@ -5483,6 +5538,26 @@
       isCompatibleFilterActive = !isCompatibleFilterActive;
       algoCompatibleFilterBtn.classList.toggle('has-active-filter', isCompatibleFilterActive);
       algoCompatibleFilterBtn.setAttribute('aria-pressed', String(isCompatibleFilterActive));
+      renderMainAlgoTree();
+    });
+
+    algoLangFilterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentLangFilterIdx = (currentLangFilterIdx + 1) % LANG_FILTER_MODES.length;
+      const mode = LANG_FILTER_MODES[currentLangFilterIdx];
+      if (algoLangFilterImg) {
+        algoLangFilterImg.src = mode.icon;
+        algoLangFilterImg.alt = mode.label;
+      }
+      algoLangFilterBtn.title = `Implementation Language: ${mode.label} — Click to cycle`;
+      renderMainAlgoTree();
+    });
+
+    algoNotesFilterBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      isHideNotesFilterActive = !isHideNotesFilterActive;
+      algoNotesFilterBtn.classList.toggle('has-active-filter', isHideNotesFilterActive);
+      algoNotesFilterBtn.setAttribute('aria-pressed', String(isHideNotesFilterActive));
       renderMainAlgoTree();
     });
 
