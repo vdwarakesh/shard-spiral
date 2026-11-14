@@ -4497,7 +4497,10 @@
         walkSearch([]);
 
         if (results.length === 0) {
-          algoTreeContainer.innerHTML = `<div class="algo-empty-msg">No matching files, folders, or tags.</div>`;
+          const emptyMsg = document.createElement('div');
+          emptyMsg.className = 'algo-empty-msg';
+          emptyMsg.textContent = 'No matching files, folders, or tags.';
+          algoTreeContainer.appendChild(emptyMsg);
           return;
         }
         results.forEach(el => algoTreeContainer.appendChild(el));
@@ -4641,7 +4644,10 @@
         }
 
         if (!hasRenderedAnySection) {
-          algoTreeContainer.innerHTML += `<div class="algo-empty-msg">No matching items in this folder for the active filters.</div>`;
+          const emptyMsg = document.createElement('div');
+          emptyMsg.className = 'algo-empty-msg';
+          emptyMsg.textContent = 'No matching items in this folder for the active filters.';
+          algoTreeContainer.appendChild(emptyMsg);
         }
         return;
       }
@@ -4671,7 +4677,10 @@
         }
 
         if (renderedCount === 0) {
-          algoTreeContainer.innerHTML += `<div class="algo-empty-msg">No matching data structures or algorithms for the active filters.</div>`;
+          const emptyMsg = document.createElement('div');
+          emptyMsg.className = 'algo-empty-msg';
+          emptyMsg.textContent = 'No matching data structures or algorithms for the active filters.';
+          algoTreeContainer.appendChild(emptyMsg);
         }
         return;
       }
@@ -4702,7 +4711,10 @@
         const msg = insideUserFolder
           ? 'Folder is empty. Right-click here to create a new file/folder or upload files/folders (5 MB max).'
           : 'No matching items in this folder.';
-        algoTreeContainer.innerHTML += `<div class="algo-empty-msg">${msg}</div>`;
+        const emptyMsg = document.createElement('div');
+        emptyMsg.className = 'algo-empty-msg';
+        emptyMsg.textContent = msg;
+        algoTreeContainer.appendChild(emptyMsg);
       }
     }
 
