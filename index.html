@@ -3211,9 +3211,23 @@
           // HTML Notes (built-in Notes or user-created extensionless/.txt/.html file)
           codeEditorInstance = null;
           activeSimLineHandle = null;
+
+          let displayHtml = text;
+
+          // Hide the metadata block (tags/constraints) at the top of .html files from the user
+          if (selectedNotesFileExt === '.html') {
+            const trimmed = displayHtml.trimStart();
+            if (trimmed && !trimmed.startsWith('<')) {
+              const firstTagIdx = displayHtml.indexOf('<');
+              if (firstTagIdx !== -1) {
+                displayHtml = displayHtml.slice(firstTagIdx).trimStart();
+              }
+            }
+          }
+
           if (selectedNotesIsUserFile) {
             codeViewPane.innerHTML = `
-              <div class="card-inner-pad notes-content" contenteditable="true" id="editable-user-notes" style="outline: none; min-height: 100%;">${text || '<p>Start typing your notes...</p>'}</div>
+              <div class="card-inner-pad notes-content" contenteditable="true" id="editable-user-notes" style="outline: none; min-height: 100%;">${displayHtml || '<p>Start typing your notes...</p>'}</div>
             `;
             const editableEl = document.getElementById('editable-user-notes');
             if (editableEl) {
@@ -3222,7 +3236,7 @@
               });
             }
           } else {
-            codeViewPane.innerHTML = `<div class="card-inner-pad notes-content">${text}</div>`;
+            codeViewPane.innerHTML = `<div class="card-inner-pad notes-content">${displayHtml}</div>`;
           }
         }
       } catch (err) {

@@ -1,0 +1,39 @@
+search
+array
+unsorted
+
+<h1>Linear Search</h1>
+
+<p>Linear Search is one of the simplest and most straightforward searching algorithms. It finds a specific target value within a collection by checking every single element, one by one, from the beginning to the end, until a match is found or the collection is exhausted.</p>
+
+<p>Imagine you are looking for a specific book on an unorganized shelf. Because the books aren't sorted by title or author, you have no choice but to pick up the first book, check its cover, and if it's not the one you want, move on to the next. You repeat this until you find your book or run out of books to check. Linear Search works exactly like this.</p><br>
+
+<h2>Understanding the Basic Terminology</h2>
+
+<p><strong>Target:</strong> The specific value or element you are trying to find within the data structure.</p>
+
+<p><strong>Current Element:</strong> The item currently being examined and compared against the target value.</p>
+
+<p><strong>Match:</strong> The condition where the current element is exactly equal to the target value.</p>
+
+<p><strong>Exhaustion:</strong> Reaching the very end of the data structure without finding the target, meaning the item does not exist in the collection.</p><br>
+
+<h2>How Does Linear Search Work Conceptually?</h2>
+
+<p>When the algorithm starts, it points to the very first element (index <code>0</code>) of the array or list. It compares this element to the target. If they match, the search is successful, and it immediately returns the current position.</p>
+
+<p>If they do not match, the algorithm simply increments its position and moves to the next adjacent element. This step-by-step process continues. Because it might have to check every single item if the target is at the very end (or not there at all), the time it takes grows directly in proportion to the size of the dataset. This is known as <strong>linear time complexity</strong> or <strong>O(N)</strong>.</p><br>
+
+<h2>Where Is Linear Search Used in the Real World?</h2>
+
+<p><strong>Small Datasets:</strong> For very small arrays or lists, the simplicity of linear search often makes it faster than setting up more complex algorithms.</p>
+
+<p><strong>Unsorted Data:</strong> When data is constantly changing or not sorted, linear search is often the only way to find an item without paying the performance cost to sort the data first.</p>
+
+<p><strong>Finding Uniqueness:</strong> Checking if a newly registered username or email already exists in an unsorted historical log.</p>
+
+<p><strong>Streamed Data:</strong> Searching through incoming data that arrives sequentially over a network where you cannot look ahead.</p><br>
+
+<h2>Summary</h2>
+
+<p>Linear Search is the "brute force" method of finding an item. While it isn't the fastest approach for massive amounts of data, it is universally applicable, requires absolutely no special ordering, and is the foundational starting point for learning algorithmic searching.</p>
