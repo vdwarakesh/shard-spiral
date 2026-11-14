@@ -2760,40 +2760,6 @@
       return step.lines?.[langName] ? step.lines[langName][step.activeLineKey] : '';
     }
 
-    function getCurrentRunnablePythonCode() {
-      if (activeRightTopTab === 'playground') {
-        if (codeEditorInstance && codeEditorInstance._loadedCacheKey === '__playground__') {
-          playgroundCode = codeEditorInstance.getValue();
-        }
-        return playgroundCode;
-      }
-
-      if (activeRightTopTab === 'practice') {
-        const activeObj = dsContainers.find(c => c.name === activeContainerName);
-        if (!activeObj) return null;
-        const practiceKey = `practice_${toSnakeCase(activeObj.dsType)}.py`;
-        if (codeEditorInstance && codeEditorInstance._loadedCacheKey === practiceKey) {
-          const liveCode = codeEditorInstance.getValue();
-          practiceCodeCache[practiceKey] = liveCode;
-          return liveCode;
-        }
-        return practiceCodeCache[practiceKey] || activeObj.dsModule?.practiceConfig?.template || null;
-      }
-
-      if (selectedIsUserFile && selectedFilePath && selectedFileExt === '.py') {
-        if (codeEditorInstance && codeEditorInstance._loadedCacheKey === `user:${selectedFilePath}`) {
-          return codeEditorInstance.getValue();
-        }
-        return userVirtualFs.entries[selectedFilePath]?.content ?? null;
-      }
-
-      if (selectedFilePath && editedCodeCache[selectedFilePath] !== undefined && selectedFileExt === '.py') {
-        return editedCodeCache[selectedFilePath];
-      }
-
-      return null;
-    }
-
     async function jediPythonHint(editor) {
       const cursor = editor.getCursor();
       const token = editor.getTokenAt(cursor);
@@ -2856,7 +2822,96 @@
       });
     }
 
+    if (btnRunPlayground) {
+      btnRunPlayground.addEventListener('click', runPlaygroundCode);
+    }
+
+    function getSmartTabExtraKeys(includeCtrlEnter = false) {
+      const keys = {
+        'Ctrl-Space': (cm) => cm.showHint({ hint: jediPythonHint, completeSingle: false }),
+        'Tab': (cm) => {
+          if (cm.somethingSelected()) {
+            cm.indentSelection('add');
+          } else {
+            const cursor = cm.getCursor();
+            const spacesNeeded = 4 - (cursor.ch % 4);
+            cm.replaceSelection(' '.repeat(spacesNeeded), 'end', '+input');
+          }
+        },
+        'Shift-Tab': (cm) => cm.indentSelection('subtract'),
+        'Backspace': (cm) => {
+          if (cm.somethingSelected()) {
+            cm.replaceSelection('', 'anchor', '+delete');
+            return;
+          }
+          const cursor = cm.getCursor();
+          const line = cm.getLine(cursor.line);
+          const beforeCursor = line.slice(0, cursor.ch);
+          // If only whitespace precedes the cursor on this line, delete up to 4 spaces (to previous tab stop)
+          if (cursor.ch > 0 && /^[ \t]+$/.test(beforeCursor)) {
+            const ExpandedBefore = beforeCursor.replace(/\t/g, '    ');
+            const rem = ExpandedBefore.length % 4;
+            const deleteCount = rem === 0 ? 4 : rem;
+            const fromCh = Math.max(0, cursor.ch - deleteCount);
+            cm.replaceRange('', { line: cursor.line, ch: fromCh }, cursor, '+delete');
+          } else {
+            cm.execCommand('delCharBefore');
+          }
+        }
+      };
+      if (includeCtrlEnter) {
+        keys['Ctrl-Enter'] = () => runPlaygroundCode();
+      }
+      return keys;
+    }
+
+    function normalizeSpaces(text = '') {
+      // Convert any hard tabs or non-breaking spaces into standard spaces
+      return String(text || '')
+        .replace(/\r\n?/g, '\n')
+        .replace(/\t/g, '    ')
+        .replace(/\u00A0/g, ' ');
+    }
+
+    function getCurrentRunnablePythonCode() {
+      if (activeRightTopTab === 'playground') {
+        if (!selectedIsUserFile || !selectedFilePath) return null;
+        if (codeEditorInstance && codeEditorInstance._loadedCacheKey === `playground:${selectedFilePath}`) {
+          const live = normalizeSpaces(codeEditorInstance.getValue());
+          saveUserFileContent(selectedFilePath, live);
+          return live;
+        }
+        return normalizeSpaces(userVirtualFs.entries[selectedFilePath]?.content ?? '');
+      }
+
+      if (activeRightTopTab === 'practice') {
+        const activeObj = dsContainers.find(c => c.name === activeContainerName);
+        if (!activeObj) return null;
+        const practiceKey = `practice_${toSnakeCase(activeObj.dsType)}.py`;
+        if (codeEditorInstance && codeEditorInstance._loadedCacheKey === practiceKey) {
+          const liveCode = normalizeSpaces(codeEditorInstance.getValue());
+          practiceCodeCache[practiceKey] = liveCode;
+          return liveCode;
+        }
+        return normalizeSpaces(practiceCodeCache[practiceKey] || activeObj.dsModule?.practiceConfig?.template || '');
+      }
+
+      if (selectedIsUserFile && selectedFilePath && selectedFileExt === '.py') {
+        if (codeEditorInstance && codeEditorInstance._loadedCacheKey === `user:${selectedFilePath}`) {
+          return normalizeSpaces(codeEditorInstance.getValue());
+        }
+        return normalizeSpaces(userVirtualFs.entries[selectedFilePath]?.content ?? '');
+      }
+
+      if (selectedFilePath && editedCodeCache[selectedFilePath] !== undefined && selectedFileExt === '.py') {
+        return normalizeSpaces(editedCodeCache[selectedFilePath]);
+      }
+
+      return null;
+    }
+
     async function runPlaygroundCode() {
+      if (!selectedIsUserFile || !selectedFilePath) return;
       const codeToRun = getCurrentRunnablePythonCode() || '';
       if (stateViewPane) {
         stateViewPane.innerHTML = `<div class="card-inner-pad"><span class="card-body-text">Running Playground (WASM)...</span></div>`;
@@ -2918,39 +2973,55 @@
 
     async function updateCodeViewPane() {
       const currentTab = activeRightTopTab;
+      const canEditInPlayground = Boolean(selectedIsUserFile && selectedFilePath && selectedFileExt);
 
       if (btnRunPlayground) {
-        btnRunPlayground.style.display = currentTab === 'playground' ? 'inline-flex' : 'none';
+        // Show Run button in Playground when a user file with an extension is active
+        btnRunPlayground.style.display = (currentTab === 'playground' && canEditInPlayground) ? 'inline-flex' : 'none';
       }
 
-      // 1. PLAYGROUND TAB (Writable & Runnable anytime, regular Python Intellisense active)
+      // 1. PLAYGROUND TAB (Edits the active user file from "My Files" / "My <DS> Files"; disabled if none selected)
       if (currentTab === 'playground') {
+        if (!canEditInPlayground) {
+          codeEditorInstance = null;
+          activeSimLineHandle = null;
+          codeViewPane.innerHTML = `
+            <div class="card-inner-pad">
+              <span class="card-body-text" style="color: var(--text-muted); text-align: center; display: block; margin-top: 1rem;">
+                Select a file with an extension from <strong>My Files</strong> (or right-click inside a Custom folder to create one) to edit and run it in the Playground.
+              </span>
+            </div>
+          `;
+          updatePlaybackCompatibilityUI();
+          return;
+        }
+
+        const entry = userVirtualFs.entries[selectedFilePath];
+        const fileContent = normalizeSpaces(entry?.content || '');
+        const cmMode = getCodeMirrorModeFromExt(selectedFileExt) || 'python';
+
         codeViewPane.innerHTML = '';
         activeSimLineHandle = null;
         codeEditorInstance = window.CodeMirror(codeViewPane, {
-          value: playgroundCode,
-          mode: 'python',
+          value: fileContent,
+          mode: cmMode,
           lineNumbers: true,
           lineWrapping: true,
           readOnly: false,
           indentUnit: 4,
           tabSize: 4,
+          indentWithTabs: false,
           indentGuide: true,
           autoCloseBrackets: true,
           matchBrackets: true,
-          extraKeys: {
-            'Ctrl-Space': (cm) => cm.showHint({ hint: jediPythonHint, completeSingle: false }),
-            'Ctrl-Enter': () => runPlaygroundCode(),
-            'Tab': (cm) => {
-              if (cm.somethingSelected()) cm.indentSelection('add');
-              else cm.replaceSelection(' '.repeat(cm.getOption('indentUnit')), 'end', '+input');
-            }
-          }
+          extraKeys: getSmartTabExtraKeys(true)
         });
-        attachPythonIntellisense(codeEditorInstance);
-        codeEditorInstance._loadedCacheKey = '__playground__';
+        if (cmMode === 'python') {
+          attachPythonIntellisense(codeEditorInstance);
+        }
+        codeEditorInstance._loadedCacheKey = `playground:${selectedFilePath}`;
         codeEditorInstance.on('change', () => {
-          playgroundCode = codeEditorInstance.getValue();
+          saveUserFileContent(selectedFilePath, normalizeSpaces(codeEditorInstance.getValue()));
         });
         requestAnimationFrame(() => codeEditorInstance && codeEditorInstance.refresh());
         updatePlaybackCompatibilityUI();
@@ -2978,7 +3049,7 @@
 
         const practiceKey = `practice_${toSnakeCase(activeObj.dsType)}.py`;
         if (practiceCodeCache[practiceKey] === undefined) {
-          practiceCodeCache[practiceKey] = practiceCfg.template;
+          practiceCodeCache[practiceKey] = normalizeSpaces(practiceCfg.template);
         }
 
         codeViewPane.innerHTML = '';
@@ -2990,21 +3061,16 @@
           readOnly: false,
           indentUnit: 4,
           tabSize: 4,
+          indentWithTabs: false,
           indentGuide: true,
           autoCloseBrackets: true,
           matchBrackets: true,
-          extraKeys: {
-            'Ctrl-Space': (cm) => cm.showHint({ hint: jediPythonHint, completeSingle: false }),
-            'Tab': (cm) => {
-              if (cm.somethingSelected()) cm.indentSelection('add');
-              else cm.replaceSelection(' '.repeat(cm.getOption('indentUnit')), 'end', '+input');
-            }
-          }
+          extraKeys: getSmartTabExtraKeys(false)
         });
         attachPythonIntellisense(codeEditorInstance);
         codeEditorInstance._loadedCacheKey = practiceKey;
         codeEditorInstance.on('change', () => {
-          practiceCodeCache[practiceKey] = codeEditorInstance.getValue();
+          practiceCodeCache[practiceKey] = normalizeSpaces(codeEditorInstance.getValue());
           if (window.isSimulating && typeof resetSimulation === 'function') resetSimulation();
         });
 
@@ -3018,7 +3084,7 @@
         return;
       }
 
-      // 3. UNIFIED NOTES TAB (Code or HTML Notes based on file extension)
+      // 3. UNIFIED NOTES TAB (Read-only for built-in files; editable in Playground)
       if (!selectedFilePath) {
         codeEditorInstance = null;
         activeSimLineHandle = null;
@@ -3041,7 +3107,7 @@
         if (selectedIsUserFile) {
           const entry = userVirtualFs.entries[targetPath];
           if (!entry) throw new Error('Local file not found');
-          text = entry.content || '';
+          text = normalizeSpaces(entry.content || '');
         } else if (editedCodeCache[targetPath] !== undefined) {
           text = editedCodeCache[targetPath];
         } else {
@@ -3051,7 +3117,7 @@
           if (text.includes('<title>Shard Spiral</title>')) {
             throw new Error('Fallback HTML returned');
           }
-          text = text.replace(/\r\n?/g, '\n');
+          text = normalizeSpaces(text);
           editedCodeCache[targetPath] = text;
         }
 
@@ -3067,16 +3133,11 @@
             readOnly: !selectedIsUserFile,
             indentUnit: 4,
             tabSize: 4,
+            indentWithTabs: false,
             indentGuide: true,
             autoCloseBrackets: selectedIsUserFile,
             matchBrackets: true,
-            extraKeys: selectedIsUserFile && cmMode === 'python' ? {
-              'Ctrl-Space': (cm) => cm.showHint({ hint: jediPythonHint, completeSingle: false }),
-              'Tab': (cm) => {
-                if (cm.somethingSelected()) cm.indentSelection('add');
-                else cm.replaceSelection(' '.repeat(cm.getOption('indentUnit')), 'end', '+input');
-              }
-            } : {}
+            extraKeys: selectedIsUserFile ? getSmartTabExtraKeys(false) : {}
           });
           if (selectedIsUserFile && cmMode === 'python') {
             attachPythonIntellisense(codeEditorInstance);
@@ -3085,7 +3146,7 @@
 
           if (selectedIsUserFile) {
             codeEditorInstance.on('change', () => {
-              saveUserFileContent(targetPath, codeEditorInstance.getValue());
+              saveUserFileContent(targetPath, normalizeSpaces(codeEditorInstance.getValue()));
             });
           }
 
@@ -4883,7 +4944,7 @@
         const valAttr = existingValues[p.name] !== undefined
           ? `value="${existingValues[p.name].replace(/"/g, '&quot;')}"`
           : '';
-        return `  <span class="token property">${p.name}</span> <span class="token operator">=</span> <input type="text" class="sig-inline-input" data-param-name="${p.name}" data-has-default="${p.hasDefault}" placeholder="${placeholder}" ${valAttr} />${comma}`;
+        return `  <span class="token property">${p.name}</span> <span class="token operator">=</span> <input type="text" class="sig-inline-input" data-param-name="${p.name}" data-has-default="${p.hasDefault}" placeholder="${placeholder}" autocapitalize="off" autocorrect="off" spellcheck="false" ${valAttr} />${comma}`;
       }).join('\n');
 
       configContainer.style.color = 'inherit';
@@ -5680,14 +5741,20 @@
       // 2. STANDARD ALGORITHM MODE
       if (selectedDsaType !== 'algo' || !selectedDsaName) return false;
 
-      const paramInputs = document.querySelectorAll('#algo-settings-body input[data-param-name]');
+      const paramInputs = document.querySelectorAll('#algo-config-container .sig-inline-input[data-param-name]');
       const rawKwargs = {};
       for (const inp of paramInputs) {
         const paramName = inp.getAttribute('data-param-name');
-        if (!paramName || paramName === 'name' || paramName === 'content') continue;
+        if (!paramName) continue;
 
         const hasDefault = inp.getAttribute('data-has-default') === 'true';
-        const rawVal = inp.value.trim();
+        // Normalize mobile keyboard smart quotes, unicode minus/dashes, and non-breaking spaces
+        const rawVal = inp.value
+          .replace(/[\u00A0\u2000-\u200B]/g, ' ')
+          .replace(/[“”]/g, '"')
+          .replace(/[‘’]/g, "'")
+          .replace(/[–—−]/g, '-')
+          .trim();
 
         if (rawVal === '') {
           if (!hasDefault) {
