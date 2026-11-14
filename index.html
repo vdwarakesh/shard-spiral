@@ -3204,7 +3204,10 @@
               });
             }
           } else {
-            codeViewPane.innerHTML = `<div class="card-inner-pad notes-content">${text}</div>`;
+            const renderedHtml = selectedNotesFileExt === '.txt'
+              ? `<pre style="margin: 0; font-family: 'Noto Sans Mono', monospace; white-space: pre-wrap;">${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>`
+              : text;
+            codeViewPane.innerHTML = `<div class="card-inner-pad notes-content">${renderedHtml}</div>`;
           }
         }
       } catch (err) {
@@ -3720,15 +3723,21 @@
     }
 
     function buildStaticDsaDirectoryTree() {
-      // Exact mirror of ./dsa directory structure when static server disables auto-indexing
       const dsNode = (name, subDirs = [], algos = [], customPy = null) => {
         const pyFile = customPy || `${toSnakeCase(name)}.py`;
+        const algoFiles = [];
+        algos.forEach(a => {
+          algoFiles.push({ name: a, type: 'file' });
+          const base = a.replace(/\.[^.]+$/, '');
+          algoFiles.push({ name: `${base}_tags.txt`, type: 'file' });
+        });
+
         const children = [
           ...subDirs,
-          ...(algos.length > 0 ? [{
+          ...(algoFiles.length > 0 ? [{
             name: 'Algorithms',
             type: 'directory',
-            children: algos.map(a => ({ name: a, type: 'file' }))
+            children: algoFiles
           }] : []),
           { name: pyFile, type: 'file' },
           { name: 'Notes', type: 'file' }
@@ -3909,14 +3918,9 @@
     function getMergedFolderChildren(pathArr) {
       const staticNode = getDirectoryNodeAtPath(pathArr);
       const itemsMap = new Map();
-      const inAlgoFolder = pathArr[pathArr.length - 1] === 'Algorithms';
 
       if (staticNode && Array.isArray(staticNode.children)) {
         staticNode.children.forEach(child => {
-          // Hide companion *_tags.txt files inside Algorithms/ folders from the Explorer UI
-          if (inAlgoFolder && child.type === 'file' && child.name.toLowerCase().endsWith('_tags.txt')) {
-            return;
-          }
           itemsMap.set(child.name, { ...child });
         });
       }
@@ -4275,7 +4279,6 @@
         }
         resetSettingsToPlaceholder();
       } else if (isAlgoFolder) {
-        // Built-in Algorithm file inside dsa/<DS>/Algorithms/<algo>.py
         selectedNotesFilePath = ['dsa', ...folderPathArr, fileItem.name].join('/');
         selectedNotesFileExt = ext;
         selectedNotesIsUserFile = false;
@@ -4284,19 +4287,35 @@
         selectedFileExt = ext;
         selectedIsUserFile = false;
 
-        selectedDsaName = baseTitle;
-        selectedDsaType = 'algo';
-        selectedAlgoParentDs = contextDs;
-        selectedAlgoDirPath = folderPathArr.slice(0, -1);
+        if (ext === '.py') {
+          // Algorithm Python file -> show code in Notes & function signature in Settings
+          selectedDsaName = baseTitle;
+          selectedDsaType = 'algo';
+          selectedAlgoParentDs = contextDs;
+          selectedAlgoDirPath = folderPathArr.slice(0, -1);
 
-        if (activeRightTopTab !== 'notes') {
-          setActiveTab('notes', 'Notes');
+          if (activeRightTopTab !== 'notes') {
+            setActiveTab('notes', 'Notes');
+          } else {
+            updateCodeViewPane();
+          }
+          updateAlgorithmSettings(baseTitle, contextDs, 'algo');
         } else {
-          updateCodeViewPane();
+          // Companion file (e.g. *_tags.txt) -> view in Notes tab
+          selectedDsaName = baseTitle;
+          selectedDsaType = 'file';
+          selectedAlgoParentDs = null;
+          selectedAlgoDirPath = [];
+
+          if (activeRightTopTab !== 'notes') {
+            setActiveTab('notes', 'Notes');
+          } else {
+            updateCodeViewPane();
+          }
+          resetSettingsToPlaceholder();
         }
-        updateAlgorithmSettings(baseTitle, contextDs, 'algo');
       } else {
-        // Built-in DS file (such as `Notes` or `array.py`)
+        // Regular file inside a DS folder (such as "Notes" or "<ds>.py") -> load into Notes tab
         selectedNotesFilePath = ['dsa', ...folderPathArr, fileItem.name].join('/');
         selectedNotesFileExt = ext;
         selectedNotesIsUserFile = false;
@@ -4429,7 +4448,9 @@
 
       // Checks whether an algorithm file inside Algorithms/ matches active filters
       function algoFileMatchesFilters(fileName, parentDsName) {
-        const base = stripFileExtension(fileName);
+        const rawBase = stripFileExtension(fileName);
+        // Strip trailing "_tags" so linear_search_tags.txt checks filter status of linear_search
+        const base = rawBase.replace(/_tags$/i, '');
         const algoSnake = toSnakeCase(base);
 
         if (isCompatibleFilterActive) {
@@ -4437,14 +4458,15 @@
             return false;
           }
         }
-        if (isFavFilterActive && !isItemFavourited(base) && !isItemFavourited(parentDsName)) {
+        if (isFavFilterActive && !isItemFavourited(base) && !isItemFavourited(rawBase) && !isItemFavourited(parentDsName)) {
           return false;
         }
         if (
           isSyllabusFilterActive &&
           syllabusAlgoSet &&
           !syllabusAlgoSet.has(algoSnake) &&
-          !isItemFavourited(base)
+          !isItemFavourited(base) &&
+          !isItemFavourited(rawBase)
         ) {
           return false;
         }
