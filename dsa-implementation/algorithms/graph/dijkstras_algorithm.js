@@ -29,7 +29,7 @@ export async function dijkstras_algorithm(containerEl, rawKwargs = {}, simOption
     }
   });
 
-  let pythonCode = options.pythonCode;
+  let pythonCode = simOptions.pythonCode;
   if (!pythonCode) {
     const pyUrl = new URL('../../../dsa/Graph/Algorithms/dijkstras_algorithm.py', import.meta.url);
     const res = await fetch(pyUrl);

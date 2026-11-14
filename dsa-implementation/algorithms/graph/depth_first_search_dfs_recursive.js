@@ -25,7 +25,7 @@ export async function depth_first_search_dfs(containerEl, rawKwargs = {}, simOpt
     }
   });
 
-  let pythonCode = options.pythonCode;
+  let pythonCode = simOptions.pythonCode;
   if (!pythonCode) {
     const pyUrl = new URL('../../../dsa/Graph/Algorithms/depth_first_search_dfs_recursive.py', import.meta.url);
     const res = await fetch(pyUrl);
